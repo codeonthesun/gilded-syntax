@@ -1495,8 +1495,8 @@
             zone.challenges.forEach(challenge => {
                 if (!challenge.completed) allCompleted = false;
                 const questEl = document.createElement('div');
-                questEl.className = 'space-y-1';
-                questEl.title = challenge.description;
+                questEl.className = 'space-y-1 tooltip';
+                questEl.setAttribute('data-tooltip', challenge.description);
                 let progress = 0;
                 let current = 0;
                 switch (challenge.type) {
