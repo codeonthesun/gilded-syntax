@@ -1914,10 +1914,79 @@
             });
         }
 
+        function getInitialGameState() {
+            return {
+                essence: 0,
+                level: 1,
+                xp: 0,
+                xpToNextLevel: 100,
+                totalClicks: 0,
+                bankedClicks: 0,
+                isBankMode: false,
+                isAutoClickerActive: false,
+                autoClickCostPerSecond: 1,
+                currentZoneIndex: 0,
+                zones: JSON.parse(JSON.stringify(ZONES)), // Deep copy
+                passiveIncomeRate: 0,
+                lastUpdateTime: Date.now(),
+                clickMultiplier: 1,
+                passiveMultiplier: 1,
+                totalPassiveGained: 0,
+                accumulatedPassive: 0,
+                lastPassiveLogTime: Date.now(),
+                clickUpgradeLevel: 0,
+                passiveUpgradeLevel: 0,
+                bankUpgradeLevel: 0,
+                autoClickUpgradeLevel: 0,
+                critChanceUpgradeLevel: 0,
+                critMultUpgradeLevel: 0,
+                luckUpgradeLevel: 0,
+                efficiencyUpgradeLevel: 0,
+                regenerationUpgradeLevel: 0,
+                critChance: 0,
+                critMultiplier: 2,
+                prestigePoints: 0,
+                prestigeMultiplier: 1,
+                luckMultiplier: 1,
+                efficiencyMultiplier: 1,
+                regenerationMultiplier: 1,
+                xpMultiplier: 1,
+                accumulatedBankInterest: 0,
+                lastBankLogTime: Date.now(),
+                passiveBoostActive: false,
+                passiveBoostEndTime: 0,
+                ceoActive: false,
+                ceoEndTime: 0,
+                lastCEOLogTime: Date.now(),
+                activeEvents: [],
+                companions: [],
+                relics: [],
+                currentDebuff: null,
+                debuffEndTime: 0,
+                mana: 0,
+                manaMax: 0,
+                manaBoostActive: false,
+                manaBoostEndTime: 0,
+                investmentActive: false,
+                investmentEndTime: 0,
+                infiniteMode: false,
+                startTime: Date.now(),
+                streak: 0,
+                lastLoginDate: new Date().toDateString(),
+                timeCrystalUpgradeLevel: 0,
+                bankMultiplier: 1,
+                autoClickMultiplier: 1,
+                achievements: []
+            };
+        }
+
         function resetProfile() {
             if (confirm("Are you sure you want to reset your progress? This will delete all saved data and cannot be undone.")) {
+                gameState = getInitialGameState();
                 localStorage.removeItem('gildedSyntaxSave');
-                location.reload();
+                loadZone();
+                updateUI();
+                logMessage("Profile reset complete. All progress has been cleared.", "system");
             }
         }
 
