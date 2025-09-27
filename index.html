@@ -643,13 +643,28 @@
         ];
 
         const EVENTS = [
-            { id: 'essence_boost', name: 'Essence Boost', description: 'Doubles essence gain from clicks', duration: 30000, effect: 'double_click', type: 'positive' },
-            { id: 'passive_surge', name: 'Passive Surge', description: 'Triples passive income', duration: 60000, effect: 'triple_passive', type: 'positive' },
-            { id: 'crit_frenzy', name: 'Critical Frenzy', description: '100% critical hit chance', duration: 20000, effect: 'max_crit', type: 'positive' },
-            { id: 'cost_reduction', name: 'Bargain Day', description: 'Halves upgrade costs', duration: 45000, effect: 'half_costs', type: 'positive' },
-            { id: 'essence_drain', name: 'Essence Drain', description: 'Halves passive income for 30 seconds', duration: 30000, effect: 'half_passive', type: 'negative' },
-            { id: 'click_penalty', name: 'Click Fatigue', description: 'Reduces click power by 25% for 20 seconds', duration: 20000, effect: 'quarter_click', type: 'negative' },
-            { id: 'essence_storm', name: 'Essence Storm', description: 'Doubles essence gain but attracts a mini-boss in 10 seconds', duration: 30000, effect: 'double_click', type: 'chained', chain: 'mini_boss' },
+            // Common (40% chance, short/weak)
+            { id: 'essence_boost', name: 'Essence Boost', description: 'Doubles essence gain from clicks', duration: 30000, effect: 'double_click', type: 'positive', rarity: 'Common' },
+            { id: 'click_penalty', name: 'Click Fatigue', description: 'Reduces click power by 25% for 20 seconds', duration: 20000, effect: 'quarter_click', type: 'negative', rarity: 'Common' },
+            { id: 'minor_luck', name: 'Minor Luck', description: 'Increases luck by 10% for 30 seconds', duration: 30000, effect: 'luck_boost', type: 'positive', rarity: 'Common' },
+            // Uncommon (30% chance, medium)
+            { id: 'passive_surge', name: 'Passive Surge', description: 'Triples passive income', duration: 60000, effect: 'triple_passive', type: 'positive', rarity: 'Uncommon' },
+            { id: 'crit_frenzy', name: 'Critical Frenzy', description: '100% critical hit chance', duration: 20000, effect: 'max_crit', type: 'positive', rarity: 'Uncommon' },
+            { id: 'essence_drain', name: 'Essence Drain', description: 'Halves passive income for 30 seconds', duration: 30000, effect: 'half_passive', type: 'negative', rarity: 'Uncommon' },
+            { id: 'bank_bonus', name: 'Bank Windfall', description: 'Doubles bank interest rate for 45 seconds', duration: 45000, effect: 'double_bank', type: 'positive', rarity: 'Uncommon' },
+            // Rare (20% chance, stronger)
+            { id: 'cost_reduction', name: 'Bargain Day', description: 'Halves upgrade costs', duration: 45000, effect: 'half_costs', type: 'positive', rarity: 'Rare' },
+            { id: 'mega_passive', name: 'Mega Passive', description: 'Quadruples passive income', duration: 45000, effect: 'quad_passive', type: 'positive', rarity: 'Rare' },
+            { id: 'crit_storm', name: 'Critical Storm', description: '150% critical hit chance and 2x multiplier', duration: 30000, effect: 'super_crit', type: 'positive', rarity: 'Rare' },
+            { id: 'essence_storm', name: 'Essence Storm', description: 'Doubles essence gain but attracts a mini-boss in 10 seconds', duration: 30000, effect: 'double_click', type: 'chained', chain: 'mini_boss', rarity: 'Rare' },
+            // Epic (7% chance, very strong)
+            { id: 'godlike_boost', name: 'Godlike Boost', description: 'Quintuples essence gain from clicks', duration: 60000, effect: 'quintuple_click', type: 'positive', rarity: 'Epic' },
+            { id: 'infinite_crit', name: 'Infinite Critical', description: '100% critical hit chance with 3x multiplier', duration: 45000, effect: 'infinite_crit', type: 'positive', rarity: 'Epic' },
+            { id: 'prestige_bonus', name: 'Prestige Surge', description: 'Temporarily doubles prestige multiplier', duration: 90000, effect: 'double_prestige', type: 'positive', rarity: 'Epic' },
+            // Legendary (3% chance, game-changing)
+            { id: 'legendary_harvest', name: 'Harvest of Legends', description: 'Sextuples essence gain and passive income', duration: 120000, effect: 'legendary_boost', type: 'positive', rarity: 'Legendary' },
+            { id: 'time_warp', name: 'Time Warp', description: 'Freezes time for bosses (no timer) for 30 seconds', duration: 30000, effect: 'freeze_boss', type: 'positive', rarity: 'Legendary' },
+            { id: 'ascended_luck', name: 'Ascended Luck', description: 'Guarantees rare+ drops from next boss', duration: 60000, effect: 'guarantee_rare', type: 'positive', rarity: 'Legendary' },
         ];
 
         const COMPANIONS = [
@@ -661,11 +676,14 @@
         ];
 
         const RELICS = [
-            { id: 'crit_relic', name: 'Crystal of Precision', description: '+5% critical chance', effect: 'crit_chance_add', value: 0.05 },
-            { id: 'click_relic', name: 'Orb of Power', description: '+10% click power', effect: 'click_mult', value: 1.1 },
-            { id: 'passive_relic', name: 'Amulet of Flow', description: '+10% passive income', effect: 'passive_mult', value: 1.1 },
-            { id: 'luck_relic', name: 'Charm of Fortune', description: '+10% luck', effect: 'luck_mult', value: 1.1 },
-            { id: 'efficiency_relic', name: 'Tome of Thrift', description: '+5% efficiency', effect: 'efficiency_mult', value: 1.05 },
+            { id: 'crit_relic', name: 'Crystal of Precision', description: '+5% critical chance', effect: 'crit_chance_add', value: 0.05, rarity: 'Common' },
+            { id: 'click_relic', name: 'Orb of Power', description: '+10% click power', effect: 'click_mult', value: 1.1, rarity: 'Common' },
+            { id: 'passive_relic', name: 'Amulet of Flow', description: '+10% passive income', effect: 'passive_mult', value: 1.1, rarity: 'Uncommon' },
+            { id: 'luck_relic', name: 'Charm of Fortune', description: '+10% luck', effect: 'luck_mult', value: 1.1, rarity: 'Rare' },
+            { id: 'efficiency_relic', name: 'Tome of Thrift', description: '+5% efficiency', effect: 'efficiency_mult', value: 1.05, rarity: 'Epic' },
+            // Add more relics for variety
+            { id: 'attack_relic', name: 'Blade of Echoes', description: '+15% attack damage', effect: 'attack_mult', value: 1.15, rarity: 'Rare' },
+            { id: 'xp_relic', name: 'Tome of Knowledge', description: '+20% XP gain', effect: 'xp_mult', value: 1.2, rarity: 'Legendary' },
         ];
 
         let gameState = {
@@ -730,6 +748,8 @@
             streak: 0,
             lastLoginDate: new Date().toDateString(),
             timeCrystalUpgradeLevel: 0,
+            bossFrozen: false,
+            guaranteeRareDrop: false,
         };
         
         // DOM Elements
@@ -1087,7 +1107,9 @@
 
 
             bossState.timer = setInterval(() => {
-                bossState.timeLeft--;
+                if (!gameState.bossFrozen) {
+                    bossState.timeLeft--;
+                }
                 const timerBar = document.getElementById('bossTimerBar');
                 const timeLeftDisplay = document.getElementById('bossTimeLeft');
 
@@ -1114,9 +1136,19 @@
 
             // Loot drop
             const performance = bossState.timeLeft / boss.timer; // 0 to 1
-            const dropChance = 0.1 + performance * 0.4; // 10% to 50%
+            let dropChance = 0.1 + performance * 0.4; // 10% to 50%
+            let forceRare = false;
+            if (gameState.guaranteeRareDrop) {
+                dropChance = 1; // Guarantee drop
+                forceRare = true;
+                gameState.guaranteeRareDrop = false; // Reset
+            }
             if (Math.random() < dropChance) {
-                const relic = RELICS[Math.floor(Math.random() * RELICS.length)];
+                let relicPool = RELICS;
+                if (forceRare) {
+                    relicPool = RELICS.filter(r => ['Rare', 'Epic', 'Legendary'].includes(r.rarity));
+                }
+                const relic = relicPool[Math.floor(Math.random() * relicPool.length)];
                 if (!gameState.relics.some(r => r.id === relic.id)) {
                     gameState.relics.push(relic);
                     logMessage(`You found a relic: ${relic.name} - ${relic.description}!`, 'victory');
@@ -1513,7 +1545,7 @@
         }
 
         function getAttackDamage() {
-            return Math.floor(getEssencePerClick() / 50) + 1;
+            return Math.floor((getEssencePerClick() / 50) + 1) * gameState.attackMultiplier;
         }
 
         function getBankSize() {
@@ -1570,7 +1602,10 @@
             }
 
             // Bank interest (compound, scales with bank upgrades, per second)
-            const bankInterest = Math.floor(gameState.bankedClicks * ((0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1)) * timeDiff);
+            let bankInterest = Math.floor(gameState.bankedClicks * ((0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1)) * timeDiff);
+            if (gameState.activeEvents.some(e => e.effect === 'double_bank')) {
+                bankInterest *= 2;
+            }
             if (bankInterest > 0) {
                 gameState.bankedClicks += bankInterest;
                 gameState.accumulatedBankInterest += bankInterest;
@@ -1770,23 +1805,34 @@
         }
 
         function triggerRandomEvent() {
-            // Weighted selection: 60% positive, 40% negative/chained
-            const positiveEvents = EVENTS.filter(e => e.type === 'positive');
-            const negativeEvents = EVENTS.filter(e => e.type !== 'positive');
+            // Rarity weights: Common 40%, Uncommon 30%, Rare 20%, Epic 7%, Legendary 3%
+            const rarityWeights = {
+                'Common': 0.4,
+                'Uncommon': 0.3,
+                'Rare': 0.2,
+                'Epic': 0.07,
+                'Legendary': 0.03
+            };
             const rand = Math.random();
-            let event;
-            if (rand < 0.6) {
-                event = positiveEvents[Math.floor(Math.random() * positiveEvents.length)];
-            } else {
-                event = negativeEvents[Math.floor(Math.random() * negativeEvents.length)];
+            let cumulative = 0;
+            let selectedRarity = 'Common';
+            for (const [rarity, weight] of Object.entries(rarityWeights)) {
+                cumulative += weight;
+                if (rand < cumulative) {
+                    selectedRarity = rarity;
+                    break;
+                }
             }
+            // Get events of selected rarity
+            const rarityEvents = EVENTS.filter(e => e.rarity === selectedRarity);
+            const event = rarityEvents[Math.floor(Math.random() * rarityEvents.length)];
             gameState.activeEvents.push({
                 ...event,
                 startTime: Date.now(),
                 endTime: Date.now() + event.duration
             });
             const msgType = event.type === 'negative' ? "system-warn" : "system-ok";
-            logMessage(`Random Event: ${event.name} - ${event.description}`, msgType);
+            logMessage(`Random Event: [${event.rarity}] ${event.name} - ${event.description}`, msgType);
             applyEventEffect(event);
             // Handle chained events
             if (event.chain === 'mini_boss') {
@@ -1855,6 +1901,39 @@
                 case 'quarter_click':
                     gameState.clickMultiplier *= 0.75;
                     break;
+                case 'luck_boost':
+                    gameState.luckMultiplier *= 1.1;
+                    break;
+                case 'double_bank':
+                    // Handled in updatePassiveIncome
+                    break;
+                case 'quad_passive':
+                    gameState.passiveMultiplier *= 4;
+                    break;
+                case 'super_crit':
+                    gameState.critChance = 1.5;
+                    gameState.critMultiplier = 4; // 2x base
+                    break;
+                case 'quintuple_click':
+                    gameState.clickMultiplier *= 5;
+                    break;
+                case 'infinite_crit':
+                    gameState.critChance = 1;
+                    gameState.critMultiplier = 6; // 3x base
+                    break;
+                case 'double_prestige':
+                    gameState.prestigeMultiplier *= 2;
+                    break;
+                case 'legendary_boost':
+                    gameState.clickMultiplier *= 6;
+                    gameState.passiveMultiplier *= 6;
+                    break;
+                case 'freeze_boss':
+                    gameState.bossFrozen = true;
+                    break;
+                case 'guarantee_rare':
+                    gameState.guaranteeRareDrop = true;
+                    break;
             }
         }
 
@@ -1896,6 +1975,50 @@
                 case 'quarter_click':
                     gameState.clickMultiplier /= 0.75;
                     break;
+                case 'luck_boost':
+                    gameState.luckMultiplier /= 1.1;
+                    break;
+                case 'double_bank':
+                    // Handled in updatePassiveIncome
+                    break;
+                case 'quad_passive':
+                    gameState.passiveMultiplier /= 4;
+                    break;
+                case 'super_crit':
+                    gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
+                    gameState.critMultiplier = 2 + 0.5 * gameState.critMultUpgradeLevel;
+                    break;
+                case 'quintuple_click':
+                    gameState.clickMultiplier /= 5;
+                    break;
+                case 'infinite_crit':
+                    gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
+                    gameState.critMultiplier = 2 + 0.5 * gameState.critMultUpgradeLevel;
+                    break;
+                case 'double_prestige':
+                    gameState.prestigeMultiplier /= 2;
+                    break;
+                case 'legendary_boost':
+                    gameState.clickMultiplier /= 6;
+                    gameState.passiveMultiplier /= 6;
+                    break;
+                case 'freeze_boss':
+                    gameState.bossFrozen = false;
+                    break;
+                case 'guarantee_rare':
+                    gameState.guaranteeRareDrop = false;
+                    break;
+            }
+        }
+
+        function getRarityColor(rarity) {
+            switch (rarity) {
+                case 'Common': return 'text-gray-400';
+                case 'Uncommon': return 'text-green-400';
+                case 'Rare': return 'text-blue-400';
+                case 'Epic': return 'text-purple-400';
+                case 'Legendary': return 'text-yellow-400';
+                default: return 'text-gray-400';
             }
         }
 
@@ -1909,7 +2032,8 @@
                 const timeLeft = Math.ceil((event.endTime - Date.now()) / 1000);
                 const eventEl = document.createElement('div');
                 eventEl.className = 'flex justify-between items-center text-sm';
-                eventEl.innerHTML = `<span class="text-yellow-400">${event.name}</span><span class="text-gray-400">${timeLeft}s</span>`;
+                const rarityClass = getRarityColor(event.rarity);
+                eventEl.innerHTML = `<span class="${rarityClass}">[${event.rarity}] ${event.name}</span><span class="text-gray-400">${timeLeft}s</span>`;
                 DOMElements.activeEventsList.appendChild(eventEl);
             });
         }
@@ -1974,6 +2098,9 @@
                 streak: 0,
                 lastLoginDate: new Date().toDateString(),
                 timeCrystalUpgradeLevel: 0,
+                bossFrozen: false,
+                guaranteeRareDrop: false,
+                attackMultiplier: 1,
                 bankMultiplier: 1,
                 autoClickMultiplier: 1,
                 achievements: []
@@ -2093,6 +2220,13 @@
                 case 'efficiency_mult':
                     gameState.efficiencyMultiplier *= relic.value;
                     break;
+                case 'attack_mult':
+                    // Assuming attack damage multiplier, but since attack is calculated, maybe add a multiplier
+                    gameState.attackMultiplier = (gameState.attackMultiplier || 1) * relic.value;
+                    break;
+                case 'xp_mult':
+                    gameState.xpMultiplier *= relic.value;
+                    break;
             }
         }
         
@@ -2186,6 +2320,9 @@
                 if (typeof gameState.streak === 'undefined') gameState.streak = 0;
                 if (typeof gameState.lastLoginDate === 'undefined') gameState.lastLoginDate = new Date().toDateString();
                 if (typeof gameState.timeCrystalUpgradeLevel === 'undefined') gameState.timeCrystalUpgradeLevel = 0;
+                if (typeof gameState.bossFrozen === 'undefined') gameState.bossFrozen = false;
+                if (typeof gameState.guaranteeRareDrop === 'undefined') gameState.guaranteeRareDrop = false;
+                if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
