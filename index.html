@@ -767,7 +767,7 @@
             // Epic (7% chance, very strong)
             { id: 'godlike_boost', name: 'Godlike Boost', description: 'Quintuples essence gain from clicks', duration: 60000, effect: 'quintuple_click', type: 'positive', rarity: 'Epic' },
             { id: 'infinite_crit', name: 'Infinite Critical', description: '100% critical hit chance with 3x multiplier', duration: 45000, effect: 'infinite_crit', type: 'positive', rarity: 'Epic' },
-            { id: 'prestige_bonus', name: 'Prestige Surge', description: 'Temporarily doubles prestige multiplier', duration: 90000, effect: 'double_prestige', type: 'positive', rarity: 'Epic' },
+            { id: 'epic_passive', name: 'Epic Passive Surge', description: 'Decuples passive income for 60 seconds', duration: 60000, effect: 'decuple_passive', type: 'positive', rarity: 'Epic' },
             // Legendary (3% chance, game-changing)
             { id: 'legendary_harvest', name: 'Harvest of Legends', description: 'Sextuples essence gain and passive income', duration: 120000, effect: 'legendary_boost', type: 'positive', rarity: 'Legendary' },
             { id: 'time_warp', name: 'Time Warp', description: 'Freezes time for bosses (no timer) for 30 seconds', duration: 30000, effect: 'freeze_boss', type: 'positive', rarity: 'Legendary' },
@@ -2054,7 +2054,7 @@
                 case 'super_crit': effectDesc = "150% crit chance with 2x multiplier"; break;
                 case 'quintuple_click': effectDesc = "Quintuples essence from clicks"; break;
                 case 'infinite_crit': effectDesc = "100% crit chance with 3x multiplier"; break;
-                case 'double_prestige': effectDesc = "Doubles prestige multiplier"; break;
+                case 'decuple_passive': effectDesc = "Decuples passive income"; break;
                 case 'legendary_boost': effectDesc = "Sextuples clicks and passive income"; break;
                 case 'freeze_boss': effectDesc = "Freezes boss timer for 30 seconds"; break;
                 case 'guarantee_rare': effectDesc = "Guarantees rare+ boss drops"; break;
@@ -2151,8 +2151,8 @@
                     gameState.critChance = 1;
                     gameState.critMultiplier = 6; // 3x base
                     break;
-                case 'double_prestige':
-                    gameState.prestigeMultiplier *= 2;
+                case 'decuple_passive':
+                    gameState.passiveMultiplier *= 10;
                     break;
                 case 'legendary_boost':
                     gameState.clickMultiplier *= 6;
@@ -2225,8 +2225,8 @@
                     gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
                     gameState.critMultiplier = 2 + 0.5 * gameState.critMultUpgradeLevel;
                     break;
-                case 'double_prestige':
-                    gameState.prestigeMultiplier /= 2;
+                case 'decuple_passive':
+                    gameState.passiveMultiplier /= 10;
                     break;
                 case 'legendary_boost':
                     gameState.clickMultiplier /= 6;
