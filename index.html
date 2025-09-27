@@ -1390,7 +1390,7 @@
             DOMElements.bankModeToggle.checked = gameState.isBankMode;
             DOMElements.autoClickButton.textContent = gameState.isAutoClickerActive ? "Auto-Clicker: On" : "Auto-Clicker: Off";
             DOMElements.autoClickRate.textContent = getAutoClickRate();
-            DOMElements.autoClickButton.title = gameState.isAutoClickerActive ? "Deactivate auto-clicker" : "Activate auto-clicker. Costs 1 banked click per second.";
+            // Removed title to prevent duplicate tooltips with custom data-tooltip
             DOMElements.bankBoostButton.disabled = gameState.passiveBoostActive || gameState.bankedClicks < 50;
             DOMElements.hireCEOButton.disabled = gameState.ceoActive || gameState.bankedClicks < 100;
             DOMElements.bankInvestmentButton.disabled = gameState.investmentActive || gameState.bankedClicks < 100;
