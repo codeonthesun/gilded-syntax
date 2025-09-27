@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gilded Syntax</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation; /* Prevents double-tap zoom on mobile */
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .chat-log::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-log::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        .chat-log::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 2px;
+        }
+        .chat-log {
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 #1f2937;
+        }
+        .boss-timer-bar {
+            transition: width 0.1s linear;
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            white-space: normal;
+            max-width: 300px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            border: 2px solid #374151;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+        #actionButton.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
+
+    <!-- Main Game Container -->
+    <div class="flex flex-col md:flex-row min-h-screen w-full max-w-7xl mx-auto p-2 md:p-4 gap-4">
+
+        <!-- Left Panel: Chat/Log and Player Stats -->
+        <div class="flex flex-col w-full md:w-1/3 md:h-full gap-4">
+            <!-- Game Title -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <img src="logo.png" alt="Gilded Syntax" data-tooltip="Gilded Syntax - Clicker Adventure Game" class="h-12 md:h-16 mx-auto tooltip">
+                <p class="text-center text-sm text-gray-400">Your journey begins...</p>
+            </div>
+
+            <!-- Active Events -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Active random events">Active Events</h2>
+                <div id="activeEventsList" class="space-y-1 text-sm">
+                    <!-- Events will be injected here -->
+                </div>
+            </div>
+
+            <!-- Chat Log -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col border border-gray-700 h-full">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Game log and messages">Chronicle</h2>
+                <div id="chatLog" class="chat-log h-72 overflow-y-auto pr-2 space-y-2 text-sm">
+                    <!-- Messages will be injected here -->
+                </div>
+            </div>
+
+            <!-- Player Stats -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Your current stats and progress">Adventurer</h2>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Your current adventurer title">Title:</span> <span id="playerTitle" class="font-bold text-amber-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Your adventurer level">Level:</span> <span id="playerLevel" class="font-bold text-white"></span></div>
+                    <div class="w-full bg-gray-700 rounded-full h-2 tooltip" data-tooltip="XP progress to next level">
+                        <div id="xpBar" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1" id="xpText">0 / 100</div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Total essence collected">Essence:</span> <span id="playerEssence" class="font-bold text-cyan-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Essence gained per click">Essence/Click:</span> <span id="essencePerClick" class="font-bold text-cyan-300"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Damage dealt per attack during boss fights">Attack:</span> <span id="playerAttack" class="font-bold text-red-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Essence gained passively per second">Passive/sec:</span> <span id="passiveIncome" class="font-bold text-green-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Critical hit chance">Crit Chance:</span> <span id="playerCritChance" class="font-bold text-red-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Critical hit damage multiplier">Crit Multiplier:</span> <span id="playerCritMult" class="font-bold text-red-300"></span></div>
+                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Daily login streak">Streak:</span> <span id="playerStreak" class="font-bold text-orange-400"></span></div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Unlocked achievements and milestones">Achievements</h2>
+                <div id="achievementsList" class="space-y-1 text-sm max-h-48 overflow-y-auto">
+                    <!-- Achievements will be injected here -->
+                </div>
+            </div>
+
+            <!-- Prestige -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Prestige system for resetting progress and gaining permanent multipliers">Prestige</h2>
+                <p class="text-sm text-gray-400 mb-2">Reset your progress for prestige points. Requires Level 50.</p>
+                <p class="text-sm">Prestige Points: <span id="prestigePoints" class="font-bold text-purple-400"></span></p>
+                <button id="prestigeButton" data-tooltip="Reset progress to gain prestige points for permanent multipliers. Requires level 50." class="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Prestige</button>
+                <button id="exportSaveButton" data-tooltip="Export your save data to clipboard for sharing or backup" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Export Save</button>
+                <button id="resetProfile" data-tooltip="Reset all progress and start fresh" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Reset Profile</button>
+            </div>
+        </div>
+
+        <!-- Right Panel: Action, Quests, Bank -->
+        <div class="flex flex-col w-full md:w-2/3 md:h-full gap-4">
+
+            <!-- Action Area -->
+            <div id="actionArea" class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-hidden min-h-[500px]">
+                <!-- Boss UI will be injected here -->
+                <div id="bossContainer" class="absolute inset-0 bg-red-900/80 backdrop-blur-sm z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
+
+                <h2 id="zoneName" title="The zone you are currently exploring" class="font-cinzel text-2xl md:text-3xl font-bold text-white mb-4"></h2>
+                <p id="actionPrompt" title="Instructions for gathering essence in this zone" class="text-gray-400 mb-6 text-center"></p>
+                <button id="actionButton" class="w-40 h-32 bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white font-bold rounded-full transition-all duration-200 ease-in-out shadow-lg flex justify-center items-center text-center text-xl transform hover:scale-105 active:scale-100 border-4 border-cyan-800/50">
+                    <span id="actionButtonText">Gather</span>
+                </button>
+                <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+                <div id="specialMechanicDisplay" class="mt-4 text-center"></div>
+            </div>
+
+            <!-- Quests/Challenges -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                  <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Current zone challenges to complete">Zone Objectives</h2>
+                  <div id="questList" class="space-y-2 text-sm">
+                      <!-- Quests will be injected here -->
+                  </div>
+            </div>
+            
+            <!-- Bank Mode -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="tooltip" data-tooltip="Bank system for storing clicks">Essence Bank</span>
+                        <span class="text-xs text-gray-500">Interest: +<span id="interestRate"></span>/sec | Accrued: <span id="accumulatedInterest"></span></span>
+                    </div>
+                    <label class="inline-flex items-center cursor-pointer tooltip" data-tooltip="Toggle bank mode to store clicks instead of generating essence">
+                        <span class="mr-3 text-sm font-medium text-gray-300">Bank Mode</span>
+                        <input type="checkbox" id="bankModeToggle" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    </label>
+                </h2>
+                <div class="flex items-center gap-4 text-sm">
+                    <div class="flex-grow">
+                        <p class="flex justify-between"><span class="tooltip" data-tooltip="Clicks stored in bank for auto-clicker">Stored Clicks:</span> <span id="bankedClicks" class="font-bold text-green-400"></span></p>
+                         <p class="flex justify-between"><span class="tooltip" data-tooltip="Maximum clicks that can be stored">Bank Size:</span> <span id="bankSize" class="font-bold text-gray-400"></span></p>
+                    </div>
+                    <button id="autoClickButton" data-tooltip="Toggle auto-clicker on/off. Costs 1 banked click per second." class="bg-green-700 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                        Auto-Clicker: Off
+                    </button>
+                    <button id="bankBoostButton" data-tooltip="Spend 50 banked clicks to double passive income for 60 seconds" class="bg-blue-700 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                        Bank Boost (50 Clicks)
+                    </button>
+                    <button id="hireCEOButton" data-tooltip="Spend 100 banked clicks to hire CEO for 2.5 minutes, providing bonus clicks on every manual click" class="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                        Hire CEO (100 Clicks)
+                    </button>
+                    <button id="bankInvestmentButton" data-tooltip="Spend 100 banked clicks for risky investment: 2x passive income for 30 seconds, but lose 20% of bank if interrupted by boss fight" class="bg-orange-700 hover:bg-orange-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                        Risky Investment (100 Clicks)
+                    </button>
+                    <button id="convertClicksButton" data-tooltip="Convert banked clicks to essence (1 click = 2 essence)" class="bg-teal-700 hover:bg-teal-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                        Convert to Essence
+                    </button>
+                </div>
+                 <p class="text-xs text-gray-500 mt-2">Cost: 1 click/second. Generates <span id="autoClickRate"></span> essence/second.</p>
+            </div>
+
+            <!-- Upgrades -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Permanent upgrades to boost your progress">Upgrades</h2>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span id="clickLabel">Click Power (Lv.0)</span>
+                        <button id="upgradeClick" data-tooltip="Increases essence gained per click by 10% per level" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (100 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="passiveLabel">Passive Income (Lv.0)</span>
+                        <button id="upgradePassive" data-tooltip="Increases passive essence income by 10% per level" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (200 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="bankLabel">Bank Capacity (Lv.0)</span>
+                        <button id="upgradeBank" data-tooltip="Increases bank capacity by 10% per level" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (150 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="autoLabel">Auto-Clicker (Lv.0)</span>
+                        <button id="upgradeAutoClick" data-tooltip="Increases auto-click rate by 10% per level" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (250 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="critChanceLabel">Critical Chance (Lv.0)</span>
+                        <button id="upgradeCritChance" data-tooltip="Increases critical hit chance by 5% per level" class="bg-orange-700 hover:bg-orange-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (300 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="critMultLabel">Critical Multiplier (Lv.0)</span>
+                        <button id="upgradeCritMult" data-tooltip="Increases critical hit damage multiplier by 0.5x per level" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (400 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="luckLabel">Luck (Lv.0)</span>
+                        <button id="upgradeLuck" data-tooltip="Increases critical hit chance by 5% per level" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (500 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="efficiencyLabel">Efficiency (Lv.0)</span>
+                        <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (600 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="regenerationLabel">Regeneration (Lv.0)</span>
+                        <button id="upgradeRegeneration" data-tooltip="Increases passive income rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (700 Ess)</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span id="timeCrystalLabel">Time Crystal (Lv.0)</span>
+                        <button id="upgradeTimeCrystal" data-tooltip="Increases offline progress cap by 30 minutes per level" class="bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (1000 Ess)</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Companions -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Summon companions for bonuses">Companions</h2>
+                <div id="companionsList" class="space-y-2 text-sm mb-4">
+                    <!-- Companions will be injected here -->
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span>Fire Sprite (1000 Ess)</span>
+                        <button id="summonFireSprite" data-tooltip="Summon Fire Sprite for +10% click power" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Water Nymph (2000 Ess)</span>
+                        <button id="summonWaterNymph" data-tooltip="Summon Water Nymph for +10% passive income" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Earth Golem (3000 Ess)</span>
+                        <button id="summonEarthGolem" data-tooltip="Summon Earth Golem for +10% bank capacity" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Air Spirit (4000 Ess)</span>
+                        <button id="summonAirSpirit" data-tooltip="Summon Air Spirit for +10% auto-click rate" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Shadow Imp (5000 Ess)</span>
+                        <button id="summonShadowImp" data-tooltip="Summon Shadow Imp for +5% critical chance" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relics -->
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Collected relics from boss fights">Relics</h2>
+                <div id="relicsList" class="space-y-2 text-sm">
+                    <!-- Relics will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ZONES = [
+            {
+                name: "Whispering Glade",
+                actionPrompt: "The air is thick with ancient magic. Gather its essence.",
+                challenges: [
+                    { id: 'gather_1', description: "Gather 100 Essence", type: 'essence', requirement: 100, completed: false },
+                    { id: 'gather_2', description: "Focus your power (Perform 50 clicks)", type: 'clicks', requirement: 50, completed: false }
+                ],
+                boss: {
+                    name: "Ancient Treant",
+                    hp: 50,
+                    timer: 15,
+                    flavorText: "The guardian of the glade awakens, its woody form groaning in protest of your presence. Strike it down before it drains your will!"
+                },
+                specialMechanic: {
+                    type: "debuff",
+                    name: "Mist Debuff",
+                    description: "20% chance per click to halve essence gain for 5 seconds",
+                    chance: 0.2,
+                    duration: 5000,
+                    effect: "half_click"
+                }
+            },
+            {
+                name: "Sunken Grotto",
+                actionPrompt: "Luminescent fungi cast an eerie glow. Harvest their potent energy.",
+                challenges: [
+                    { id: 'gather_3', description: "Gather 1,000 Essence", type: 'essence', requirement: 1000, completed: false },
+                    { id: 'gather_4', description: "Unlock deeper power (Perform 500 clicks)", type: 'clicks', requirement: 500, completed: false },
+                    { id: 'upgrade_1', description: "Enhance your focus (Reach Level 5)", type: 'level', requirement: 5, completed: false }
+                ],
+                boss: {
+                    name: "Abyssal Lurker",
+                    hp: 250,
+                    timer: 20,
+                    flavorText: "A creature of shimmering scales and too many eyes emerges from the depths! Its gaze is paralyzing. Act quickly!"
+                }
+            },
+            {
+                name: "Volcanic Caldera",
+                actionPrompt: "The ground trembles with raw power. Channel the heart of the mountain.",
+                challenges: [
+                    { id: 'gather_5', description: "Gather 25,000 Essence", type: 'essence', requirement: 25000, completed: false },
+                    { id: 'gather_6', description: "Endure the heat (Perform 2,000 clicks)", type: 'clicks', requirement: 2000, completed: false },
+                    { id: 'upgrade_2', description: "Master your abilities (Reach Level 10)", type: 'level', requirement: 10, completed: false }
+                ],
+                boss: {
+                    name: "Magma Elemental",
+                    hp: 1000,
+                    timer: 25,
+                    flavorText: "The very heart of the volcano takes form, a roaring inferno of molten rock and fury! Extinguish its rage before you are consumed!"
+                },
+                specialMechanic: {
+                    type: "mana",
+                    name: "Lava Mana",
+                    description: "Build mana with clicks for a zone-wide boost",
+                    maxMana: 100,
+                    manaPerClick: 1,
+                    boostMultiplier: 2,
+                    boostDuration: 10000
+                }
+            },
+             {
+                name: "Celestial Peak",
+                actionPrompt: "Starlight condenses into tangible energy. Weave it into your being.",
+                challenges: [
+                    { id: 'gather_7', description: "Gather 500,000 Essence", type: 'essence', requirement: 500000, completed: false },
+                    { id: 'upgrade_3', description: "Achieve enlightenment (Reach Level 15)", type: 'level', requirement: 15, completed: false },
+                    { id: 'passive_1', description: "Harness the stars passively (Gain 10,000 Essence passively)", type: 'passive', requirement: 10000, completed: false }
+                ],
+                boss: {
+                    name: "Aetheric Wyrm",
+                    hp: 5000,
+                    timer: 30,
+                    flavorText: "A serpent of pure starlight descends from the heavens, its form both beautiful and terrifying. Unmake this celestial guardian!"
+                }
+            },
+            {
+                name: "Void Abyss",
+                actionPrompt: "The emptiness calls. Draw power from the nothingness itself.",
+                challenges: [
+                    { id: 'gather_8', description: "Gather 2,000,000 Essence", type: 'essence', requirement: 2000000, completed: false },
+                    { id: 'gather_9', description: "Conquer the void (Perform 10,000 clicks)", type: 'clicks', requirement: 10000, completed: false },
+                    { id: 'upgrade_4', description: "Transcend reality (Reach Level 25)", type: 'level', requirement: 25, completed: false },
+                    { id: 'passive_2', description: "Embrace the void passively (Gain 50,000 Essence passively)", type: 'passive', requirement: 50000, completed: false }
+                ],
+                boss: {
+                    name: "Void Devourer",
+                    hp: 25000,
+                    timer: 35,
+                    flavorText: "A swirling vortex of absolute darkness manifests, hungry for existence itself. Defy the inevitable!"
+                }
+            },
+            {
+                name: "Eternal Forge",
+                actionPrompt: "Flames of creation burn eternal. Shape destiny with molten will.",
+                challenges: [
+                    { id: 'gather_10', description: "Gather 10,000,000 Essence", type: 'essence', requirement: 10000000, completed: false },
+                    { id: 'gather_11', description: "Forge your legend (Perform 50,000 clicks)", type: 'clicks', requirement: 50000, completed: false },
+                    { id: 'upgrade_5', description: "Become the smith (Reach Level 35)", type: 'level', requirement: 35, completed: false }
+                ],
+                boss: {
+                    name: "Primordial Smith",
+                    hp: 100000,
+                    timer: 40,
+                    flavorText: "The first craftsman of the universe wields hammers forged from the bones of dead gods. Prove your worth!"
+                }
+            },
+            {
+                name: "Dream Realm",
+                actionPrompt: "Reality bends in slumber. Harvest the power of imagination.",
+                challenges: [
+                    { id: 'gather_12', description: "Gather 50,000,000 Essence", type: 'essence', requirement: 50000000, completed: false },
+                    { id: 'gather_13', description: "Dream big (Perform 200,000 clicks)", type: 'clicks', requirement: 200000, completed: false },
+                    { id: 'upgrade_6', description: "Master the subconscious (Reach Level 45)", type: 'level', requirement: 45, completed: false }
+                ],
+                boss: {
+                    name: "Nightmare Weaver",
+                    hp: 500000,
+                    timer: 45,
+                    flavorText: "A being of pure nightmare spins webs of terror and delight. Wake from this dream before it consumes you!"
+                }
+            },
+            {
+                name: "Nexus of Power",
+                actionPrompt: "All realities converge. Claim the ultimate power.",
+                challenges: [
+                    { id: 'gather_14', description: "Gather 250,000,000 Essence", type: 'essence', requirement: 250000000, completed: false },
+                    { id: 'gather_15', description: "Unite the realms (Perform 1,000,000 clicks)", type: 'clicks', requirement: 1000000, completed: false },
+                    { id: 'upgrade_7', description: "Ascend to godhood (Reach Level 55)", type: 'level', requirement: 55, completed: false }
+                ],
+                boss: {
+                    name: "Reality Shatterer",
+                    hp: 2000000,
+                    timer: 50,
+                    flavorText: "The final guardian, a being that exists in all times and places simultaneously. Break the cycle!"
+                }
+            },
+            {
+                name: "Etherial Abyss",
+                actionPrompt: "Dive into the void between worlds. Harness the raw ether.",
+                challenges: [
+                    { id: 'gather_16', description: "Gather 1,500,000,000 Essence", type: 'essence', requirement: 1500000000, completed: false },
+                    { id: 'gather_17', description: "Pierce the veil (Perform 5,000,000 clicks)", type: 'clicks', requirement: 5000000, completed: false },
+                    { id: 'upgrade_8', description: "Become ethereal (Reach Level 65)", type: 'level', requirement: 65, completed: false },
+                    { id: 'passive_3', description: "Ether flows passively (Gain 500,000 Essence passively)", type: 'passive', requirement: 500000, completed: false }
+                ],
+                boss: {
+                    name: "Void Weaver",
+                    hp: 10000000,
+                    timer: 55,
+                    flavorText: "A master of nothingness, weaving threads of ether into deadly patterns. Unravel its design!"
+                }
+            },
+            {
+                name: "Crystal Spire",
+                actionPrompt: "Ascend the towering crystal formations. Channel their perfect geometry.",
+                challenges: [
+                    { id: 'gather_18', description: "Gather 10,000,000,000 Essence", type: 'essence', requirement: 10000000000, completed: false },
+                    { id: 'gather_19', description: "Shape the crystals (Perform 25,000,000 clicks)", type: 'clicks', requirement: 25000000, completed: false },
+                    { id: 'upgrade_9', description: "Attune to harmony (Reach Level 75)", type: 'level', requirement: 75, completed: false }
+                ],
+                boss: {
+                    name: "Crystal Guardian",
+                    hp: 50000000,
+                    timer: 60,
+                    flavorText: "A colossal being of living crystal, its facets refracting deadly beams of light. Shatter its form!"
+                }
+            },
+            {
+                name: "Storm Citadel",
+                actionPrompt: "Weather the eternal tempest. Command the fury of the skies.",
+                challenges: [
+                    { id: 'gather_20', description: "Gather 75,000,000,000 Essence", type: 'essence', requirement: 75000000000, completed: false },
+                    { id: 'gather_21', description: "Ride the lightning (Perform 100,000,000 clicks)", type: 'clicks', requirement: 100000000, completed: false },
+                    { id: 'upgrade_10', description: "Harness the storm (Reach Level 85)", type: 'level', requirement: 85, completed: false },
+                    { id: 'passive_4', description: "Thunder rumbles passively (Gain 2,500,000 Essence passively)", type: 'passive', requirement: 2500000, completed: false }
+                ],
+                boss: {
+                    name: "Thunder Lord",
+                    hp: 250000000,
+                    timer: 65,
+                    flavorText: "The embodiment of electrical fury, crackling with power that could level mountains. Ground its wrath!"
+                }
+            },
+            {
+                name: "Frostbound Peaks",
+                actionPrompt: "Conquer the icy summits. Forge strength from eternal winter.",
+                challenges: [
+                    { id: 'gather_22', description: "Gather 500,000,000,000 Essence", type: 'essence', requirement: 500000000000, completed: false },
+                    { id: 'gather_23', description: "Shatter the ice (Perform 500,000,000 clicks)", type: 'clicks', requirement: 500000000, completed: false },
+                    { id: 'upgrade_11', description: "Embrace the cold (Reach Level 95)", type: 'level', requirement: 95, completed: false }
+                ],
+                boss: {
+                    name: "Ice Titan",
+                    hp: 1000000000,
+                    timer: 70,
+                    flavorText: "A giant of frozen fury, its breath can freeze souls. Melt its icy heart!"
+                }
+            },
+            {
+                name: "Shadow Realm",
+                actionPrompt: "Navigate the darkness. Master the arts of stealth and shadow.",
+                challenges: [
+                    { id: 'gather_24', description: "Gather 3,000,000,000,000 Essence", type: 'essence', requirement: 3000000000000, completed: false },
+                    { id: 'gather_25', description: "Embrace the shadows (Perform 2,500,000,000 clicks)", type: 'clicks', requirement: 2500000000, completed: false },
+                    { id: 'upgrade_12', description: "Become one with darkness (Reach Level 105)", type: 'level', requirement: 105, completed: false },
+                    { id: 'passive_5', description: "Shadows whisper passively (Gain 10,000,000 Essence passively)", type: 'passive', requirement: 10000000, completed: false }
+                ],
+                boss: {
+                    name: "Shadow Monarch",
+                    hp: 5000000000,
+                    timer: 75,
+                    flavorText: "A ruler of darkness, commanding legions of shadow creatures. Illuminate the void!"
+                }
+            },
+            {
+                name: "Radiant Sanctuary",
+                actionPrompt: "Bask in holy light. Purify your essence with divine energy.",
+                challenges: [
+                    { id: 'gather_26', description: "Gather 20,000,000,000,000 Essence", type: 'essence', requirement: 20000000000000, completed: false },
+                    { id: 'gather_27', description: "Spread the light (Perform 10,000,000,000 clicks)", type: 'clicks', requirement: 10000000000, completed: false },
+                    { id: 'upgrade_13', description: "Achieve radiance (Reach Level 115)", type: 'level', requirement: 115, completed: false }
+                ],
+                boss: {
+                    name: "Light Seraph",
+                    hp: 25000000000,
+                    timer: 80,
+                    flavorText: "A being of pure light, its radiance can blind and burn. Dim its eternal glow!"
+                }
+            },
+            {
+                name: "Chaos Nexus",
+                actionPrompt: "Enter the heart of disorder. Bend chaos to your will.",
+                challenges: [
+                    { id: 'gather_28', description: "Gather 150,000,000,000,000 Essence", type: 'essence', requirement: 150000000000000, completed: false },
+                    { id: 'gather_29', description: "Master the chaos (Perform 50,000,000,000 clicks)", type: 'clicks', requirement: 50000000000, completed: false },
+                    { id: 'upgrade_14', description: "Control the uncontrollable (Reach Level 125)", type: 'level', requirement: 125, completed: false },
+                    { id: 'passive_6', description: "Chaos swirls passively (Gain 50,000,000 Essence passively)", type: 'passive', requirement: 50000000, completed: false }
+                ],
+                boss: {
+                    name: "Chaos Bringer",
+                    hp: 100000000000,
+                    timer: 85,
+                    flavorText: "The source of all disorder, a swirling mass of conflicting energies. Impose order upon chaos!"
+                }
+            },
+            {
+                name: "Time's End",
+                actionPrompt: "Witness the final moments. Rewrite the flow of time itself.",
+                challenges: [
+                    { id: 'gather_30', description: "Gather 1,000,000,000,000,000 Essence", type: 'essence', requirement: 1000000000000000, completed: false },
+                    { id: 'gather_31', description: "Rewind existence (Perform 250,000,000,000 clicks)", type: 'clicks', requirement: 250000000000, completed: false },
+                    { id: 'upgrade_15', description: "Transcend time (Reach Level 135)", type: 'level', requirement: 135, completed: false }
+                ],
+                boss: {
+                    name: "Chronos Prime",
+                    hp: 500000000000,
+                    timer: 90,
+                    flavorText: "The ultimate timekeeper, bending ages to its whim. Stop the clock forever!"
+                }
+            },
+            {
+                name: "Infinite Void",
+                actionPrompt: "Step into eternity. Become one with the infinite.",
+                challenges: [
+                    { id: 'gather_32', description: "Gather 10,000,000,000,000,000 Essence", type: 'essence', requirement: 10000000000000000, completed: false },
+                    { id: 'gather_33', description: "Embrace infinity (Perform 1,000,000,000,000 clicks)", type: 'clicks', requirement: 1000000000000, completed: false },
+                    { id: 'upgrade_16', description: "Achieve infinity (Reach Level 145)", type: 'level', requirement: 145, completed: false },
+                    { id: 'passive_7', description: "Infinity expands passively (Gain 250,000,000 Essence passively)", type: 'passive', requirement: 250000000, completed: false }
+                ],
+                boss: {
+                    name: "Infinity Devourer",
+                    hp: 2500000000000,
+                    timer: 95,
+                    flavorText: "A being that consumes infinities, growing stronger with each devoured universe. End its endless hunger!"
+                }
+            },
+            {
+                name: "Ultimate Pinnacle",
+                actionPrompt: "Reach the absolute peak. Claim your place among the gods.",
+                challenges: [
+                    { id: 'gather_34', description: "Gather 100,000,000,000,000,000 Essence", type: 'essence', requirement: 100000000000000000, completed: false },
+                    { id: 'gather_35', description: "Ascend to godhood (Perform 5,000,000,000,000 clicks)", type: 'clicks', requirement: 5000000000000, completed: false },
+                    { id: 'upgrade_17', description: "Become ultimate (Reach Level 155)", type: 'level', requirement: 155, completed: false }
+                ],
+                boss: {
+                    name: "God Emperor",
+                    hp: 10000000000000,
+                    timer: 100,
+                    flavorText: "The supreme ruler of all existence, wielding power beyond comprehension. Dethrone the emperor!"
+                }
+            }
+        ];
+
+        const TITLES = [
+            { level: 1, name: "Neophyte" },
+            { level: 5, name: "Acolyte" },
+            { level: 10, name: "Mage" },
+            { level: 15, name: "Archmage" },
+            { level: 20, name: "Ascendant" },
+            { level: 25, name: "Transcendent" },
+            { level: 30, name: "Demi-God" },
+            { level: 35, name: "Deity" },
+            { level: 40, name: "God" },
+            { level: 45, name: "Supreme Being" },
+            { level: 50, name: "Overlord" },
+            { level: 55, name: "Cosmic Entity" },
+            { level: 60, name: "Reality Weaver" },
+            { level: 70, name: "Omnipotent" },
+            { level: 80, name: "Transcendent" },
+            { level: 90, name: "Supreme Entity" },
+            { level: 100, name: "Cosmic Overlord" },
+            { level: 110, name: "Dimensional Master" },
+            { level: 120, name: "Reality Bender" },
+            { level: 130, name: "Infinite Being" },
+            { level: 140, name: "Eternal Sovereign" },
+            { level: 150, name: "Ultimate Existence" },
+            { level: 160, name: "Absolute Dominator" },
+            { level: 170, name: "Primordial Force" },
+            { level: 180, name: "Universal Emperor" },
+            { level: 190, name: "Multiversal Lord" },
+            { level: 200, name: "Omniscient Creator" },
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: 'first_click', name: 'First Steps', description: 'Perform your first click', condition: () => gameState.totalClicks >= 1 },
+            { id: 'thousand_clicks', name: 'Click Master', description: 'Perform 1,000 clicks', condition: () => gameState.totalClicks >= 1000 },
+            { id: 'million_essence', name: 'Essence Hoarder', description: 'Gather 1,000,000 Essence', condition: () => gameState.essence >= 1000000 },
+            { id: 'level_10', name: 'Rising Star', description: 'Reach Level 10', condition: () => gameState.level >= 10 },
+            { id: 'all_zones', name: 'World Conqueror', description: 'Complete all zones', condition: () => gameState.currentZoneIndex >= ZONES.length },
+            { id: 'passive_master', name: 'Idle Champion', description: 'Gain 100,000 Essence passively', condition: () => gameState.totalPassiveGained >= 100000 },
+            { id: 'level_100', name: 'Century Milestone', description: 'Reach Level 100', condition: () => gameState.level >= 100 },
+            { id: 'total_essence_1e12', name: 'Essence Billionaire', description: 'Gather 1,000,000,000,000 Essence', condition: () => gameState.essence >= 1000000000000 },
+            { id: 'zone_10', name: 'Etherial Conqueror', description: 'Complete Etherial Abyss', condition: () => gameState.currentZoneIndex >= 9 },
+            { id: 'zone_15', name: 'Chaos Master', description: 'Complete Chaos Nexus', condition: () => gameState.currentZoneIndex >= 16 },
+            { id: 'zone_20', name: 'Ultimate Victor', description: 'Complete all zones', condition: () => gameState.currentZoneIndex >= 20 },
+            { id: 'crit_master', name: 'Critical Expert', description: 'Upgrade Critical Chance to Level 10', condition: () => gameState.critChanceUpgradeLevel >= 10 },
+            { id: 'prestige_1', name: 'First Rebirth', description: 'Prestige for the first time', condition: () => gameState.prestigePoints >= 1 },
+            { id: 'speed_zone_10', name: 'Speed Conqueror', description: 'Complete Zone 10 in under 1 hour', condition: () => gameState.currentZoneIndex >= 9 && (Date.now() - gameState.startTime) < 3600000 },
+            { id: 'relic_master', name: 'Relic Collector', description: 'Collect 5 relics', condition: () => gameState.relics.length >= 5 },
+            { id: 'infinite_10', name: 'Infinite Explorer', description: 'Complete 10 infinite zones', condition: () => gameState.infiniteMode && gameState.currentZoneIndex >= ZONES.length + 9 },
+            { id: 'streak_7', name: 'Dedicated Player', description: 'Maintain a 7-day login streak', condition: () => gameState.streak >= 7 },
+        ];
+
+        const EVENTS = [
+            { id: 'essence_boost', name: 'Essence Boost', description: 'Doubles essence gain from clicks', duration: 30000, effect: 'double_click', type: 'positive' },
+            { id: 'passive_surge', name: 'Passive Surge', description: 'Triples passive income', duration: 60000, effect: 'triple_passive', type: 'positive' },
+            { id: 'crit_frenzy', name: 'Critical Frenzy', description: '100% critical hit chance', duration: 20000, effect: 'max_crit', type: 'positive' },
+            { id: 'cost_reduction', name: 'Bargain Day', description: 'Halves upgrade costs', duration: 45000, effect: 'half_costs', type: 'positive' },
+            { id: 'essence_drain', name: 'Essence Drain', description: 'Halves passive income for 30 seconds', duration: 30000, effect: 'half_passive', type: 'negative' },
+            { id: 'click_penalty', name: 'Click Fatigue', description: 'Reduces click power by 25% for 20 seconds', duration: 20000, effect: 'quarter_click', type: 'negative' },
+            { id: 'essence_storm', name: 'Essence Storm', description: 'Doubles essence gain but attracts a mini-boss in 10 seconds', duration: 30000, effect: 'double_click', type: 'chained', chain: 'mini_boss' },
+        ];
+
+        const COMPANIONS = [
+            { id: 'fire_sprite', name: 'Fire Sprite', description: '+10% click power', cost: 1000, effect: 'click_mult', value: 1.1, unlockReq: { level: 5 } },
+            { id: 'water_nymph', name: 'Water Nymph', description: '+10% passive income', cost: 2000, effect: 'passive_mult', value: 1.1, unlockReq: { level: 10 } },
+            { id: 'earth_golem', name: 'Earth Golem', description: '+10% bank capacity', cost: 3000, effect: 'bank_mult', value: 1.1, unlockReq: { level: 15 } },
+            { id: 'air_spirit', name: 'Air Spirit', description: '+10% auto-click rate', cost: 4000, effect: 'auto_mult', value: 1.1, unlockReq: { level: 20 } },
+            { id: 'shadow_imp', name: 'Shadow Imp', description: '+5% critical chance', cost: 5000, effect: 'crit_chance_add', value: 0.05, unlockReq: { level: 25 } },
+        ];
+
+        const RELICS = [
+            { id: 'crit_relic', name: 'Crystal of Precision', description: '+5% critical chance', effect: 'crit_chance_add', value: 0.05 },
+            { id: 'click_relic', name: 'Orb of Power', description: '+10% click power', effect: 'click_mult', value: 1.1 },
+            { id: 'passive_relic', name: 'Amulet of Flow', description: '+10% passive income', effect: 'passive_mult', value: 1.1 },
+            { id: 'luck_relic', name: 'Charm of Fortune', description: '+10% luck', effect: 'luck_mult', value: 1.1 },
+            { id: 'efficiency_relic', name: 'Tome of Thrift', description: '+5% efficiency', effect: 'efficiency_mult', value: 1.05 },
+        ];
+
+        let gameState = {
+            essence: 0,
+            level: 1,
+            xp: 0,
+            xpToNextLevel: 100,
+            totalClicks: 0,
+            bankedClicks: 0,
+            isBankMode: false,
+            isAutoClickerActive: false,
+            autoClickCostPerSecond: 1,
+            currentZoneIndex: 0,
+            zones: JSON.parse(JSON.stringify(ZONES)), // Deep copy
+            passiveIncomeRate: 0,
+            lastUpdateTime: Date.now(),
+            clickMultiplier: 1,
+            passiveMultiplier: 1,
+            totalPassiveGained: 0,
+            bankMultiplier: 1,
+            autoClickMultiplier: 1,
+            achievements: [],
+            accumulatedPassive: 0,
+            lastPassiveLogTime: Date.now(),
+            clickUpgradeLevel: 0,
+            passiveUpgradeLevel: 0,
+            bankUpgradeLevel: 0,
+            autoClickUpgradeLevel: 0,
+            critChanceUpgradeLevel: 0,
+            critMultUpgradeLevel: 0,
+            luckUpgradeLevel: 0,
+            efficiencyUpgradeLevel: 0,
+            regenerationUpgradeLevel: 0,
+            critChance: 0,
+            critMultiplier: 2,
+            prestigePoints: 0,
+            prestigeMultiplier: 1,
+            luckMultiplier: 1,
+            efficiencyMultiplier: 1,
+            regenerationMultiplier: 1,
+            xpMultiplier: 1,
+            accumulatedBankInterest: 0,
+            lastBankLogTime: Date.now(),
+            passiveBoostActive: false,
+            passiveBoostEndTime: 0,
+            ceoActive: false,
+            ceoEndTime: 0,
+            lastCEOLogTime: Date.now(),
+            activeEvents: [],
+            companions: [],
+            relics: [],
+            currentDebuff: null,
+            debuffEndTime: 0,
+            mana: 0,
+            manaMax: 0,
+            manaBoostActive: false,
+            manaBoostEndTime: 0,
+            investmentActive: false,
+            investmentEndTime: 0,
+            infiniteMode: false,
+            startTime: Date.now(),
+            streak: 0,
+            lastLoginDate: new Date().toDateString(),
+            timeCrystalUpgradeLevel: 0,
+        };
+        
+        // DOM Elements
+        const DOMElements = {
+            chatLog: document.getElementById('chatLog'),
+            playerTitle: document.getElementById('playerTitle'),
+            playerLevel: document.getElementById('playerLevel'),
+            playerEssence: document.getElementById('playerEssence'),
+            essencePerClick: document.getElementById('essencePerClick'),
+            playerAttack: document.getElementById('playerAttack'),
+            passiveIncome: document.getElementById('passiveIncome'),
+            playerCritChance: document.getElementById('playerCritChance'),
+            playerCritMult: document.getElementById('playerCritMult'),
+            zoneName: document.getElementById('zoneName'),
+            actionPrompt: document.getElementById('actionPrompt'),
+            actionButton: document.getElementById('actionButton'),
+            actionButtonText: document.getElementById('actionButtonText'),
+            questList: document.getElementById('questList'),
+            bankModeToggle: document.getElementById('bankModeToggle'),
+            bankedClicks: document.getElementById('bankedClicks'),
+            bankSize: document.getElementById('bankSize'),
+            autoClickButton: document.getElementById('autoClickButton'),
+            autoClickCost: document.getElementById('autoClickCost'),
+            autoClickRate: document.getElementById('autoClickRate'),
+            bankBoostButton: document.getElementById('bankBoostButton'),
+            hireCEOButton: document.getElementById('hireCEOButton'),
+            bankInvestmentButton: document.getElementById('bankInvestmentButton'),
+            convertClicksButton: document.getElementById('convertClicksButton'),
+            bossContainer: document.getElementById('bossContainer'),
+            clickFeedbackContainer: document.getElementById('click-feedback-container'),
+            upgradeClick: document.getElementById('upgradeClick'),
+            upgradePassive: document.getElementById('upgradePassive'),
+            upgradeBank: document.getElementById('upgradeBank'),
+            upgradeAutoClick: document.getElementById('upgradeAutoClick'),
+            upgradeCritChance: document.getElementById('upgradeCritChance'),
+            upgradeCritMult: document.getElementById('upgradeCritMult'),
+            clickLabel: document.getElementById('clickLabel'),
+            passiveLabel: document.getElementById('passiveLabel'),
+            bankLabel: document.getElementById('bankLabel'),
+            autoLabel: document.getElementById('autoLabel'),
+            critChanceLabel: document.getElementById('critChanceLabel'),
+            critMultLabel: document.getElementById('critMultLabel'),
+            upgradeLuck: document.getElementById('upgradeLuck'),
+            upgradeEfficiency: document.getElementById('upgradeEfficiency'),
+            upgradeRegeneration: document.getElementById('upgradeRegeneration'),
+            upgradeTimeCrystal: document.getElementById('upgradeTimeCrystal'),
+            timeCrystalLabel: document.getElementById('timeCrystalLabel'),
+            luckLabel: document.getElementById('luckLabel'),
+            efficiencyLabel: document.getElementById('efficiencyLabel'),
+            regenerationLabel: document.getElementById('regenerationLabel'),
+            prestigeButton: document.getElementById('prestigeButton'),
+            prestigePoints: document.getElementById('prestigePoints'),
+            exportSaveButton: document.getElementById('exportSaveButton'),
+            achievementsList: document.getElementById('achievementsList'),
+            activeEventsList: document.getElementById('activeEventsList'),
+            companionsList: document.getElementById('companionsList'),
+            relicsList: document.getElementById('relicsList'),
+            summonFireSprite: document.getElementById('summonFireSprite'),
+            summonWaterNymph: document.getElementById('summonWaterNymph'),
+            summonEarthGolem: document.getElementById('summonEarthGolem'),
+            summonAirSpirit: document.getElementById('summonAirSpirit'),
+            summonShadowImp: document.getElementById('summonShadowImp'),
+            specialMechanicDisplay: document.getElementById('specialMechanicDisplay')
+        };
+        
+        let bossState = {
+            active: false,
+            hp: 0,
+            maxHp: 0,
+            timer: null,
+            timeLeft: 0,
+            isMiniBoss: false,
+        };
+
+        // --- Core Game Logic ---
+        
+        function handleActionClick() {
+            if (bossState.active) {
+                handleBossClick();
+                return;
+            }
+
+            DOMElements.actionButton.classList.remove('shake');
+            void DOMElements.actionButton.offsetWidth; // Trigger reflow
+            DOMElements.actionButton.classList.add('shake');
+
+            gameState.totalClicks++;
+
+            if (gameState.isBankMode) {
+                if (gameState.bankedClicks < getBankSize()) {
+                    gameState.bankedClicks++;
+                    showClickFeedback('+1 Click', 'text-white');
+                } else {
+                    logMessage("Your bank is full!", "system-warn");
+                }
+            } else {
+                // Apply special mechanic
+                const zone = gameState.zones[gameState.currentZoneIndex];
+                if (zone.specialMechanic) {
+                    if (zone.specialMechanic.type === 'debuff') {
+                        if (Math.random() < zone.specialMechanic.chance) {
+                            gameState.currentDebuff = zone.specialMechanic;
+                            gameState.debuffEndTime = Date.now() + zone.specialMechanic.duration;
+                            logMessage(`${zone.specialMechanic.name} activated! Essence gain halved for ${zone.specialMechanic.duration / 1000} seconds.`, "system-warn");
+                        }
+                    } else if (zone.specialMechanic.type === 'mana') {
+                        gameState.mana += zone.specialMechanic.manaPerClick;
+                        if (gameState.mana >= gameState.manaMax && !gameState.manaBoostActive) {
+                            gameState.manaBoostActive = true;
+                            gameState.manaBoostEndTime = Date.now() + zone.specialMechanic.boostDuration;
+                            gameState.mana = 0; // Reset mana
+                            logMessage(`${zone.specialMechanic.name} full! Zone-wide boost activated for ${zone.specialMechanic.boostDuration / 1000} seconds.`, "system-ok");
+                        }
+                    }
+                }
+
+                let essenceGained = getEssencePerClick();
+                // Apply debuff
+                if (gameState.currentDebuff && Date.now() < gameState.debuffEndTime) {
+                    essenceGained = Math.floor(essenceGained / 2);
+                }
+                // Apply mana boost
+                if (gameState.manaBoostActive && Date.now() < gameState.manaBoostEndTime) {
+                    essenceGained = Math.floor(essenceGained * zone.specialMechanic.boostMultiplier);
+                }
+                let isCrit = false;
+                if (Math.random() < gameState.critChance) {
+                    essenceGained = Math.floor(essenceGained * gameState.critMultiplier);
+                    isCrit = true;
+                }
+                gameState.essence += essenceGained;
+                gainXP(2);
+                showClickFeedback(`+${formatNumber(essenceGained)}${isCrit ? ' CRIT!' : ''}`, isCrit ? 'text-yellow-400' : 'text-white');
+
+                // CEO Bonus
+                if (gameState.ceoActive) {
+                    let bonusEssence = getEssencePerClick();
+                    // Apply debuff and boost to bonus too
+                    if (gameState.currentDebuff && Date.now() < gameState.debuffEndTime) {
+                        bonusEssence = Math.floor(bonusEssence / 2);
+                    }
+                    if (gameState.manaBoostActive && Date.now() < gameState.manaBoostEndTime) {
+                        bonusEssence = Math.floor(bonusEssence * zone.specialMechanic.boostMultiplier);
+                    }
+                    gameState.essence += bonusEssence;
+                    gainXP(1);
+                    showClickFeedback(`+${formatNumber(bonusEssence)} (CEO Bonus)`, 'text-yellow-400');
+                    const flavorTexts = [
+                        "The CEO whispered sweet nothings to the essence, coaxing it forth.",
+                        "With a snap of his fingers, the CEO summoned extra power from the void.",
+                        "The CEO's golden watch gleamed as he boosted your click with corporate magic.",
+                        "In the boardroom of reality, the CEO approved your bonus essence.",
+                        "The CEO leveraged your click for maximum shareholder value... in essence."
+                    ];
+                    const randomFlavor = flavorTexts[Math.floor(Math.random() * flavorTexts.length)];
+                    logMessage(`CEO of Money helped you earn ${formatNumber(bonusEssence)} extra essence! "${randomFlavor}"`, "system-ok");
+                }
+            }
+
+            updateUI();
+            checkQuestCompletion();
+        }
+
+        function handleBossClick() {
+            let damage = Math.floor(getEssencePerClick() / 50) + 1;
+            bossState.hp -= damage;
+            showClickFeedback(`+${damage} Damage`, 'text-red-400');
+            DOMElements.actionButton.classList.remove('shake');
+            void DOMElements.actionButton.offsetWidth; // Trigger reflow
+            DOMElements.actionButton.classList.add('shake');
+
+            // CEO Bonus for boss
+            if (gameState.ceoActive) {
+                let bonusDamage = Math.floor(getEssencePerClick() / 50) + 1;
+                bossState.hp -= bonusDamage;
+                showClickFeedback(`+${bonusDamage} (CEO Bonus)`, 'text-yellow-400');
+                const bossFlavorTexts = [
+                    "The CEO called in artillery strikes on the boss!",
+                    "With a hostile takeover bid, the CEO weakened the foe.",
+                    "The CEO's board meeting decided the boss's fate.",
+                    "Corporate synergy amplified your attack!",
+                    "The CEO leveraged the boss's weaknesses for maximum damage."
+                ];
+                const randomFlavor = bossFlavorTexts[Math.floor(Math.random() * bossFlavorTexts.length)];
+                logMessage(`CEO of Money helped you deal ${bonusDamage} extra damage! "${randomFlavor}"`, "system-ok");
+            }
+
+            const bossHpElement = document.getElementById('bossHp');
+            if (bossHpElement) bossHpElement.textContent = `${formatNumber(bossState.hp)} / ${formatNumber(bossState.maxHp)}`;
+
+            if (bossState.hp <= 0) {
+                winBossFight();
+            }
+        }
+
+        function toggleBankMode() {
+            if (bossState.active) {
+                DOMElements.bankModeToggle.checked = false;
+                logMessage("Cannot access bank mode during boss fight.", "system-warn");
+                return;
+            }
+            gameState.isBankMode = DOMElements.bankModeToggle.checked;
+            // Remove all color classes first
+            DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+            if (gameState.isBankMode) {
+                logMessage("Bank mode activated. Clicks are now stored.", "system-ok");
+                DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+                DOMElements.actionButtonText.textContent = "Store";
+            } else {
+                logMessage("Bank mode deactivated. Clicks now generate Essence.", "system");
+                DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+                DOMElements.actionButtonText.textContent = "Gather";
+            }
+            updateUI();
+        }
+
+
+        function useBankBoost() {
+            if (gameState.bankedClicks < 50 || gameState.passiveBoostActive) return;
+            gameState.bankedClicks -= 50;
+            gameState.passiveBoostActive = true;
+            gameState.passiveBoostEndTime = Date.now() + 60000;
+            logMessage("Bank Boost activated! Passive income doubled for 60 seconds.", "system-ok");
+            updateUI();
+        }
+
+        function hireCEO() {
+            if (gameState.bankedClicks < 100 || gameState.ceoActive) return;
+            gameState.bankedClicks -= 100;
+            gameState.ceoActive = true;
+            gameState.ceoEndTime = Date.now() + 150000; // 2.5 minutes
+            gameState.activeEvents.push({
+                id: 'ceo_active',
+                name: 'CEO of Money',
+                description: 'Bonus clicks on every manual click',
+                startTime: Date.now(),
+                endTime: Date.now() + 150000
+            });
+            logMessage("Hired CEO of Money! Bonus clicks activated for 2.5 minutes.", "system-ok");
+            updateUI();
+        }
+
+        function useBankInvestment() {
+            if (gameState.bankedClicks < 100 || gameState.investmentActive) return;
+            gameState.bankedClicks -= 100;
+            gameState.investmentActive = true;
+            gameState.investmentEndTime = Date.now() + 30000; // 30 seconds
+            logMessage("Risky investment activated! Passive income doubled for 30 seconds. Beware of interruptions!", "system-ok");
+            updateUI();
+        }
+
+        function convertClicksToEssence() {
+            if (gameState.bankedClicks < 1) return;
+            const clicksUsed = gameState.bankedClicks;
+            const essenceGained = clicksUsed * 2;
+            gameState.essence += essenceGained;
+            gameState.bankedClicks = 0;
+            logMessage(`Converted ${formatNumber(clicksUsed)} banked clicks to ${formatNumber(essenceGained)} essence!`, "system-ok");
+            updateUI();
+        }
+
+        function toggleAutoClicker() {
+            gameState.isAutoClickerActive = !gameState.isAutoClickerActive;
+            if (gameState.isAutoClickerActive) {
+                logMessage("Auto-clicker activated.", "system-ok");
+            } else {
+                logMessage("Auto-clicker deactivated.", "system");
+            }
+            updateUI();
+        }
+
+        function checkQuestCompletion(allowBossTrigger = true) {
+            if (gameState.currentZoneIndex >= gameState.zones.length) return;
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            let allCompleted = true;
+
+            zone.challenges.forEach(challenge => {
+                if (challenge.completed) return;
+
+                let isCompleted = false;
+                switch (challenge.type) {
+                    case 'essence':
+                        if (gameState.essence >= challenge.requirement) isCompleted = true;
+                        break;
+                    case 'clicks':
+                        if (gameState.totalClicks >= challenge.requirement) isCompleted = true;
+                        break;
+                    case 'level':
+                           if (gameState.level >= challenge.requirement) isCompleted = true;
+                        break;
+                    case 'passive':
+                        if (gameState.totalPassiveGained >= challenge.requirement) isCompleted = true;
+                        break;
+                }
+
+                if (isCompleted) {
+                    challenge.completed = true;
+                    logMessage(`Objective Complete: ${challenge.description}`, "quest");
+                }
+            });
+
+            zone.challenges.forEach(c => {
+                if (!c.completed) allCompleted = false;
+            });
+
+            if (allCompleted && !bossState.active && !gameState.isBankMode && allowBossTrigger) {
+                startBossFight();
+            }
+
+            updateQuestList();
+        }
+
+        function startBossFight() {
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            const boss = zone.boss;
+            bossState.active = true;
+            bossState.hp = boss.hp;
+            bossState.maxHp = boss.hp;
+            bossState.timeLeft = boss.timer;
+            bossState.isMiniBoss = false;
+
+            logMessage(`A powerful foe appears! The ${boss.name} blocks your path!`, "danger");
+            
+            DOMElements.bossContainer.innerHTML = `
+                <div class="fade-in w-full">
+                    <h3 class="font-cinzel text-4xl font-bold text-red-300 drop-shadow-lg">${boss.name}</h3>
+                    <p class="text-red-200 mt-2 mb-4">${boss.flavorText}</p>
+                    <p id="bossHp" class="text-2xl font-bold text-white">${formatNumber(bossState.hp)} / ${formatNumber(bossState.maxHp)}</p>
+                    <div class="w-full bg-gray-700 rounded-full h-4 mt-4 border-2 border-black/50">
+                        <div id="bossTimerBar" class="bg-yellow-400 h-full rounded-full" style="width: 100%"></div>
+                    </div>
+                    <p id="bossTimeLeft" class="text-lg font-bold mt-2">${bossState.timeLeft}s remaining</p>
+                </div>
+            `;
+            DOMElements.bossContainer.classList.remove('hidden', 'absolute', 'inset-0');
+            DOMElements.bossContainer.classList.add('flex');
+            DOMElements.zoneName.style.display = 'none';
+            DOMElements.actionPrompt.style.display = 'none';
+            DOMElements.actionButton.classList.remove('h-32');
+            DOMElements.actionButton.classList.add('h-20');
+            DOMElements.actionButton.style.height = '5rem';
+
+            gameState.isBankMode = false;
+            DOMElements.bankModeToggle.checked = false;
+            // Check investment risk
+            if (gameState.investmentActive) {
+                const loss = Math.floor(gameState.bankedClicks * 0.2);
+                gameState.bankedClicks -= loss;
+                gameState.investmentActive = false;
+                logMessage(`Investment interrupted! Lost ${formatNumber(loss)} banked clicks.`, "system-warn");
+            }
+            DOMElements.actionButtonText.textContent = "ATTACK!";
+            DOMElements.actionButton.classList.add('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+            DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+
+
+            bossState.timer = setInterval(() => {
+                bossState.timeLeft--;
+                const timerBar = document.getElementById('bossTimerBar');
+                const timeLeftDisplay = document.getElementById('bossTimeLeft');
+
+                if (timerBar) timerBar.style.width = `${(bossState.timeLeft / boss.timer) * 100}%`;
+                if (timeLeftDisplay) timeLeftDisplay.textContent = `${bossState.timeLeft}s remaining`;
+
+                if (bossState.timeLeft <= 0) {
+                    loseBossFight();
+                }
+            }, 1000);
+        }
+
+        function winBossFight() {
+            clearInterval(bossState.timer);
+            bossState.active = false;
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            const boss = zone.boss;
+            
+            logMessage(`The ${boss.name} has been vanquished! The path forward is clear.`, "victory");
+            
+            const xpGained = boss.hp * 2;
+            gainXP(xpGained);
+            logMessage(`You gained ${formatNumber(xpGained)} XP for your victory!`, 'system-ok');
+
+            // Loot drop
+            const performance = bossState.timeLeft / boss.timer; // 0 to 1
+            const dropChance = 0.1 + performance * 0.4; // 10% to 50%
+            if (Math.random() < dropChance) {
+                const relic = RELICS[Math.floor(Math.random() * RELICS.length)];
+                if (!gameState.relics.some(r => r.id === relic.id)) {
+                    gameState.relics.push(relic);
+                    logMessage(`You found a relic: ${relic.name} - ${relic.description}!`, 'victory');
+                } else {
+                    logMessage(`You found a duplicate relic: ${relic.name}. It's already in your collection.`, 'system-ok');
+                }
+            }
+
+            DOMElements.bossContainer.classList.add('hidden');
+            DOMElements.bossContainer.classList.remove('flex');
+            DOMElements.zoneName.style.display = '';
+            DOMElements.actionPrompt.style.display = '';
+            DOMElements.actionButton.classList.remove('h-20');
+            DOMElements.actionButton.classList.add('h-32');
+            DOMElements.actionButton.style.height = '8rem';
+
+            DOMElements.actionButtonText.textContent = "Gather";
+            DOMElements.actionButton.classList.remove('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+            DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+
+            if (!bossState.isMiniBoss) {
+                gameState.currentZoneIndex++;
+
+                if (gameState.currentZoneIndex >= ZONES.length) {
+                    if (!gameState.infiniteMode) {
+                        gameState.infiniteMode = true;
+                        logMessage("You have entered the Infinite Realms! Endless challenges await.", "victory");
+                    }
+                    generateInfiniteZone(gameState.currentZoneIndex);
+                    loadZone();
+                } else {
+                    loadZone();
+                }
+            } else {
+                logMessage("The mini-boss has been defeated! The storm clears.", "victory");
+            }
+           
+            updateUI();
+        }
+
+        function loseBossFight() {
+            clearInterval(bossState.timer);
+            bossState.active = false;
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            const boss = zone.boss;
+            
+            logMessage(`You were overwhelmed by the ${boss.name}. Regroup and try again.`, "danger");
+
+            DOMElements.bossContainer.classList.add('hidden');
+            DOMElements.bossContainer.classList.remove('flex');
+            DOMElements.zoneName.style.display = '';
+            DOMElements.actionPrompt.style.display = '';
+
+            DOMElements.actionButton.classList.remove('h-20');
+            DOMElements.actionButton.classList.add('h-32');
+            DOMElements.actionButton.style.height = '8rem';
+
+            DOMElements.actionButtonText.textContent = "Gather";
+            DOMElements.actionButton.classList.remove('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+            DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+
+            // Make player re-do the challenges for penalty
+            zone.challenges.forEach(c => c.completed = false);
+            logMessage("Your failure has reset the zone's challenges.", "system-warn");
+            
+            updateUI();
+        }
+
+
+        // --- Player Progression ---
+        function gainXP(amount) {
+            gameState.xp += Math.floor(amount * gameState.xpMultiplier);
+            while (gameState.xp >= gameState.xpToNextLevel) {
+                levelUp();
+            }
+        }
+        
+        function levelUp() {
+            gameState.level++;
+            gameState.xp -= gameState.xpToNextLevel;
+            gameState.xpToNextLevel = Math.floor(gameState.xpToNextLevel * 1.5);
+            logMessage(`You have reached Level ${gameState.level}!`, "levelup");
+            updateUI();
+            checkQuestCompletion();
+        }
+        
+        // --- UI Updates ---
+        function updateUI() {
+            // Stats
+            DOMElements.playerTitle.textContent = getPlayerTitle();
+            DOMElements.playerLevel.textContent = gameState.level;
+            const xpProgress = Math.min((gameState.xp / gameState.xpToNextLevel) * 100, 100);
+            document.getElementById('xpBar').style.width = `${xpProgress}%`;
+            document.getElementById('xpText').textContent = `${formatNumber(gameState.xp)} / ${formatNumber(gameState.xpToNextLevel)}`;
+            DOMElements.playerEssence.textContent = formatNumber(gameState.essence);
+            DOMElements.essencePerClick.textContent = formatNumber(getEssencePerClick());
+            DOMElements.playerAttack.textContent = formatNumber(getAttackDamage());
+            DOMElements.passiveIncome.textContent = formatNumber(gameState.passiveIncomeRate);
+            DOMElements.playerCritChance.textContent = (gameState.critChance * 100).toFixed(1) + '%';
+            DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
+
+            // Bank
+            DOMElements.bankedClicks.textContent = `${formatNumber(gameState.bankedClicks)} / ${formatNumber(getBankSize())}`;
+            DOMElements.bankSize.textContent = formatNumber(getBankSize());
+            const interestRate = (0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1);
+            document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
+            document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.accumulatedBankInterest);
+            // Update bank mode UI
+            if (bossState.active) {
+                DOMElements.actionButtonText.textContent = "ATTACK!";
+            } else if (gameState.isBankMode) {
+                DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+                DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+                DOMElements.actionButtonText.textContent = "Store";
+            } else {
+                DOMElements.actionButton.classList.remove('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+                DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+                DOMElements.actionButtonText.textContent = "Gather";
+            }
+            DOMElements.bankModeToggle.checked = gameState.isBankMode;
+            DOMElements.autoClickButton.textContent = gameState.isAutoClickerActive ? "Auto-Clicker: On" : "Auto-Clicker: Off";
+            DOMElements.autoClickRate.textContent = getAutoClickRate();
+            DOMElements.autoClickButton.title = gameState.isAutoClickerActive ? "Deactivate auto-clicker" : "Activate auto-clicker. Costs 1 banked click per second.";
+            DOMElements.bankBoostButton.disabled = gameState.passiveBoostActive || gameState.bankedClicks < 50;
+            DOMElements.hireCEOButton.disabled = gameState.ceoActive || gameState.bankedClicks < 100;
+            DOMElements.bankInvestmentButton.disabled = gameState.investmentActive || gameState.bankedClicks < 100;
+            DOMElements.convertClicksButton.disabled = gameState.bankedClicks < 1;
+
+            // Update multipliers with diminishing returns after Lv.50
+            const softCap = 50;
+            gameState.clickMultiplier = Math.pow(1.1, Math.min(gameState.clickUpgradeLevel, softCap)) * Math.pow(1.05, Math.max(gameState.clickUpgradeLevel - softCap, 0));
+            gameState.passiveMultiplier = Math.pow(1.1, Math.min(gameState.passiveUpgradeLevel, softCap)) * Math.pow(1.05, Math.max(gameState.passiveUpgradeLevel - softCap, 0));
+            gameState.bankMultiplier = Math.pow(1.1, Math.min(gameState.bankUpgradeLevel, softCap)) * Math.pow(1.05, Math.max(gameState.bankUpgradeLevel - softCap, 0));
+            gameState.autoClickMultiplier = Math.pow(1.1, Math.min(gameState.autoClickUpgradeLevel, softCap)) * Math.pow(1.05, Math.max(gameState.autoClickUpgradeLevel - softCap, 0));
+            gameState.luckMultiplier = Math.pow(1.05, Math.min(gameState.luckUpgradeLevel, softCap)) * Math.pow(1.02, Math.max(gameState.luckUpgradeLevel - softCap, 0));
+            gameState.efficiencyMultiplier = Math.pow(0.95, Math.min(gameState.efficiencyUpgradeLevel, softCap)) * Math.pow(0.98, Math.max(gameState.efficiencyUpgradeLevel - softCap, 0));
+            gameState.regenerationMultiplier = Math.pow(1.1, Math.min(gameState.regenerationUpgradeLevel, softCap)) * Math.pow(1.05, Math.max(gameState.regenerationUpgradeLevel - softCap, 0));
+            gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
+            gameState.critMultiplier = 2 + 0.5 * gameState.critMultUpgradeLevel;
+
+            // Apply companion, relic, and active event effects
+            gameState.companions.forEach(companion => {
+                applyCompanionEffect(companion);
+            });
+            gameState.relics.forEach(relic => {
+                applyRelicEffect(relic);
+            });
+            gameState.activeEvents.forEach(event => {
+                applyEventEffect(event);
+            });
+
+            // Update upgrade labels
+            DOMElements.clickLabel.textContent = `Click Power (Lv.${gameState.clickUpgradeLevel})`;
+            DOMElements.upgradeClick.textContent = `Upgrade (${formatNumber(getClickUpgradeCost())} Ess)`;
+            DOMElements.passiveLabel.textContent = `Passive Income (Lv.${gameState.passiveUpgradeLevel})`;
+            DOMElements.upgradePassive.textContent = `Upgrade (${formatNumber(getPassiveUpgradeCost())} Ess)`;
+            DOMElements.bankLabel.textContent = `Bank Capacity (Lv.${gameState.bankUpgradeLevel})`;
+            DOMElements.upgradeBank.textContent = `Upgrade (${formatNumber(getBankUpgradeCost())} Ess)`;
+            DOMElements.autoLabel.textContent = `Auto-Clicker (Lv.${gameState.autoClickUpgradeLevel})`;
+            DOMElements.upgradeAutoClick.textContent = `Upgrade (${formatNumber(getAutoClickUpgradeCost())} Ess)`;
+            DOMElements.critChanceLabel.textContent = `Critical Chance (Lv.${gameState.critChanceUpgradeLevel})`;
+            DOMElements.upgradeCritChance.textContent = `Upgrade (${formatNumber(getCritChanceUpgradeCost())} Ess)`;
+            DOMElements.critMultLabel.textContent = `Critical Multiplier (Lv.${gameState.critMultUpgradeLevel})`;
+            DOMElements.upgradeCritMult.textContent = `Upgrade (${formatNumber(getCritMultUpgradeCost())} Ess)`;
+            DOMElements.luckLabel.textContent = `Luck (Lv.${gameState.luckUpgradeLevel})`;
+            DOMElements.upgradeLuck.textContent = `Upgrade (${formatNumber(getLuckUpgradeCost())} Ess)`;
+            DOMElements.efficiencyLabel.textContent = `Efficiency (Lv.${gameState.efficiencyUpgradeLevel})`;
+            DOMElements.upgradeEfficiency.textContent = `Upgrade (${formatNumber(getEfficiencyUpgradeCost())} Ess)`;
+            DOMElements.regenerationLabel.textContent = `Regeneration (Lv.${gameState.regenerationUpgradeLevel})`;
+            DOMElements.upgradeRegeneration.textContent = `Upgrade (${formatNumber(getRegenerationUpgradeCost())} Ess)`;
+            DOMElements.timeCrystalLabel.textContent = `Time Crystal (Lv.${gameState.timeCrystalUpgradeLevel})`;
+            DOMElements.upgradeTimeCrystal.textContent = `Upgrade (${formatNumber(getTimeCrystalUpgradeCost())} Ess)`;
+
+            // Prestige
+            DOMElements.prestigePoints.textContent = formatNumber(gameState.prestigePoints);
+            DOMElements.prestigeButton.disabled = gameState.level < 50;
+
+            // Dynamic tooltips
+            if (bossState.active) {
+                DOMElements.actionButton.title = "Attack the boss to deal damage and defeat it";
+            } else if (gameState.isBankMode) {
+                DOMElements.actionButton.title = "Store this click in your bank for later use";
+            } else {
+                DOMElements.actionButton.title = "Click to gather essence from this zone";
+            }
+
+            checkAchievements();
+            updateAchievementsList();
+            updateCompanionsList();
+            updateRelicsList();
+            updateSpecialMechanicDisplay();
+
+            saveGame();
+        }
+        
+        function updateQuestList() {
+              if (gameState.currentZoneIndex >= gameState.zones.length) {
+                DOMElements.questList.innerHTML = `<p class="text-green-400">All syntax realms mastered!</p>`;
+                return;
+              }
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            DOMElements.questList.innerHTML = '';
+            zone.challenges.forEach(challenge => {
+                const questEl = document.createElement('div');
+                questEl.className = 'space-y-1';
+                questEl.title = challenge.description;
+                let progress = 0;
+                let current = 0;
+                switch (challenge.type) {
+                    case 'essence': current = gameState.essence; break;
+                    case 'clicks': current = gameState.totalClicks; break;
+                    case 'level': current = gameState.level; break;
+                    case 'passive': current = gameState.totalPassiveGained; break;
+                }
+                progress = Math.min((current / challenge.requirement) * 100, 100);
+                if (challenge.completed) {
+                    questEl.innerHTML = `<div class="flex justify-between"><span class="text-gray-500 line-through">${challenge.description}</span><span class="text-green-500 font-bold">✓</span></div>`;
+                } else {
+                    questEl.innerHTML = `
+                        <div>${challenge.description}</div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="text-xs text-gray-400">${formatNumber(current)} / ${formatNumber(challenge.requirement)}</div>
+                    `;
+                }
+                DOMElements.questList.appendChild(questEl);
+            });
+        }
+
+        function checkAchievements() {
+            ACHIEVEMENTS.forEach(achievement => {
+                if (!gameState.achievements.includes(achievement.id) && achievement.condition()) {
+                    gameState.achievements.push(achievement.id);
+                    logMessage(`Achievement Unlocked: ${achievement.name} - ${achievement.description}`, "victory");
+                }
+            });
+        }
+
+        function updateAchievementsList() {
+            DOMElements.achievementsList.innerHTML = '';
+            ACHIEVEMENTS.forEach(achievement => {
+                const achEl = document.createElement('div');
+                achEl.className = 'flex justify-between items-center text-xs';
+                achEl.title = achievement.description;
+                if (gameState.achievements.includes(achievement.id)) {
+                    achEl.innerHTML = `<span class="text-yellow-400 font-bold">${achievement.name}</span><span class="text-green-500">✓</span>`;
+                } else {
+                    achEl.innerHTML = `<span class="text-gray-500">${achievement.name}</span><span class="text-gray-500">Locked</span>`;
+                }
+                DOMElements.achievementsList.appendChild(achEl);
+            });
+        }
+
+        function loadZone() {
+            if (gameState.currentZoneIndex >= gameState.zones.length && !gameState.infiniteMode) return;
+            if (gameState.infiniteMode && gameState.currentZoneIndex >= gameState.zones.length) {
+                generateInfiniteZone(gameState.currentZoneIndex);
+            }
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            DOMElements.zoneName.textContent = zone.name;
+            DOMElements.actionPrompt.textContent = zone.actionPrompt;
+            logMessage(`You have entered the ${zone.name}.`, "zone");
+            updateQuestList();
+            // Initialize special mechanic
+            if (zone.specialMechanic) {
+                if (zone.specialMechanic.type === 'mana') {
+                    gameState.mana = 0;
+                    gameState.manaMax = zone.specialMechanic.maxMana;
+                    gameState.manaBoostActive = false;
+                }
+            } else {
+                gameState.mana = 0;
+                gameState.manaMax = 0;
+                gameState.manaBoostActive = false;
+            }
+            updateSpecialMechanicDisplay();
+        }
+
+        function generateInfiniteZone(zoneIndex) {
+            const baseIndex = zoneIndex - ZONES.length + 1;
+            const scale = Math.pow(1.5, baseIndex);
+            const zoneNames = ["Eternal Abyss", "Void Citadel", "Cosmic Forge", "Nebula Spire", "Quantum Rift", "Astral Domain", "Dimensional Nexus", "Temporal Vault"];
+            const prompts = ["Harness the infinite power.", "Conquer the endless void.", "Shape reality itself.", "Navigate the cosmic currents.", "Pierce the quantum veil.", "Command the astral forces.", "Bridge the dimensions.", "Unlock the temporal secrets."];
+            const bossNames = ["Infinite Guardian", "Void Overlord", "Cosmic Behemoth", "Nebula Colossus", "Quantum Leviathan", "Astral Titan", "Dimensional Horror", "Temporal Emperor"];
+            const flavors = ["A being of pure infinity, growing stronger with each defeat.", "The ruler of nothingness, devouring all in its path.", "A cosmic entity that warps space and time.", "A swirling mass of stellar energy and fury.", "A creature that exists in multiple quantum states.", "A radiant figure commanding celestial armies.", "A horror that spans countless realities.", "A master of time, bending ages to its will."];
+
+            const zone = {
+                name: `${zoneNames[baseIndex % zoneNames.length]} ${baseIndex}`,
+                actionPrompt: prompts[baseIndex % prompts.length],
+                challenges: [
+                    { id: `infinite_gather_${baseIndex}`, description: `Gather ${formatNumber(100000000000 * scale)} Essence`, type: 'essence', requirement: 100000000000 * scale, completed: false },
+                    { id: `infinite_clicks_${baseIndex}`, description: `Perform ${formatNumber(1000000000 * scale)} clicks`, type: 'clicks', requirement: 1000000000 * scale, completed: false },
+                    { id: `infinite_level_${baseIndex}`, description: `Reach Level ${50 + baseIndex * 10}`, type: 'level', requirement: 50 + baseIndex * 10, completed: false }
+                ],
+                boss: {
+                    name: `${bossNames[baseIndex % bossNames.length]} ${baseIndex}`,
+                    hp: 1000000000 * Math.pow(1.2, baseIndex),
+                    timer: 100 + baseIndex * 5,
+                    flavorText: flavors[baseIndex % flavors.length]
+                }
+            };
+            // Random special mechanic
+            if (Math.random() < 0.5) {
+                if (Math.random() < 0.5) {
+                    zone.specialMechanic = {
+                        type: "debuff",
+                        name: "Infinite Mist",
+                        description: `${Math.floor(10 + baseIndex)}% chance per click to halve essence gain for ${Math.floor(3 + baseIndex / 2)} seconds`,
+                        chance: 0.1 + baseIndex * 0.01,
+                        duration: 3000 + baseIndex * 500,
+                        effect: "half_click"
+                    };
+                } else {
+                    zone.specialMechanic = {
+                        type: "mana",
+                        name: "Infinite Mana",
+                        description: "Build mana with clicks for a zone-wide boost",
+                        maxMana: 50 + baseIndex * 10,
+                        manaPerClick: 1,
+                        boostMultiplier: 1.5 + baseIndex * 0.1,
+                        boostDuration: 5000 + baseIndex * 500
+                    };
+                }
+            }
+            gameState.zones.push(zone);
+        }
+
+        function logMessage(message, type = "normal") {
+            const msgEl = document.createElement('div');
+            msgEl.classList.add('fade-in', 'flex', 'flex-col');
+
+            const timeEl = document.createElement('span');
+            timeEl.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
+            timeEl.className = 'text-white text-xs opacity-75';
+            timeEl.style.fontSize = '0.6rem';
+
+            const textEl = document.createElement('span');
+            textEl.textContent = message;
+
+            switch (type) {
+                case "system": textEl.className += " text-gray-400 italic"; break;
+                case "system-ok": textEl.className += " text-green-400 italic"; break;
+                case "system-warn": textEl.className += " text-yellow-400 italic"; break;
+                case "quest": textEl.className += " text-amber-300"; break;
+                case "zone": textEl.className += " text-purple-400 font-bold"; break;
+                case "levelup": textEl.className += " text-yellow-300 font-bold font-cinzel"; break;
+                case "danger": textEl.className += " text-red-400 font-bold"; break;
+                case "victory": textEl.className += " text-green-300 font-bold font-cinzel"; break;
+                default: textEl.className += " text-gray-300"; break;
+            }
+
+            msgEl.appendChild(timeEl);
+            msgEl.appendChild(textEl);
+
+            DOMElements.chatLog.appendChild(msgEl);
+            // Limit to 5 messages
+            while (DOMElements.chatLog.children.length > 5) {
+                DOMElements.chatLog.removeChild(DOMElements.chatLog.firstChild);
+            }
+            DOMElements.chatLog.scrollTop = DOMElements.chatLog.scrollHeight;
+        }
+        
+        function showClickFeedback(text, colorClass) {
+            const feedback = document.createElement('div');
+            feedback.textContent = text;
+            feedback.className = `absolute font-bold text-lg pointer-events-none ${colorClass} opacity-100 transition-all duration-1000`;
+            
+            // Random position around the button
+            const rect = DOMElements.actionButton.getBoundingClientRect();
+            const containerRect = DOMElements.clickFeedbackContainer.getBoundingClientRect();
+            
+            const x = Math.random() * rect.width + (rect.left - containerRect.left);
+            const y = Math.random() * rect.height + (rect.top - containerRect.top);
+
+            feedback.style.left = `${x}px`;
+            feedback.style.top = `${y}px`;
+
+            DOMElements.clickFeedbackContainer.appendChild(feedback);
+
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+                feedback.style.transform = 'translateY(-50px)';
+            }, 10);
+
+            setTimeout(() => {
+                feedback.remove();
+            }, 1000);
+        }
+
+        // --- Utility Functions ---
+        function getEssencePerClick() {
+            return Math.floor((1 + Math.floor(gameState.level / 2)) * gameState.clickMultiplier * gameState.prestigeMultiplier);
+        }
+
+        function getAttackDamage() {
+            return Math.floor(getEssencePerClick() / 50) + 1;
+        }
+
+        function getBankSize() {
+            return Math.floor((50 + (gameState.level * 10)) * gameState.bankMultiplier * gameState.prestigeMultiplier);
+        }
+
+        function getAutoClickRate() {
+            return Math.floor((1 + Math.floor(gameState.level / 5)) * gameState.autoClickMultiplier * gameState.prestigeMultiplier);
+        }
+
+        function getPassiveIncomeRate() {
+            return Math.floor((Math.floor(gameState.level / 10) + gameState.currentZoneIndex) * gameState.passiveMultiplier * gameState.prestigeMultiplier);
+        }
+
+        function updatePassiveIncome() {
+            const now = Date.now();
+            const timeDiff = (now - gameState.lastUpdateTime) / 1000; // seconds
+            let passiveRate = gameState.passiveIncomeRate;
+            if (gameState.passiveBoostActive && now < gameState.passiveBoostEndTime) {
+                passiveRate *= 2;
+            } else if (gameState.passiveBoostActive) {
+                gameState.passiveBoostActive = false;
+                updateUI();
+            }
+            if (gameState.investmentActive && now < gameState.investmentEndTime) {
+                passiveRate *= 2;
+            } else if (gameState.investmentActive) {
+                gameState.investmentActive = false;
+                logMessage("Risky investment completed successfully!", "system-ok");
+                updateUI();
+            }
+            // Apply debuff to passive
+            if (gameState.currentDebuff && now < gameState.debuffEndTime) {
+                passiveRate = Math.floor(passiveRate / 2);
+            } else if (gameState.currentDebuff) {
+                gameState.currentDebuff = null;
+                updateUI();
+            }
+            // Apply mana boost to passive
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            if (zone && zone.specialMechanic && zone.specialMechanic.type === 'mana' && gameState.manaBoostActive && now < gameState.manaBoostEndTime) {
+                passiveRate = Math.floor(passiveRate * zone.specialMechanic.boostMultiplier);
+            } else if (gameState.manaBoostActive) {
+                gameState.manaBoostActive = false;
+                updateUI();
+            }
+            const passiveGained = Math.floor(timeDiff * passiveRate);
+            if (passiveGained > 0) {
+                gameState.essence += passiveGained;
+                gameState.totalPassiveGained += passiveGained;
+                gameState.accumulatedPassive += passiveGained;
+                gainXP(Math.floor(passiveGained / 100));
+                checkQuestCompletion(false);
+            }
+
+            // Bank interest (compound, scales with bank upgrades, per second)
+            const bankInterest = Math.floor(gameState.bankedClicks * ((0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1)) * timeDiff);
+            if (bankInterest > 0) {
+                gameState.bankedClicks += bankInterest;
+                gameState.accumulatedBankInterest += bankInterest;
+            }
+
+            // Auto-clicker
+            if (gameState.isAutoClickerActive) {
+                if (gameState.bankedClicks >= gameState.autoClickCostPerSecond) {
+                    gameState.bankedClicks -= gameState.autoClickCostPerSecond;
+                    const essenceGained = getAutoClickRate();
+                    gameState.essence += essenceGained;
+                    gainXP(1);
+                } else {
+                    gameState.isAutoClickerActive = false;
+                    logMessage("Auto-clicker deactivated: insufficient banked clicks.", "system-warn");
+                }
+            }
+
+            gameState.lastUpdateTime = now;
+            gameState.passiveIncomeRate = getPassiveIncomeRate();
+
+            // Log accumulated passive every 10 seconds
+            if (now - gameState.lastPassiveLogTime > 10000 && gameState.accumulatedPassive > 0) {
+                logMessage(`You gained ${formatNumber(gameState.accumulatedPassive)} Essence from passive income.`, "system-ok");
+                gameState.accumulatedPassive = 0;
+                gameState.lastPassiveLogTime = now;
+            }
+
+            // Log bank interest every 10 seconds
+            if (now - gameState.lastBankLogTime > 10000 && gameState.accumulatedBankInterest > 0) {
+                logMessage(`Your bank has accrued ${formatNumber(gameState.accumulatedBankInterest)} interest clicks.`, "system-ok");
+                gameState.accumulatedBankInterest = 0;
+                gameState.lastBankLogTime = now;
+            }
+
+            // Random event trigger (5% chance every second)
+            if (Math.random() < 0.05 && gameState.activeEvents.length === 0) {
+                triggerRandomEvent();
+            }
+
+            // Update active events
+            updateActiveEvents();
+        }
+
+        function buyClickUpgrade() {
+            const cost = getClickUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.clickUpgradeLevel++;
+                logMessage("Click Power upgraded! Essence per click increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyPassiveUpgrade() {
+            const cost = getPassiveUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.passiveUpgradeLevel++;
+                logMessage("Passive Income upgraded! Passive income increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyBankUpgrade() {
+            const cost = getBankUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.bankUpgradeLevel++;
+                logMessage("Bank Capacity upgraded! Bank size increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyAutoClickUpgrade() {
+            const cost = getAutoClickUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.autoClickUpgradeLevel++;
+                logMessage("Auto-Clicker upgraded! Auto-click rate increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyCritChanceUpgrade() {
+            const cost = getCritChanceUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.critChanceUpgradeLevel++;
+                logMessage("Critical Chance upgraded! Critical hit chance increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyCritMultUpgrade() {
+            const cost = getCritMultUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.critMultUpgradeLevel++;
+                logMessage("Critical Multiplier upgraded! Critical damage increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyLuckUpgrade() {
+            const cost = getLuckUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.luckUpgradeLevel++;
+                logMessage("Luck upgraded! Critical hit chance increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyEfficiencyUpgrade() {
+            const cost = getEfficiencyUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.efficiencyUpgradeLevel++;
+                logMessage("Efficiency upgraded! Upgrade costs reduced.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyRegenerationUpgrade() {
+            const cost = getRegenerationUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.regenerationUpgradeLevel++;
+                logMessage("Regeneration upgraded! Passive income increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function buyTimeCrystalUpgrade() {
+            const cost = getTimeCrystalUpgradeCost();
+            if (gameState.essence >= cost) {
+                gameState.essence -= cost;
+                gameState.timeCrystalUpgradeLevel++;
+                logMessage("Time Crystal upgraded! Offline progress cap increased.", "system-ok");
+                updateUI();
+            } else {
+                logMessage("Not enough Essence for this upgrade.", "system-warn");
+            }
+        }
+
+        function prestige() {
+            if (gameState.level < 50) return;
+            const pointsGained = Math.floor(gameState.level / 10);
+            gameState.prestigePoints += pointsGained;
+            gameState.prestigeMultiplier = 1 + gameState.prestigePoints * 0.01;
+            // Reset
+            gameState.level = 1;
+            gameState.xp = 0;
+            gameState.xpToNextLevel = 100;
+            gameState.essence = 0;
+            gameState.totalClicks = 0;
+            gameState.bankedClicks = 0;
+            gameState.currentZoneIndex = 0;
+            gameState.zones = JSON.parse(JSON.stringify(ZONES));
+            gameState.passiveIncomeRate = 0;
+            gameState.totalPassiveGained = 0;
+            gameState.accumulatedPassive = 0;
+            gameState.lastPassiveLogTime = Date.now();
+            gameState.activeEvents = [];
+            gameState.companions = [];
+            logMessage(`You have prestiged! Gained ${pointsGained} prestige points. Multiplier increased to ${gameState.prestigeMultiplier.toFixed(2)}x`, "victory");
+            loadZone();
+            updateUI();
+        }
+
+        function exportSave() {
+            const saveData = JSON.stringify(gameState);
+            navigator.clipboard.writeText(saveData).then(() => {
+                logMessage("Save data copied to clipboard!", "system-ok");
+            }).catch(() => {
+                logMessage("Failed to copy save data. Please check clipboard permissions.", "system-warn");
+            });
+        }
+
+        function triggerRandomEvent() {
+            // Weighted selection: 60% positive, 40% negative/chained
+            const positiveEvents = EVENTS.filter(e => e.type === 'positive');
+            const negativeEvents = EVENTS.filter(e => e.type !== 'positive');
+            const rand = Math.random();
+            let event;
+            if (rand < 0.6) {
+                event = positiveEvents[Math.floor(Math.random() * positiveEvents.length)];
+            } else {
+                event = negativeEvents[Math.floor(Math.random() * negativeEvents.length)];
+            }
+            gameState.activeEvents.push({
+                ...event,
+                startTime: Date.now(),
+                endTime: Date.now() + event.duration
+            });
+            const msgType = event.type === 'negative' ? "system-warn" : "system-ok";
+            logMessage(`Random Event: ${event.name} - ${event.description}`, msgType);
+            applyEventEffect(event);
+            // Handle chained events
+            if (event.chain === 'mini_boss') {
+                setTimeout(() => {
+                    if (!bossState.active) {
+                        logMessage("The Essence Storm has attracted a Mini-Boss!", "danger");
+                        // Simple mini-boss: small HP, short timer
+                        bossState.active = true;
+                        bossState.hp = 100;
+                        bossState.maxHp = 100;
+                        bossState.timeLeft = 10;
+                        bossState.isMiniBoss = true;
+                        DOMElements.bossContainer.innerHTML = `
+                            <div class="fade-in w-full">
+                                <h3 class="font-cinzel text-2xl font-bold text-red-300 drop-shadow-lg">Mini-Boss: Storm Elemental</h3>
+                                <p class="text-red-200 mt-2 mb-4">A small but fierce foe drawn by the storm!</p>
+                                <p id="bossHp" class="text-xl font-bold text-white">100 / 100</p>
+                                <div class="w-full bg-gray-700 rounded-full h-4 mt-4 border-2 border-black/50">
+                                    <div id="bossTimerBar" class="bg-yellow-400 h-full rounded-full" style="width: 100%"></div>
+                                </div>
+                                <p id="bossTimeLeft" class="text-lg font-bold mt-2">10s remaining</p>
+                            </div>
+                        `;
+                        DOMElements.bossContainer.classList.remove('hidden', 'absolute', 'inset-0');
+                        DOMElements.bossContainer.classList.add('flex');
+                        DOMElements.zoneName.style.display = 'none';
+                        DOMElements.actionPrompt.style.display = 'none';
+                        DOMElements.actionButton.classList.remove('h-32');
+                        DOMElements.actionButton.classList.add('h-20');
+                        DOMElements.actionButton.style.height = '5rem';
+                        DOMElements.actionButtonText.textContent = "ATTACK!";
+                        DOMElements.actionButton.classList.add('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+                        DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+                        bossState.timer = setInterval(() => {
+                            bossState.timeLeft--;
+                            const timerBar = document.getElementById('bossTimerBar');
+                            const timeLeftDisplay = document.getElementById('bossTimeLeft');
+                            if (timerBar) timerBar.style.width = `${(bossState.timeLeft / 10) * 100}%`;
+                            if (timeLeftDisplay) timeLeftDisplay.textContent = `${bossState.timeLeft}s remaining`;
+                            if (bossState.timeLeft <= 0) {
+                                loseBossFight();
+                            }
+                        }, 1000);
+                    }
+                }, 10000); // 10 seconds delay
+            }
+        }
+
+        function applyEventEffect(event) {
+            switch (event.effect) {
+                case 'double_click':
+                    gameState.clickMultiplier *= 2;
+                    break;
+                case 'triple_passive':
+                    gameState.passiveMultiplier *= 3;
+                    break;
+                case 'max_crit':
+                    gameState.critChance = 1;
+                    break;
+                case 'half_costs':
+                    gameState.efficiencyMultiplier *= 0.5;
+                    break;
+                case 'half_passive':
+                    gameState.passiveMultiplier *= 0.5;
+                    break;
+                case 'quarter_click':
+                    gameState.clickMultiplier *= 0.75;
+                    break;
+            }
+        }
+
+        function updateActiveEvents() {
+            const now = Date.now();
+            gameState.activeEvents = gameState.activeEvents.filter(event => {
+                if (now >= event.endTime) {
+                    removeEventEffect(event);
+                    if (event.id === 'ceo_active') {
+                        gameState.ceoActive = false;
+                        logMessage("CEO of Money's contract has expired.", "system");
+                    } else {
+                        logMessage(`Event ended: ${event.name}`, "system");
+                    }
+                    return false;
+                }
+                return true;
+            });
+            updateActiveEventsList();
+        }
+
+        function removeEventEffect(event) {
+            switch (event.effect) {
+                case 'double_click':
+                    gameState.clickMultiplier /= 2;
+                    break;
+                case 'triple_passive':
+                    gameState.passiveMultiplier /= 3;
+                    break;
+                case 'max_crit':
+                    gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
+                    break;
+                case 'half_costs':
+                    gameState.efficiencyMultiplier /= 0.5;
+                    break;
+                case 'half_passive':
+                    gameState.passiveMultiplier /= 0.5;
+                    break;
+                case 'quarter_click':
+                    gameState.clickMultiplier /= 0.75;
+                    break;
+            }
+        }
+
+        function updateActiveEventsList() {
+            DOMElements.activeEventsList.innerHTML = '';
+            if (gameState.activeEvents.length === 0) {
+                DOMElements.activeEventsList.innerHTML = '<div class="text-gray-500 text-sm">No active events</div>';
+                return;
+            }
+            gameState.activeEvents.forEach(event => {
+                const timeLeft = Math.ceil((event.endTime - Date.now()) / 1000);
+                const eventEl = document.createElement('div');
+                eventEl.className = 'flex justify-between items-center text-sm';
+                eventEl.innerHTML = `<span class="text-yellow-400">${event.name}</span><span class="text-gray-400">${timeLeft}s</span>`;
+                DOMElements.activeEventsList.appendChild(eventEl);
+            });
+        }
+
+        function resetProfile() {
+            if (confirm("Are you sure you want to reset your progress? This will delete all saved data and cannot be undone.")) {
+                localStorage.removeItem('gildedSyntaxSave');
+                location.reload();
+            }
+        }
+
+        function updateCompanionsList() {
+            DOMElements.companionsList.innerHTML = '';
+            if (gameState.companions.length === 0) {
+                DOMElements.companionsList.innerHTML = '<div class="text-gray-500 text-sm">No companions summoned</div>';
+                return;
+            }
+            gameState.companions.forEach(companion => {
+                const companionEl = document.createElement('div');
+                companionEl.className = 'flex justify-between items-center text-sm';
+                companionEl.innerHTML = `<span class="text-purple-400">${companion.name}</span><span class="text-green-400">${companion.description}</span>`;
+                DOMElements.companionsList.appendChild(companionEl);
+            });
+        }
+
+        function updateRelicsList() {
+            DOMElements.relicsList.innerHTML = '';
+            if (gameState.relics.length === 0) {
+                DOMElements.relicsList.innerHTML = '<div class="text-gray-500 text-sm">No relics collected</div>';
+                return;
+            }
+            gameState.relics.forEach(relic => {
+                const relicEl = document.createElement('div');
+                relicEl.className = 'flex justify-between items-center text-sm';
+                relicEl.innerHTML = `<span class="text-yellow-400">${relic.name}</span><span class="text-green-400">${relic.description}</span>`;
+                DOMElements.relicsList.appendChild(relicEl);
+            });
+        }
+
+        function updateSpecialMechanicDisplay() {
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            if (!zone || !zone.specialMechanic) {
+                DOMElements.specialMechanicDisplay.innerHTML = '';
+                return;
+            }
+            const mechanic = zone.specialMechanic;
+            if (mechanic.type === 'debuff') {
+                if (gameState.currentDebuff) {
+                    const timeLeft = Math.ceil((gameState.debuffEndTime - Date.now()) / 1000);
+                    DOMElements.specialMechanicDisplay.innerHTML = `<div class="text-red-400 text-sm">${mechanic.name}: Essence halved for ${timeLeft}s</div>`;
+                } else {
+                    DOMElements.specialMechanicDisplay.innerHTML = `<div class="text-gray-500 text-sm">${mechanic.description}</div>`;
+                }
+            } else if (mechanic.type === 'mana') {
+                const manaPercent = (gameState.mana / gameState.manaMax) * 100;
+                const boostText = gameState.manaBoostActive ? ` (Boost Active: ${Math.ceil((gameState.manaBoostEndTime - Date.now()) / 1000)}s)` : '';
+                DOMElements.specialMechanicDisplay.innerHTML = `
+                    <div class="text-blue-400 text-sm mb-2">${mechanic.name}: ${mechanic.description}</div>
+                    <div class="w-full bg-gray-700 rounded-full h-4">
+                        <div class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: ${manaPercent}%"></div>
+                    </div>
+                    <div class="text-sm text-gray-300 mt-1">${gameState.mana}/${gameState.manaMax}${boostText}</div>
+                `;
+            }
+        }
+
+        function summonCompanion(companionId) {
+            const companion = COMPANIONS.find(c => c.id === companionId);
+            if (!companion || gameState.companions.some(c => c.id === companionId) || gameState.essence < companion.cost || gameState.level < companion.unlockReq.level) return;
+
+            gameState.essence -= companion.cost;
+            gameState.companions.push(companion);
+            applyCompanionEffect(companion);
+            logMessage(`Summoned ${companion.name}! ${companion.description}`, "system-ok");
+            updateUI();
+        }
+
+        function applyCompanionEffect(companion) {
+            switch (companion.effect) {
+                case 'click_mult':
+                    gameState.clickMultiplier *= companion.value;
+                    break;
+                case 'passive_mult':
+                    gameState.passiveMultiplier *= companion.value;
+                    break;
+                case 'bank_mult':
+                    gameState.bankMultiplier *= companion.value;
+                    break;
+                case 'auto_mult':
+                    gameState.autoClickMultiplier *= companion.value;
+                    break;
+                case 'crit_chance_add':
+                    gameState.critChance += companion.value;
+                    break;
+            }
+        }
+
+        function applyRelicEffect(relic) {
+            switch (relic.effect) {
+                case 'crit_chance_add':
+                    gameState.critChance += relic.value;
+                    break;
+                case 'click_mult':
+                    gameState.clickMultiplier *= relic.value;
+                    break;
+                case 'passive_mult':
+                    gameState.passiveMultiplier *= relic.value;
+                    break;
+                case 'luck_mult':
+                    gameState.luckMultiplier *= relic.value;
+                    break;
+                case 'efficiency_mult':
+                    gameState.efficiencyMultiplier *= relic.value;
+                    break;
+            }
+        }
+        
+        function getPlayerTitle() {
+            let currentTitle = "Neophyte";
+            for (const title of TITLES) {
+                if (gameState.level >= title.level) {
+                    currentTitle = title.name;
+                }
+            }
+            return currentTitle;
+        }
+        
+        function formatNumber(num) {
+            if (num < 1000) return num.toString();
+            if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+            if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num < 1000000000000) return (num / 1000000000).toFixed(1) + 'B';
+            if (num < 1000000000000000) return (num / 1000000000000).toFixed(1) + 'T';
+            return (num / 1000000000000000).toFixed(1) + 'Q';
+        }
+
+        function getClickUpgradeCost() { return Math.floor(100 * Math.pow(1.5, gameState.clickUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getPassiveUpgradeCost() { return Math.floor(200 * Math.pow(1.5, gameState.passiveUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getBankUpgradeCost() { return Math.floor(150 * Math.pow(1.5, gameState.bankUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getAutoClickUpgradeCost() { return Math.floor(250 * Math.pow(1.5, gameState.autoClickUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getCritChanceUpgradeCost() { return Math.floor(300 * Math.pow(1.5, gameState.critChanceUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getCritMultUpgradeCost() { return Math.floor(400 * Math.pow(1.5, gameState.critMultUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getLuckUpgradeCost() { return Math.floor(500 * Math.pow(1.5, gameState.luckUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getEfficiencyUpgradeCost() { return Math.floor(600 * Math.pow(1.5, gameState.efficiencyUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getRegenerationUpgradeCost() { return Math.floor(700 * Math.pow(1.5, gameState.regenerationUpgradeLevel) * gameState.efficiencyMultiplier); }
+        function getTimeCrystalUpgradeCost() { return Math.floor(1000 * Math.pow(1.5, gameState.timeCrystalUpgradeLevel) * gameState.efficiencyMultiplier); }
+
+        // --- Save/Load ---
+        function saveGame() {
+            localStorage.setItem('gildedSyntaxSave', JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const savedGame = localStorage.getItem('gildedSyntaxSave');
+            if (savedGame) {
+                const loadedState = JSON.parse(savedGame);
+                // Basic validation and merging
+                gameState = { ...gameState, ...loadedState };
+                // Ensure new properties are initialized
+                if (typeof gameState.accumulatedPassive === 'undefined') gameState.accumulatedPassive = 0;
+                if (typeof gameState.lastPassiveLogTime === 'undefined') gameState.lastPassiveLogTime = Date.now();
+                if (typeof gameState.clickUpgradeLevel === 'undefined') gameState.clickUpgradeLevel = 0;
+                if (typeof gameState.passiveUpgradeLevel === 'undefined') gameState.passiveUpgradeLevel = 0;
+                if (typeof gameState.bankUpgradeLevel === 'undefined') gameState.bankUpgradeLevel = 0;
+                if (typeof gameState.autoClickUpgradeLevel === 'undefined') gameState.autoClickUpgradeLevel = 0;
+                if (typeof gameState.critChanceUpgradeLevel === 'undefined') gameState.critChanceUpgradeLevel = 0;
+                if (typeof gameState.critMultUpgradeLevel === 'undefined') gameState.critMultUpgradeLevel = 0;
+                if (typeof gameState.luckUpgradeLevel === 'undefined') gameState.luckUpgradeLevel = 0;
+                if (typeof gameState.efficiencyUpgradeLevel === 'undefined') gameState.efficiencyUpgradeLevel = 0;
+                if (typeof gameState.regenerationUpgradeLevel === 'undefined') gameState.regenerationUpgradeLevel = 0;
+                if (typeof gameState.critChance === 'undefined') gameState.critChance = 0;
+                if (typeof gameState.critMultiplier === 'undefined') gameState.critMultiplier = 2;
+                if (typeof gameState.prestigePoints === 'undefined') gameState.prestigePoints = 0;
+                if (typeof gameState.prestigeMultiplier === 'undefined') gameState.prestigeMultiplier = 1;
+                if (typeof gameState.accumulatedBankInterest === 'undefined') gameState.accumulatedBankInterest = 0;
+                if (typeof gameState.lastBankLogTime === 'undefined') gameState.lastBankLogTime = Date.now();
+                if (typeof gameState.passiveBoostActive === 'undefined') gameState.passiveBoostActive = false;
+                if (typeof gameState.passiveBoostEndTime === 'undefined') gameState.passiveBoostEndTime = 0;
+                if (typeof gameState.ceoActive === 'undefined') gameState.ceoActive = false;
+                if (typeof gameState.ceoEndTime === 'undefined') gameState.ceoEndTime = 0;
+                if (typeof gameState.lastCEOLogTime === 'undefined') gameState.lastCEOLogTime = Date.now();
+                if (typeof gameState.xpMultiplier === 'undefined') gameState.xpMultiplier = 1;
+                if (typeof gameState.isAutoClickerActive === 'undefined') gameState.isAutoClickerActive = false;
+                if (typeof gameState.autoClickCostPerSecond === 'undefined') gameState.autoClickCostPerSecond = 1;
+                // Restore CEO from active events
+                gameState.activeEvents.forEach(event => {
+                    if (event.id === 'ceo_active') {
+                        gameState.ceoActive = true;
+                        gameState.ceoEndTime = event.endTime;
+                    }
+                });
+                if (typeof gameState.activeEvents === 'undefined') gameState.activeEvents = [];
+                if (typeof gameState.companions === 'undefined') gameState.companions = [];
+                if (typeof gameState.relics === 'undefined') gameState.relics = [];
+                if (typeof gameState.currentDebuff === 'undefined') gameState.currentDebuff = null;
+                if (typeof gameState.debuffEndTime === 'undefined') gameState.debuffEndTime = 0;
+                if (typeof gameState.mana === 'undefined') gameState.mana = 0;
+                if (typeof gameState.manaMax === 'undefined') gameState.manaMax = 0;
+                if (typeof gameState.manaBoostActive === 'undefined') gameState.manaBoostActive = false;
+                if (typeof gameState.manaBoostEndTime === 'undefined') gameState.manaBoostEndTime = 0;
+                if (typeof gameState.investmentActive === 'undefined') gameState.investmentActive = false;
+                if (typeof gameState.investmentEndTime === 'undefined') gameState.investmentEndTime = 0;
+                if (typeof gameState.infiniteMode === 'undefined') gameState.infiniteMode = false;
+                if (typeof gameState.startTime === 'undefined') gameState.startTime = Date.now();
+                if (typeof gameState.streak === 'undefined') gameState.streak = 0;
+                if (typeof gameState.lastLoginDate === 'undefined') gameState.lastLoginDate = new Date().toDateString();
+                if (typeof gameState.timeCrystalUpgradeLevel === 'undefined') gameState.timeCrystalUpgradeLevel = 0;
+                  // Deep copy zones from master list but keep completed status
+                  const masterZones = JSON.parse(JSON.stringify(ZONES));
+                  gameState.zones = masterZones.map((zone, index) => {
+                      if (loadedState.zones && loadedState.zones[index]) {
+                          zone.challenges.forEach((challenge, cIndex) => {
+                                if(loadedState.zones[index].challenges[cIndex]){
+                                  challenge.completed = loadedState.zones[index].challenges[cIndex].completed;
+                                }
+                          });
+                      }
+                      return zone;
+                  });
+                  // Reset bank mode on load
+                  gameState.isBankMode = false;
+                  // Calculate offline passive income
+                const now = Date.now();
+                const timeDiff = (now - gameState.lastUpdateTime) / 1000;
+                const maxOfflineTime = 3600000 + gameState.timeCrystalUpgradeLevel * 1800000; // 1h + 30min per level
+                const cappedTimeDiff = Math.min(timeDiff, maxOfflineTime);
+                const passiveGained = Math.floor(cappedTimeDiff * gameState.passiveIncomeRate);
+                if (passiveGained > 0) {
+                    gameState.essence += passiveGained;
+                    gainXP(Math.floor(passiveGained / 100));
+                    const timeStr = timeDiff > maxOfflineTime ? ` (capped at ${Math.floor(maxOfflineTime / 3600)}h)` : '';
+                    logMessage(`While you were away from Gilded Syntax, you gained ${formatNumber(passiveGained)} Essence from passive income${timeStr}.`, "system-ok");
+                }
+                gameState.lastUpdateTime = now;
+                // Check daily login
+                const today = new Date().toDateString();
+                if (gameState.lastLoginDate !== today) {
+                    gameState.streak++;
+                    gameState.lastLoginDate = today;
+                    const bonus = gameState.streak * 1000; // 1K essence per streak day
+                    gameState.essence += bonus;
+                    logMessage(`Daily login bonus! Streak: ${gameState.streak} days. Gained ${formatNumber(bonus)} essence.`, "system-ok");
+                }
+                logMessage("Welcome back to Gilded Syntax, your progress has been restored.", "system-ok");
+            } else {
+                logMessage("Welcome to Gilded Syntax. Begin your ascent through the gilded realms.", "system");
+            }
+        }
+
+        // --- Initialization ---
+        function init() {
+            DOMElements.actionButton.addEventListener('click', handleActionClick);
+            DOMElements.bankModeToggle.addEventListener('change', toggleBankMode);
+            DOMElements.autoClickButton.addEventListener('click', toggleAutoClicker);
+            DOMElements.upgradeClick.addEventListener('click', buyClickUpgrade);
+            DOMElements.upgradePassive.addEventListener('click', buyPassiveUpgrade);
+            DOMElements.upgradeBank.addEventListener('click', buyBankUpgrade);
+            DOMElements.upgradeAutoClick.addEventListener('click', buyAutoClickUpgrade);
+            DOMElements.upgradeCritChance.addEventListener('click', buyCritChanceUpgrade);
+            DOMElements.upgradeCritMult.addEventListener('click', buyCritMultUpgrade);
+            DOMElements.upgradeLuck.addEventListener('click', buyLuckUpgrade);
+            DOMElements.upgradeEfficiency.addEventListener('click', buyEfficiencyUpgrade);
+            DOMElements.upgradeRegeneration.addEventListener('click', buyRegenerationUpgrade);
+            DOMElements.upgradeTimeCrystal.addEventListener('click', buyTimeCrystalUpgrade);
+            DOMElements.summonFireSprite.addEventListener('click', () => summonCompanion('fire_sprite'));
+            DOMElements.summonWaterNymph.addEventListener('click', () => summonCompanion('water_nymph'));
+            DOMElements.summonEarthGolem.addEventListener('click', () => summonCompanion('earth_golem'));
+            DOMElements.summonAirSpirit.addEventListener('click', () => summonCompanion('air_spirit'));
+            DOMElements.summonShadowImp.addEventListener('click', () => summonCompanion('shadow_imp'));
+            DOMElements.bankBoostButton.addEventListener('click', useBankBoost);
+            DOMElements.hireCEOButton.addEventListener('click', hireCEO);
+            DOMElements.bankInvestmentButton.addEventListener('click', useBankInvestment);
+            DOMElements.convertClicksButton.addEventListener('click', convertClicksToEssence);
+            DOMElements.prestigeButton.addEventListener('click', prestige);
+            DOMElements.exportSaveButton.addEventListener('click', exportSave);
+            document.getElementById('resetProfile').addEventListener('click', resetProfile);
+
+            loadGame();
+            loadZone();
+            updateUI();
+
+            // Passive income every second
+            setInterval(() => {
+                updatePassiveIncome();
+                updateUI();
+            }, 1000);
+        }
+
+        window.onload = init;
+
+    </script>
+</body>
+</html>
