@@ -70,6 +70,9 @@
             bottom: auto;
             transform: translateX(-50%) translateY(-8px);
         }
+        #zoneObjectivesContainer, #bankContainer {
+            transition: order 0.5s ease-in-out;
+        }
         #actionButton.shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
             transform: translate3d(0, 0, 0);
@@ -268,7 +271,7 @@
             </div>
 
             <!-- Quests/Challenges -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div id="zoneObjectivesContainer" class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
                   <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                       <span class="tooltip" data-tooltip="Current zone challenges to complete">Zone Objectives</span>
                       <span class="text-xs text-gray-500" id="zoneFlavorText"></span>
@@ -279,7 +282,7 @@
             </div>
             
             <!-- Bank Mode -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div id="bankContainer" class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <span class="tooltip" data-tooltip="Bank system for storing clicks">Essence Bank</span>
@@ -1066,14 +1069,22 @@
                 return;
             }
             gameState.isBankMode = DOMElements.bankModeToggle.checked;
+            // Animate container swap
+            const zoneEl = document.getElementById('zoneObjectivesContainer');
+            const bankEl = document.getElementById('bankContainer');
+            if (gameState.isBankMode) {
+                zoneEl.parentNode.insertBefore(bankEl, zoneEl);
+                logMessage("Bank mode activated. Clicks are now stored.", "system-ok");
+            } else {
+                zoneEl.parentNode.insertBefore(zoneEl, bankEl);
+                logMessage("Bank mode deactivated. Clicks now generate Essence.", "system");
+            }
             // Remove all color classes first
             DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
             if (gameState.isBankMode) {
-                logMessage("Bank mode activated. Clicks are now stored.", "system-ok");
                 DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
                 DOMElements.actionButtonText.textContent = "Store";
             } else {
-                logMessage("Bank mode deactivated. Clicks now generate Essence.", "system");
                 DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
                 DOMElements.actionButtonText.textContent = "Gather";
             }
