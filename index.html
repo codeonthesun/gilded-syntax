@@ -42,7 +42,7 @@
             position: absolute;
             bottom: 100%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(4px);
             background: #1f2937;
             color: #f9fafb;
             padding: 10px 15px;
@@ -53,12 +53,22 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
-            z-index: 1000;
+            z-index: 1001;
             border: 2px solid #374151;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .tooltip:hover::after {
             opacity: 1;
+        }
+        .tooltip.above::after {
+            bottom: 100%;
+            top: auto;
+            transform: translateX(-50%) translateY(4px);
+        }
+        .tooltip.below::after {
+            top: 100%;
+            bottom: auto;
+            transform: translateX(-50%) translateY(-8px);
         }
         #actionButton.shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
@@ -224,7 +234,7 @@
             <!-- Achievements -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Unlocked achievements and milestones">Achievements</h2>
-                <div id="achievementsList" class="space-y-1 text-sm max-h-48 overflow-y-auto">
+                <div id="achievementsList" class="space-y-1 text-sm">
                     <!-- Achievements will be injected here -->
                 </div>
             </div>
@@ -1527,18 +1537,31 @@
         }
 
         function updateAchievementsList() {
-            DOMElements.achievementsList.innerHTML = '';
-            ACHIEVEMENTS.forEach(achievement => {
-                const achEl = document.createElement('div');
-                achEl.className = 'flex justify-between items-center text-xs';
-                achEl.title = achievement.description;
-                if (gameState.achievements.includes(achievement.id)) {
-                    achEl.innerHTML = `<span class="text-yellow-400 font-bold">${achievement.name}</span><span class="text-green-500">✓</span>`;
-                } else {
-                    achEl.innerHTML = `<span class="text-gray-500">${achievement.name}</span><span class="text-gray-500">Locked</span>`;
-                }
-                DOMElements.achievementsList.appendChild(achEl);
-            });
+            const existing = DOMElements.achievementsList.children;
+            if (existing.length === ACHIEVEMENTS.length) {
+                // Update existing elements to prevent tooltip flickering
+                ACHIEVEMENTS.forEach((achievement, index) => {
+                    const achEl = existing[index];
+                    achEl.setAttribute('data-tooltip', achievement.description);
+                    achEl.classList.remove('above', 'below');
+                    achEl.classList.add(index < ACHIEVEMENTS.length - 3 ? 'below' : 'above');
+                });
+            } else {
+                // Recreate if list changed
+                DOMElements.achievementsList.innerHTML = '';
+                ACHIEVEMENTS.forEach((achievement, index) => {
+                    const achEl = document.createElement('div');
+                    achEl.className = 'flex justify-between items-center text-xs tooltip';
+                    achEl.classList.add(index < ACHIEVEMENTS.length - 3 ? 'below' : 'above');
+                    achEl.setAttribute('data-tooltip', achievement.description);
+                    if (gameState.achievements.includes(achievement.id)) {
+                        achEl.innerHTML = `<span class="text-yellow-400 font-bold">${achievement.name}</span><span class="text-green-500">✓</span>`;
+                    } else {
+                        achEl.innerHTML = `<span class="text-gray-500">${achievement.name}</span><span class="text-gray-500">Locked</span>`;
+                    }
+                    DOMElements.achievementsList.appendChild(achEl);
+                });
+            }
         }
 
         function loadZone() {
