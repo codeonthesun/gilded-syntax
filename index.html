@@ -76,6 +76,96 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Rarity Effects */
+        :root {
+            --common: #808080;
+            --uncommon: #2ecc71;
+            --rare: #3498db;
+            --epic: #8e44ad;
+            --legendary: #f39c12;
+        }
+
+        .rarity-prefix {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            display: inline-block;
+            margin-right: 0.75rem;
+        }
+        .rarity-prefix span {
+            position: relative;
+            display: inline-block;
+            z-index: 1;
+        }
+
+        .common { color: var(--common); }
+        .uncommon {
+            color: var(--uncommon);
+            animation: uncommon-glow 1000s infinite ease-in-out;
+        }
+        @keyframes uncommon-glow {
+            0%, 100% { text-shadow: 0 0 3px var(--uncommon); }
+            50% { text-shadow: 0 0 8px var(--uncommon); }
+        }
+        .rare {
+            color: var(--rare);
+            animation: rare-shimmer 1000s infinite alternate;
+        }
+        @keyframes rare-shimmer {
+            from { text-shadow: 0 0 10px var(--rare), 0 0 15px var(--rare); }
+            to { text-shadow: 0 0 20px var(--rare), 0 0 30px #a9d6f5; }
+        }
+        .epic {
+            color: var(--epic);
+            animation: epic-void 1000s infinite ease-in-out;
+        }
+        @keyframes epic-void {
+            0%, 100% {
+                text-shadow: 0 0 5px #000, 0 0 8px var(--epic), 0 0 12px #c39bd3;
+                transform: scale(1);
+            }
+            50% {
+                text-shadow: 0 0 8px #000, 0 0 15px var(--epic), 0 0 25px #c39bd3;
+                transform: scale(1.03);
+            }
+        }
+        .legendary {
+            color: #f7d674;
+            animation: legendary-fire 1000s infinite linear;
+        }
+        .legendary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 140%;
+            transform: translate(-50%, -50%);
+            border: 3px solid transparent;
+            border-radius: 10px;
+            animation: legendary-border-glow 2.5s infinite ease-in-out;
+        }
+        @keyframes legendary-fire {
+            0%, 100% {
+                text-shadow: 0 0 10px #f39c12, 0 0 20px #e67e22, 0 0 30px #d35400;
+            }
+            50% {
+                text-shadow: 0 0 12px #f1c40f, 0 0 24px #e67e22, 0 0 36px #d35400;
+            }
+        }
+        @keyframes legendary-border-glow {
+            0%, 100% {
+                border-color: #f39c12;
+                box-shadow: 0 0 15px #f39c12;
+            }
+            50% {
+                border-color: #f1c40f;
+                box-shadow: 0 0 25px #f1c40f, 0 0 5px #fff inset;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
@@ -93,7 +183,10 @@
 
             <!-- Active Events -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
-                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Active random events">Active Events</h2>
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
+                    <span class="tooltip" data-tooltip="Active random events">Active Events</span>
+                    <span class="text-xs text-gray-500" id="eventFlavorText"></span>
+                </h2>
                 <div id="activeEventsList" class="space-y-1 text-sm">
                     <!-- Events will be injected here -->
                 </div>
@@ -165,7 +258,10 @@
 
             <!-- Quests/Challenges -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
-                  <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Current zone challenges to complete">Zone Objectives</h2>
+                  <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
+                      <span class="tooltip" data-tooltip="Current zone challenges to complete">Zone Objectives</span>
+                      <span class="text-xs text-gray-500" id="zoneFlavorText"></span>
+                  </h2>
                   <div id="questList" class="space-y-2 text-sm">
                       <!-- Quests will be injected here -->
                   </div>
@@ -184,11 +280,8 @@
                         <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                 </h2>
-                <div class="flex items-center gap-4 text-sm">
-                    <div class="flex-grow">
-                        <p class="flex justify-between"><span class="tooltip" data-tooltip="Clicks stored in bank for auto-clicker">Stored Clicks:</span> <span id="bankedClicks" class="font-bold text-green-400"></span></p>
-                         <p class="flex justify-between"><span class="tooltip" data-tooltip="Maximum clicks that can be stored">Bank Size:</span> <span id="bankSize" class="font-bold text-gray-400"></span></p>
-                    </div>
+                <p class="text-center text-sm mb-4"><span class="tooltip" data-tooltip="Clicks stored in bank for auto-clicker / Maximum clicks that can be stored">Stored Clicks: <span id="bankedClicks" class="font-bold text-green-400"></span> / <span id="bankSize" class="font-bold text-gray-400"></span></span></p>
+                <div class="flex items-center gap-4 text-sm justify-center">
                     <button id="autoClickButton" data-tooltip="Toggle auto-clicker on/off. Costs 1 banked click per second." class="bg-green-700 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
                         Auto-Clicker: Off
                     </button>
@@ -832,6 +925,16 @@
                 return;
             }
 
+            // Check if boss is ready (only if not in bank mode)
+            if (!gameState.isBankMode && gameState.currentZoneIndex < gameState.zones.length) {
+                const zone = gameState.zones[gameState.currentZoneIndex];
+                const bossReady = zone.challenges.every(c => c.completed);
+                if (bossReady) {
+                    startBossFight();
+                    return;
+                }
+            }
+
             DOMElements.actionButton.classList.remove('shake');
             void DOMElements.actionButton.offsetWidth; // Trigger reflow
             DOMElements.actionButton.classList.add('shake');
@@ -1055,9 +1158,7 @@
                 if (!c.completed) allCompleted = false;
             });
 
-            if (allCompleted && !bossState.active && !gameState.isBankMode && allowBossTrigger) {
-                startBossFight();
-            }
+            // Boss fight is now manual via button
 
             updateQuestList();
         }
@@ -1206,13 +1307,12 @@
             DOMElements.actionButton.classList.add('h-32');
             DOMElements.actionButton.style.height = '8rem';
 
+            // Keep challenges completed, just reset button to Gather
             DOMElements.actionButtonText.textContent = "Gather";
             DOMElements.actionButton.classList.remove('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
             DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
 
-            // Make player re-do the challenges for penalty
-            zone.challenges.forEach(c => c.completed = false);
-            logMessage("Your failure has reset the zone's challenges.", "system-warn");
+            logMessage("Your failure has reset the zone's challenge.", "system-warn");
             
             updateUI();
         }
@@ -1251,7 +1351,7 @@
             DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
 
             // Bank
-            DOMElements.bankedClicks.textContent = `${formatNumber(gameState.bankedClicks)} / ${formatNumber(getBankSize())}`;
+            DOMElements.bankedClicks.textContent = formatNumber(gameState.bankedClicks);
             DOMElements.bankSize.textContent = formatNumber(getBankSize());
             const interestRate = (0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1);
             document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
@@ -1259,14 +1359,32 @@
             // Update bank mode UI
             if (bossState.active) {
                 DOMElements.actionButtonText.textContent = "ATTACK!";
-            } else if (gameState.isBankMode) {
-                DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
-                DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
-                DOMElements.actionButtonText.textContent = "Store";
             } else {
-                DOMElements.actionButton.classList.remove('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
-                DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
-                DOMElements.actionButtonText.textContent = "Gather";
+                // Check if boss is ready
+                let bossReady = false;
+                if (gameState.currentZoneIndex < gameState.zones.length) {
+                    const zone = gameState.zones[gameState.currentZoneIndex];
+                    bossReady = zone.challenges.every(c => c.completed);
+                }
+                if (gameState.isBankMode) {
+                    DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+                    DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+                    DOMElements.actionButtonText.textContent = "Store";
+                } else if (bossReady) {
+                    DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+                    DOMElements.actionButton.classList.add('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+                    DOMElements.actionButtonText.textContent = "BOSS!";
+                } else {
+                    DOMElements.actionButton.classList.remove('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
+                    DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+                    DOMElements.actionButtonText.textContent = "Gather";
+                }
+                // Hide action prompt when boss is ready
+                if (bossReady) {
+                    DOMElements.actionPrompt.style.display = 'none';
+                } else {
+                    DOMElements.actionPrompt.style.display = '';
+                }
             }
             DOMElements.bankModeToggle.checked = gameState.isBankMode;
             DOMElements.autoClickButton.textContent = gameState.isAutoClickerActive ? "Auto-Clicker: On" : "Auto-Clicker: Off";
@@ -1341,17 +1459,30 @@
             updateRelicsList();
             updateSpecialMechanicDisplay();
 
+            // Update event flavor text
+            const flavorEl = document.getElementById('eventFlavorText');
+            if (gameState.activeEvents.length > 0) {
+                flavorEl.textContent = '';
+            } else if (gameState.eventBufferCountdown > 0) {
+                flavorEl.textContent = `Event Incoming in: ${gameState.eventBufferCountdown}s`;
+            } else {
+                flavorEl.textContent = '';
+            }
+
             saveGame();
         }
         
         function updateQuestList() {
               if (gameState.currentZoneIndex >= gameState.zones.length) {
                 DOMElements.questList.innerHTML = `<p class="text-green-400">All syntax realms mastered!</p>`;
+                document.getElementById('zoneFlavorText').textContent = '';
                 return;
               }
             const zone = gameState.zones[gameState.currentZoneIndex];
             DOMElements.questList.innerHTML = '';
+            let allCompleted = true;
             zone.challenges.forEach(challenge => {
+                if (!challenge.completed) allCompleted = false;
                 const questEl = document.createElement('div');
                 questEl.className = 'space-y-1';
                 questEl.title = challenge.description;
@@ -1377,6 +1508,12 @@
                 }
                 DOMElements.questList.appendChild(questEl);
             });
+            // Update flavor text
+            if (allCompleted) {
+                document.getElementById('zoneFlavorText').textContent = 'Challenge Boss to Proceed';
+            } else {
+                document.getElementById('zoneFlavorText').textContent = 'Clear Objectives to Challenge Boss to Proceed';
+            }
         }
 
         function checkAchievements() {
@@ -1509,7 +1646,11 @@
             while (DOMElements.chatLog.children.length > 5) {
                 DOMElements.chatLog.removeChild(DOMElements.chatLog.firstChild);
             }
-            DOMElements.chatLog.scrollTop = DOMElements.chatLog.scrollHeight;
+            // Auto-scroll only if user is near the bottom
+            const isNearBottom = DOMElements.chatLog.scrollTop + DOMElements.chatLog.clientHeight >= DOMElements.chatLog.scrollHeight - 50;
+            if (isNearBottom) {
+                DOMElements.chatLog.scrollTop = DOMElements.chatLog.scrollHeight;
+            }
         }
         
         function showClickFeedback(text, colorClass) {
@@ -1642,8 +1783,22 @@
             }
 
             // Random event trigger (5% chance every second)
-            if (Math.random() < 0.05 && gameState.activeEvents.length === 0) {
+            if (Math.random() < 0.05 && gameState.activeEvents.length === 0 && !gameState.pendingEvent) {
                 triggerRandomEvent();
+                gameState.nextEventCountdown = 20; // Reset countdown on trigger
+            }
+
+            // Update event buffer
+            if (gameState.eventBufferCountdown > 0) {
+                gameState.eventBufferCountdown--;
+                if (gameState.eventBufferCountdown <= 0) {
+                    activatePendingEvent();
+                }
+            }
+
+            // Update event countdown
+            if (gameState.nextEventCountdown > 0) {
+                gameState.nextEventCountdown--;
             }
 
             // Update active events
@@ -1826,14 +1981,54 @@
             // Get events of selected rarity
             const rarityEvents = EVENTS.filter(e => e.rarity === selectedRarity);
             const event = rarityEvents[Math.floor(Math.random() * rarityEvents.length)];
+            gameState.pendingEvent = event;
+            gameState.eventBufferCountdown = 11;
+            const incomingMessages = [
+                "The veil between realms thins... An event stirs in the ether!",
+                "Whispers of power echo through the syntax... Something approaches!",
+                "The gilded threads of fate weave a new pattern... Brace yourself!",
+                "Ancient energies coalesce... A random event manifests soon!",
+                "The code of destiny rewrites itself... An event is imminent!"
+            ];
+            const randomMessage = incomingMessages[Math.floor(Math.random() * incomingMessages.length)];
+            logMessage(`Event Incoming: ${randomMessage}`, "system-ok");
+        }
+
+        function activatePendingEvent() {
+            const event = gameState.pendingEvent;
+            if (!event) return;
             gameState.activeEvents.push({
                 ...event,
                 startTime: Date.now(),
                 endTime: Date.now() + event.duration
             });
             const msgType = event.type === 'negative' ? "system-warn" : "system-ok";
-            logMessage(`Random Event: [${event.rarity}] ${event.name} - ${event.description}`, msgType);
+            logMessage(`Event Activated: (${event.rarity}) ${event.name}`, msgType);
+            // Add effect description
+            let effectDesc = "";
+            switch (event.effect) {
+                case 'double_click': effectDesc = "Doubles essence gained from clicks"; break;
+                case 'half_click': effectDesc = "Halves essence gained from clicks"; break;
+                case 'quarter_click': effectDesc = "Reduces click power by 25%"; break;
+                case 'triple_passive': effectDesc = "Triples passive income"; break;
+                case 'half_passive': effectDesc = "Halves passive income"; break;
+                case 'max_crit': effectDesc = "Grants 100% critical hit chance"; break;
+                case 'half_costs': effectDesc = "Halves upgrade costs"; break;
+                case 'double_bank': effectDesc = "Doubles bank interest rate"; break;
+                case 'quad_passive': effectDesc = "Quadruples passive income"; break;
+                case 'super_crit': effectDesc = "150% crit chance with 2x multiplier"; break;
+                case 'quintuple_click': effectDesc = "Quintuples essence from clicks"; break;
+                case 'infinite_crit': effectDesc = "100% crit chance with 3x multiplier"; break;
+                case 'double_prestige': effectDesc = "Doubles prestige multiplier"; break;
+                case 'legendary_boost': effectDesc = "Sextuples clicks and passive income"; break;
+                case 'freeze_boss': effectDesc = "Freezes boss timer for 30 seconds"; break;
+                case 'guarantee_rare': effectDesc = "Guarantees rare+ boss drops"; break;
+                case 'luck_boost': effectDesc = "Increases luck by 10%"; break;
+                default: effectDesc = event.description;
+            }
+            logMessage(`Effect: ${effectDesc} for ${event.duration / 1000} seconds`, "system");
             applyEventEffect(event);
+            gameState.pendingEvent = null;
             // Handle chained events
             if (event.chain === 'mini_boss') {
                 setTimeout(() => {
@@ -2011,16 +2206,6 @@
             }
         }
 
-        function getRarityColor(rarity) {
-            switch (rarity) {
-                case 'Common': return 'text-gray-400';
-                case 'Uncommon': return 'text-green-400';
-                case 'Rare': return 'text-blue-400';
-                case 'Epic': return 'text-purple-400';
-                case 'Legendary': return 'text-yellow-400';
-                default: return 'text-gray-400';
-            }
-        }
 
         function updateActiveEventsList() {
             DOMElements.activeEventsList.innerHTML = '';
@@ -2032,8 +2217,8 @@
                 const timeLeft = Math.ceil((event.endTime - Date.now()) / 1000);
                 const eventEl = document.createElement('div');
                 eventEl.className = 'flex justify-between items-center text-sm';
-                const rarityClass = getRarityColor(event.rarity);
-                eventEl.innerHTML = `<span class="${rarityClass}">[${event.rarity}] ${event.name}</span><span class="text-gray-400">${timeLeft}s</span>`;
+                const rarityClass = event.rarity.toLowerCase();
+                eventEl.innerHTML = `<span><span class="rarity-prefix ${rarityClass}"><span>(${event.rarity})</span></span>${event.name}</span><span class="text-gray-400">${timeLeft}s</span>`;
                 DOMElements.activeEventsList.appendChild(eventEl);
             });
         }
@@ -2101,6 +2286,9 @@
                 bossFrozen: false,
                 guaranteeRareDrop: false,
                 attackMultiplier: 1,
+                nextEventCountdown: 20,
+                pendingEvent: null,
+                eventBufferCountdown: 0,
                 bankMultiplier: 1,
                 autoClickMultiplier: 1,
                 achievements: []
@@ -2150,6 +2338,14 @@
             if (!zone || !zone.specialMechanic) {
                 DOMElements.specialMechanicDisplay.innerHTML = '';
                 return;
+            }
+            // Hide if boss is ready
+            if (gameState.currentZoneIndex < gameState.zones.length) {
+                const bossReady = zone.challenges.every(c => c.completed);
+                if (bossReady) {
+                    DOMElements.specialMechanicDisplay.innerHTML = '';
+                    return;
+                }
             }
             const mechanic = zone.specialMechanic;
             if (mechanic.type === 'debuff') {
@@ -2320,6 +2516,9 @@
                 if (typeof gameState.streak === 'undefined') gameState.streak = 0;
                 if (typeof gameState.lastLoginDate === 'undefined') gameState.lastLoginDate = new Date().toDateString();
                 if (typeof gameState.timeCrystalUpgradeLevel === 'undefined') gameState.timeCrystalUpgradeLevel = 0;
+                if (typeof gameState.nextEventCountdown === 'undefined') gameState.nextEventCountdown = 20;
+                if (typeof gameState.pendingEvent === 'undefined') gameState.pendingEvent = null;
+                if (typeof gameState.eventBufferCountdown === 'undefined') gameState.eventBufferCountdown = 0;
                 if (typeof gameState.bossFrozen === 'undefined') gameState.bossFrozen = false;
                 if (typeof gameState.guaranteeRareDrop === 'undefined') gameState.guaranteeRareDrop = false;
                 if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
@@ -2337,6 +2536,8 @@
                   });
                   // Reset bank mode on load
                   gameState.isBankMode = false;
+                  // Recheck quest completion
+                  checkQuestCompletion(false);
                   // Calculate offline passive income
                 const now = Date.now();
                 const timeDiff = (now - gameState.lastUpdateTime) / 1000;
