@@ -99,7 +99,10 @@ Inspired by fantasy RPGs and incremental games, Gilded Syntax features:
 - **Chained Events**: Some events trigger follow-up effects (e.g., mini-boss spawns)
 - **Special Effects**: Boss timer freezing, guaranteed rare drops, prestige bonuses
 - **Duration-Based**: Events last for set time periods, with rarer events lasting longer
-- **Visual Indicators**: Events display with color-coded rarity labels in the UI
+- **Visual Indicators**: Events display with animated, color-coded rarity labels in the UI
+- **Anticipation Mechanic**: Events trigger with a 10-second buffer period showing "Event Incoming in: Xs" countdown
+- **Effect Descriptions**: Each event activation includes a clear explanation of what the effect does and its duration
+- **Smart Auto-Scroll**: Chat log only auto-scrolls if you're near the bottom, preventing UI shifts during reading
 - **Example Events**:
   - **Common**: Essence Boost (2x clicks for 30s), Click Fatigue (25% click reduction for 20s)
   - **Uncommon**: Passive Surge (3x passive income for 60s), Bank Windfall (2x bank interest for 45s)
