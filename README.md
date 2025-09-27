@@ -88,10 +88,24 @@ Inspired by fantasy RPGs and incremental games, Gilded Syntax features:
 - **Multiplier Formula**: 1% bonus per prestige point
 
 ### Random Events
-- **Positive Events**: Essence boosts, passive surges, cost reductions
-- **Negative Events**: Essence drains, click penalties
-- **Chained Events**: Some events trigger follow-up effects
-- **Duration-Based**: Events last for set time periods
+- **Rarity Tiers**: Events are categorized into 5 rarity tiers with weighted probabilities:
+  - **Common** (40% chance): Short-duration basic effects
+  - **Uncommon** (30% chance): Medium-strength bonuses and debuffs
+  - **Rare** (20% chance): Strong multipliers and special mechanics
+  - **Epic** (7% chance): Very powerful effects with long durations
+  - **Legendary** (3% chance): Game-changing abilities and unique mechanics
+- **Positive Events**: Essence boosts, passive surges, cost reductions, critical enhancements
+- **Negative Events**: Essence drains, click penalties, reduced income
+- **Chained Events**: Some events trigger follow-up effects (e.g., mini-boss spawns)
+- **Special Effects**: Boss timer freezing, guaranteed rare drops, prestige bonuses
+- **Duration-Based**: Events last for set time periods, with rarer events lasting longer
+- **Visual Indicators**: Events display with color-coded rarity labels in the UI
+- **Example Events**:
+  - **Common**: Essence Boost (2x clicks for 30s), Click Fatigue (25% click reduction for 20s)
+  - **Uncommon**: Passive Surge (3x passive income for 60s), Bank Windfall (2x bank interest for 45s)
+  - **Rare**: Bargain Day (50% cost reduction for 45s), Critical Storm (150% crit chance + 2x multiplier for 30s)
+  - **Epic**: Godlike Boost (5x clicks for 60s), Prestige Surge (2x prestige multiplier for 90s)
+  - **Legendary**: Harvest of Legends (6x clicks/passive for 120s), Time Warp (freeze boss timer for 30s)
 
 ### Companions and Relics
 - **Companions**: Summoned beings providing permanent bonuses
