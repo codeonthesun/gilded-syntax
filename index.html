@@ -88,6 +88,9 @@
             box-shadow: 0 0 8px currentColor;
             animation: trace 0.6s ease forwards;
         }
+        .glow-static {
+            animation: faintGlow 1.5s infinite ease-in-out;
+        }
         @keyframes faintGlow {
             0%, 100% { text-shadow: 0 0 8px currentColor; }
             50% { text-shadow: 0 0 15px currentColor; }
@@ -1394,6 +1397,17 @@
             return '#ff00ff'; // magenta
         }
 
+        function getRarityColor(rarity) {
+            switch(rarity) {
+                case 'Common': return '#808080';
+                case 'Uncommon': return '#2ecc71';
+                case 'Rare': return '#3498db';
+                case 'Epic': return '#8e44ad';
+                case 'Legendary': return '#f39c12';
+                default: return '#ffffff';
+            }
+        }
+
         // --- UI Updates ---
         function updateUI() {
             // Stats
@@ -2395,6 +2409,14 @@
                 gameState.essence = 0;
                 logMessage("Debug: Reset essence to 0", "system");
             }
+            if (gameState.relics.length === 0) {
+                const relic = RELICS[Math.floor(Math.random() * RELICS.length)];
+                gameState.relics.push(relic);
+                logMessage(`Debug: Added relic ${relic.name}`, "system");
+            } else {
+                gameState.relics = [];
+                logMessage("Debug: Removed all relics", "system");
+            }
             updateUI();
         }
 
@@ -2420,8 +2442,9 @@
             }
             gameState.relics.forEach(relic => {
                 const relicEl = document.createElement('div');
-                relicEl.className = 'flex justify-between items-center text-sm';
-                relicEl.innerHTML = `<span class="text-yellow-400">${relic.name}</span><span class="text-green-400">${relic.description}</span>`;
+                relicEl.className = 'flex justify-between items-center text-sm glow-static';
+                relicEl.style.color = getRarityColor(relic.rarity);
+                relicEl.innerHTML = `<span>${relic.name}</span><span class="text-green-400">${relic.description}</span>`;
                 DOMElements.relicsList.appendChild(relicEl);
             });
         }
