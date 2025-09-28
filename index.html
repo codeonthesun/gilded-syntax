@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        * {
+            cursor: none !important; /* Hide system cursor globally for custom cursors */
+        }
         body {
             font-family: 'Inter', sans-serif;
             touch-action: manipulation; /* Prevents double-tap zoom on mobile */
@@ -98,6 +101,45 @@
         @keyframes trace {
             0% { width: 0; }
             100% { width: 100%; }
+        }
+
+        /* Custom Cursor Styles */
+        .custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 48px;
+            height: 48px;
+            z-index: 9999;
+            pointer-events: none;
+            transition: transform 0.05s ease-out;
+        }
+
+        .custom-cursor svg {
+            width: 100%;
+            height: 100%;
+            transform-origin: center;
+            transition: transform 0.1s ease-out;
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.6));
+        }
+
+        /* Pulse animation for crystal cursors */
+        .custom-cursor[data-shape="crystal"] svg,
+        .custom-cursor[data-shape="fireCrystal"] svg,
+        .custom-cursor[data-shape="shadowCrystal"] svg,
+        .custom-cursor[data-shape="shardCluster"] svg {
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(0.95); }
+        }
+
+        /* Clicking animation */
+        .custom-cursor.clicking svg {
+            transform: scale(0.85);
         }
         .shake {
             animation: shake 0.7s ease-in-out;
@@ -214,6 +256,35 @@
 </head>
 <body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
     <audio id="backgroundMusic" src="664408__seth_makes_sounds__whimsical-melancholic-song-thing.wav" preload="auto" loop></audio>
+
+    <!-- Custom Cursor -->
+    <div id="custom-cursor" class="custom-cursor" style="display: none;"></div>
+
+    <!-- SVG Definitions -->
+    <div style="display: none;">
+        <div id="crystalSVG">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+                <defs>
+                    <linearGradient id="crystalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#81e6d9;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#d6bcfa;stop-opacity:1" />
+                    </linearGradient>
+                    <filter id="crystalGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#crystalGlow)" transform="rotate(135 16 16)">
+                    <path d="M16 2 L22 12 L16 30 L10 12 Z" fill="url(#crystalGradient)" stroke="#a78bfa" stroke-width="1.5"/>
+                    <path d="M16 2 L10 12 L16 9 Z" fill="#faf5ff" opacity="0.7"/>
+                    <path d="M16 2 L22 12 L16 9 Z" fill="#e9d8fd" opacity="0.7"/>
+                </g>
+            </svg>
+        </div>
+    </div>
 
     <!-- Main Game Container -->
     <div class="flex flex-col md:flex-row min-h-screen w-full max-w-7xl mx-auto p-2 md:p-4 gap-4">
@@ -3054,6 +3125,7 @@
             loadGame();
             loadZone();
             updateUI();
+            setCursor();
 
             // Passive income every second
             setInterval(() => {
@@ -3072,6 +3144,38 @@
                 }
             }, { once: true });
         }
+
+        // Custom Cursor Logic
+        const customCursor = document.getElementById('custom-cursor');
+
+        function setCursor() {
+            const svgElement = document.getElementById('crystalSVG');
+            const svgContent = svgElement.outerHTML;
+            customCursor.innerHTML = svgContent;
+            customCursor.dataset.shape = 'crystal';
+            customCursor.style.display = 'block';
+        }
+
+        // Mouse move for cursor positioning
+        document.addEventListener('mousemove', e => {
+            if (customCursor.style.display === 'none') return;
+            // Hotspot for the up-left rotated crystal tip
+            const hotspotX = 9;
+            const hotspotY = 9;
+            const x = e.clientX - hotspotX;
+            const y = e.clientY - hotspotY;
+            customCursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        });
+
+        // Clicking animation
+        document.addEventListener('mousedown', () => {
+            if (customCursor.style.display !== 'none') {
+                customCursor.classList.add('clicking');
+            }
+        });
+        document.addEventListener('mouseup', () => {
+            customCursor.classList.remove('clicking');
+        });
 
         window.onload = init;
 
