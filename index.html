@@ -1477,6 +1477,8 @@
             DOMElements.playerCritChance.textContent = (gameState.critChance * 100).toFixed(1) + '%';
             DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
 
+            DOMElements.playerStreak.textContent = gameState.streak > 0 ? gameState.streak : '';
+
             // Bank
             DOMElements.bankedClicks.textContent = showFullBankedClicks ? gameState.bankedClicks.toLocaleString() : formatNumber(gameState.bankedClicks);
             DOMElements.bankSize.textContent = formatNumber(getBankSize());
@@ -1533,6 +1535,10 @@
             gameState.regenerationMultiplier = Math.pow(1.1, Math.min(gameState.regenerationUpgradeLevel, softCap)) * Math.pow(1.05, Math.max(gameState.regenerationUpgradeLevel - softCap, 0));
             gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
             gameState.critMultiplier = 2 + 0.5 * gameState.critMultUpgradeLevel;
+
+            // Reset multipliers that are affected by relics before applying effects
+            gameState.attackMultiplier = 1;
+            gameState.xpMultiplier = 1;
 
             // Apply companion, relic, and active event effects
             gameState.companions.forEach(companion => {
@@ -1874,6 +1880,14 @@
 
         function updatePassiveIncome() {
             const now = Date.now();
+            const today = new Date().toDateString();
+            if (gameState.lastLoginDate !== today) {
+                gameState.streak++;
+                gameState.lastLoginDate = today;
+                const bonus = gameState.streak * 1000;
+                gameState.essence += bonus;
+                logMessage(`Daily login bonus! Streak: ${gameState.streak} days. Gained ${formatNumber(bonus)} essence.`, "system-ok");
+            }
             const timeDiff = (now - gameState.lastUpdateTime) / 1000; // seconds
             let passiveRate = gameState.passiveIncomeRate;
             if (gameState.passiveBoostActive && now < gameState.passiveBoostEndTime) {
