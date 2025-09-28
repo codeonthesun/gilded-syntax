@@ -1,12 +1,28 @@
-# Gilded Syntax
+# 🎮 Gilded Syntax
 
-## Overview
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Game Theme](#game-theme)
+- [Core Features](#core-features)
+- [How to Play](#how-to-play)
+- [Core Gameplay Mechanics](#core-gameplay-mechanics)
+- [Zone Guide](#zone-guide)
+- [Detailed Bank System](#detailed-bank-system)
+- [Companion System Details](#companion-system-details)
+- [Relic Collection](#relic-collection)
+- [Mathematical Formulas](#mathematical-formulas)
+- [Gameplay Tips and Strategies](#gameplay-tips-and-strategies)
+- [Achievements](#achievements)
+- [Technical Details](#technical-details)
+- [Credits](#credits)
+
+## 🌟 Overview
 
 Gilded Syntax is an immersive clicker/idle game set in a fantastical world of magical realms and ancient powers. As an adventurer, you embark on a journey through progressively challenging zones, gathering "essence" – the fundamental energy of the universe – to grow stronger and unlock new abilities.
 
 The game combines classic clicker mechanics with strategic depth, featuring zone-based progression, boss battles, upgrade systems, companions, relics, and a prestige system for long-term replayability. With infinite zones after completing the main campaign, Gilded Syntax offers endless content for dedicated players.
 
-## Game Theme
+## 🎨 Game Theme
 
 Inspired by fantasy RPGs and incremental games, Gilded Syntax features:
 - **Fantasy Setting**: Explore zones like Whispering Glade, Volcanic Caldera, and Celestial Peak
@@ -14,24 +30,24 @@ Inspired by fantasy RPGs and incremental games, Gilded Syntax features:
 - **Progressive Difficulty**: Each zone introduces new challenges and mechanics
 - **Endless Content**: Infinite mode with procedurally generated zones
 
-## Core Features
+## ⚙️ Core Features
 
-- **Click-to-Gather Mechanics**: Manual clicking to collect essence
-- **Passive Income System**: Automatic essence generation
-- **Zone-Based Progression**: 20 unique zones with distinct challenges
-- **Boss Battles**: Timed combat encounters with strategic elements
-- **Upgrade System**: 10 different upgrade types for various stats
-- **Companion System**: Summon magical beings for permanent bonuses
-- **Relic Collection**: Rare drops from boss fights
-- **Bank System**: Store clicks for special abilities and auto-clicking
-- **Random Events**: Dynamic events that affect gameplay
-- **Prestige System**: Reset progress for permanent multipliers
-- **Achievement System**: 15+ achievements to unlock
-- **Infinite Mode**: Endless zones with scaling difficulty
-- **Save System**: Automatic local storage with export/import
-- **Daily Login Bonuses**: Streak-based rewards
+- **🖱️ Click-to-Gather Mechanics**: Manual clicking to collect essence
+- **💰 Passive Income System**: Automatic essence generation
+- **🗺️ Zone-Based Progression**: 18 unique zones with distinct challenges
+- **⚔️ Boss Battles**: Timed combat encounters with strategic elements
+- **⬆️ Upgrade System**: 10 different upgrade types for various stats
+- **👥 Companion System**: Summon magical beings for permanent bonuses
+- **💎 Relic Collection**: Rare drops from boss fights
+- **🏦 Bank System**: Store clicks for special abilities and auto-clicking
+- **🎲 Random Events**: Dynamic events that affect gameplay
+- **🔄 Prestige System**: Reset progress for permanent multipliers
+- **🏆 Achievement System**: 15+ achievements to unlock
+- **♾️ Infinite Mode**: Endless zones with scaling difficulty
+- **💾 Save System**: Automatic local storage with export/import
+- **📅 Daily Login Bonuses**: Streak-based rewards
 
-## How to Play
+## 🎮 How to Play
 
 ### Basic Gameplay
 1. **Start Clicking**: Click the main action button to gather essence
@@ -48,46 +64,46 @@ Inspired by fantasy RPGs and incremental games, Gilded Syntax features:
 4. Open your browser to `http://localhost:8000`
 5. Start playing!
 
-## Core Gameplay Mechanics
+## 🔧 Core Gameplay Mechanics
 
-### Essence Gathering
+### 💎 Essence Gathering
 - **Manual Clicks**: Primary way to collect essence
 - **Passive Income**: Automatic essence generation every second
 - **Critical Hits**: Chance for bonus damage on clicks
 - **CEO Bonus**: Temporary double-click effect from bank system
 
-### Zone Progression
-- **20 Main Zones**: Each with unique themes and challenges
-- **Infinite Zones**: Procedurally generated after zone 20
+### 🗺️ Zone Progression
+- **18 Main Zones**: Each with unique themes and challenges
+- **Infinite Zones**: Procedurally generated after zone 18
 - **Special Mechanics**: Some zones have unique effects (debuffs, mana systems)
 - **Boss Fights**: Timed battles that must be completed to advance
 
-### Combat System
+### ⚔️ Combat System
 - **Boss HP**: Fixed health that decreases with attacks
 - **Time Limits**: Bosses must be defeated within the timer
 - **Attack Damage**: Based on essence per click, scaled down for combat
 - **Failure Penalty**: Reset zone challenges on boss defeat failure
 
-### Bank System
+### 🏦 Bank System
 - **Bank Mode**: Toggle to store clicks instead of generating essence
 - **Bank Capacity**: Limited storage that can be upgraded
 - **Auto-Clicker**: Spend banked clicks for automatic clicking
 - **Special Abilities**: Boosts, CEO hiring, risky investments
 - **Interest**: Passive accumulation of banked clicks over time
 
-### Upgrade System
+### ⬆️ Upgrade System
 - **10 Upgrade Types**: Click power, passive income, bank capacity, etc.
 - **Exponential Costs**: Costs increase by 1.5x per level
 - **Efficiency Multiplier**: Reduces costs as you upgrade
 - **Diminishing Returns**: Multipliers weaken after level 50
 
-### Prestige System
+### 🔄 Prestige System
 - **Level Requirement**: Must reach level 50 to prestige
 - **Reset Benefits**: Permanent multipliers for all stats
 - **Prestige Points**: Earned based on level achieved
 - **Multiplier Formula**: 1% bonus per prestige point
 
-### Random Events
+### 🎲 Random Events
 - **Rarity Tiers**: Events are categorized into 5 rarity tiers with weighted probabilities:
   - **Common** (40% chance): Short-duration basic effects
   - **Uncommon** (30% chance): Medium-strength bonuses and debuffs
@@ -110,15 +126,15 @@ Inspired by fantasy RPGs and incremental games, Gilded Syntax features:
   - **Epic**: Godlike Boost (5x clicks for 60s), Prestige Surge (2x prestige multiplier for 90s)
   - **Legendary**: Harvest of Legends (6x clicks/passive for 120s), Time Warp (freeze boss timer for 30s)
 
-### Companions and Relics
+### 👥 Companions and Relics
 - **Companions**: Summoned beings providing permanent bonuses
 - **Relics**: Rare drops from boss fights
 - **Unlock Requirements**: Level-based for companions
 - **Stacking Effects**: Multiple items can be active simultaneously
 
-## Zone Guide
+## 🗺️ Zone Guide
 
-Gilded Syntax features 20 unique zones, each with distinct themes, challenges, and boss encounters. After completing all zones, infinite mode begins with procedurally generated zones of increasing difficulty.
+Gilded Syntax features 18 unique zones, each with distinct themes, challenges, and boss encounters. After completing all zones, infinite mode begins with procedurally generated zones of increasing difficulty.
 
 ### Zone 1: Whispering Glade
 - **Action Prompt**: The air is thick with ancient magic. Gather its essence.
@@ -305,17 +321,13 @@ Gilded Syntax features 20 unique zones, each with distinct themes, challenges, a
   - Flavor: The supreme ruler of all existence, wielding power beyond comprehension. Dethrone the emperor!
 - **Special Mechanic**: None
 
-### Zones 19-20: Additional Main Zones
-- **Zone 19**: Arcane Library - Boss: Knowledge Keeper
-- **Zone 20**: Primal Wilds - Boss: Beast Lord
-
 **Note**: Boss fights have a chance to drop relics upon victory. Relics are random and not zone-specific.
 
-## Detailed Bank System
+## 🏦 Detailed Bank System
 
 The bank system allows you to store clicks for later use, providing strategic depth and automation options. Banked clicks cannot be used for essence gathering but unlock powerful abilities.
 
-### Bank Mode Toggle
+### 🔄 Bank Mode Toggle
 - **How it works**: Switch between "Gather" mode (generates essence) and "Store" mode (banks clicks)
 - **Capacity**: Limited by bank size, which increases with level and upgrades
 - **Visual Feedback**: Button changes color and text to indicate current mode
@@ -362,11 +374,11 @@ The bank system allows you to store clicks for later use, providing strategic de
 - **Display**: Shows accumulated interest in the UI
 - **Logging**: Reports interest gains every 10 seconds
 
-## Companion System Details
+## 👥 Companion System Details
 
 Companions are magical beings you can summon to provide permanent stat bonuses. Once summoned, they remain active indefinitely and their effects stack with other companions.
 
-### How to Summon
+### 🧙 How to Summon
 - **Cost**: Essence (varies by companion)
 - **Requirements**: Must meet level requirement
 - **Availability**: Unlocked at specific levels
@@ -405,11 +417,11 @@ Companions are magical beings you can summon to provide permanent stat bonuses. 
 - **No Conflicts**: All companions work together harmoniously
 - **Strategic Value**: Early companions help with core stats, later ones provide specialized bonuses
 
-## Relic Collection
+## 💎 Relic Collection
 
 Relics are rare magical artifacts dropped randomly from boss fights. They provide permanent bonuses similar to companions but are chance-based rewards.
 
-### How to Obtain
+### 🎁 How to Obtain
 - **Source**: Boss fight victories
 - **Drop Chance**: ~10-50% depending on fight performance (time remaining)
 - **Rarity**: All relics are equally rare, drops are random
@@ -442,15 +454,25 @@ Relics are rare magical artifacts dropped randomly from boss fights. They provid
 - **Description**: An ancient tome that reduces upgrade costs
 - **Bonus Type**: Multiplicative (1.05x to efficiency multiplier)
 
+#### Blade of Echoes
+- **Effect**: +15% attack damage
+- **Description**: A blade that echoes with the power of fallen warriors
+- **Bonus Type**: Multiplicative (1.15x to attack damage)
+
+#### Tome of Knowledge
+- **Effect**: +20% XP gain
+- **Description**: An ancient tome filled with forgotten wisdom
+- **Bonus Type**: Multiplicative (1.2x to XP gain)
+
 ### Relic Mechanics
 - **Permanent Effects**: Active once collected, persist through saves
 - **Stacking**: Multiple different relics can be active
 - **Strategic Value**: Provide bonuses similar to high-level upgrades
 - **Collection Goal**: All relics are worth collecting for their unique effects
 
-## Mathematical Formulas
+## 🔢 Mathematical Formulas
 
-### Essence Calculations
+### 💎 Essence Calculations
 
 **Essence Per Click**:
 ```
@@ -483,7 +505,7 @@ critMultiplier = 2 + (0.5 * critMultUpgradeLevel)
 - Base: 2x damage
 - Bonus: +0.5x per upgrade level
 
-### Progression Formulas
+### 📈 Progression Formulas
 
 **XP to Next Level**:
 ```
@@ -497,7 +519,7 @@ xpToNext = 100 * (1.5 ^ (level - 1))
 - Bank Size: `floor((50 + level * 10) * bankMultiplier * prestigeMultiplier)`
 - Auto-Click Rate: `floor((1 + floor(level / 5)) * autoClickMultiplier * prestigeMultiplier)`
 
-### Upgrade Costs
+### 💰 Upgrade Costs
 
 **General Formula**:
 ```
@@ -519,7 +541,7 @@ cost = floor(baseCost * (1.5 ^ upgradeLevel) * efficiencyMultiplier)
 - Regeneration: 700 essence
 - Time Crystal: 1000 essence
 
-### Multiplier Calculations
+### ⚖️ Multiplier Calculations
 
 **Upgrade Multipliers** (with diminishing returns after Lv. 50):
 ```
@@ -534,7 +556,7 @@ prestigeMultiplier = 1 + (prestigePoints * 0.01)
 ```
 - 1% bonus per prestige point earned
 
-### Bank and Interest
+### 🏦 Bank and Interest
 
 **Bank Capacity**:
 ```
@@ -550,55 +572,55 @@ interest = (bankedClicks * 0.005 / 60) * (1 + bankUpgradeLevel * 0.1)
 - Base: 0.005% per minute (compounded)
 - Bank Upgrades: +10% per level
 
-### Zone Scaling
+### 🗺️ Zone Scaling
 
 **Infinite Zone Difficulty**:
 ```
-scale = 1.5 ^ (zoneIndex - 20)
+scale = 1.5 ^ (zoneIndex - 18)
 ```
 - Essence requirements: `100000000000 * scale`
 - Click requirements: `1000000000 * scale`
 - Boss HP: `1000000000 * (1.2 ^ zoneIndex)`
 
-## Gameplay Tips and Strategies
+## 💡 Gameplay Tips and Strategies
 
-### Early Game (Levels 1-10)
+### 🌱 Early Game (Levels 1-10)
 - Focus on completing zone challenges quickly
 - Upgrade click power and passive income first
 - Save essence for critical upgrades
 - Use bank mode sparingly until you have upgrades
 
-### Mid Game (Levels 10-50)
+### 🌿 Mid Game (Levels 10-50)
 - Balance all upgrade types
 - Start collecting companions when available
 - Use bank system for auto-clicking and boosts
 - Complete achievements for milestones
 
-### Late Game (Level 50+)
+### 🌌 Late Game (Level 50+)
 - Consider prestiging for multipliers
 - Focus on efficiency and regeneration upgrades
 - Collect relics from boss fights
 - Optimize bank usage for maximum passive income
 
-### Boss Fight Strategies
+### ⚔️ Boss Fight Strategies
 - Save banked clicks for CEO bonus during fights
 - Time your clicks to maximize critical hits
 - Use zone-specific mechanics to your advantage
 - Don't waste time - defeat bosses quickly
 
-### Optimization Tips
+### 🎯 Optimization Tips
 - Efficiency upgrades reduce future costs significantly
 - Luck affects critical hits and random events
 - Regeneration provides passive income bonuses
 - Time crystals increase offline progress caps
 
-### Advanced Strategies
+### 🚀 Advanced Strategies
 - Risky investments can be profitable if timed well
 - Daily login streaks provide free essence
 - Export saves regularly for backup
 - Balance manual clicking with passive income
 
-## Achievements
+## 🏆 Achievements
 
 The game features 15+ achievements tracking various milestones:
 - First click and basic progression
@@ -607,7 +629,7 @@ The game features 15+ achievements tracking various milestones:
 - Prestige and advanced features
 - Special conditions like streaks and relic collection
 
-## Technical Details
+## 🛠️ Technical Details
 
 - **Built with**: HTML5, CSS3 (Tailwind), JavaScript (ES6+)
 - **Backend**: Python Flask for serving
@@ -615,7 +637,7 @@ The game features 15+ achievements tracking various milestones:
 - **Responsive**: Mobile-friendly design
 - **Performance**: Optimized for long play sessions
 
-## Credits
+## 🙏 Credits
 
 Gilded Syntax was created as a passion project exploring incremental game mechanics with fantasy themes. The game features original artwork, balanced progression systems, and deep strategic elements designed for long-term engagement.
 
