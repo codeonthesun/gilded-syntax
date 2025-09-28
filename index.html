@@ -213,6 +213,7 @@
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
+    <audio id="backgroundMusic" src="664408__seth_makes_sounds__whimsical-melancholic-song-thing.wav" preload="auto" loop></audio>
 
     <!-- Main Game Container -->
     <div class="flex flex-col md:flex-row min-h-screen w-full max-w-7xl mx-auto p-2 md:p-4 gap-4">
@@ -281,6 +282,7 @@
                 <button id="exportSaveButton" data-tooltip="Export your save data to clipboard for sharing or backup" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Export Save</button>
                 <button id="resetProfile" data-tooltip="Reset all progress and start fresh" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Reset Profile</button>
                 <button id="debugButton" data-tooltip="Debug: Toggle essence between 1M and 0" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Debug</button>
+                <button id="musicToggleButton" data-tooltip="Toggle background music on/off" class="bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Music: On</button>
             </div>
         </div>
 
@@ -901,6 +903,7 @@
             bossFrozen: false,
             guaranteeRareDrop: false,
             fractionalBankInterest: 0,
+            musicEnabled: true,
         };
         
         // DOM Elements
@@ -965,7 +968,8 @@
             summonAirSpirit: document.getElementById('summonAirSpirit'),
             summonShadowImp: document.getElementById('summonShadowImp'),
             companionFlavor: document.getElementById('companionFlavor'),
-            specialMechanicDisplay: document.getElementById('specialMechanicDisplay')
+            specialMechanicDisplay: document.getElementById('specialMechanicDisplay'),
+            musicToggleButton: document.getElementById('musicToggleButton')
         };
         
         let bossState = {
@@ -1591,6 +1595,17 @@
             updateCompanionsList();
             updateRelicsList();
             updateSpecialMechanicDisplay();
+
+            // Update music toggle button
+            if (gameState.musicEnabled) {
+                DOMElements.musicToggleButton.textContent = 'Music: On';
+                DOMElements.musicToggleButton.classList.remove('bg-red-700', 'hover:bg-red-600');
+                DOMElements.musicToggleButton.classList.add('bg-green-700', 'hover:bg-green-600');
+            } else {
+                DOMElements.musicToggleButton.textContent = 'Music: Off';
+                DOMElements.musicToggleButton.classList.remove('bg-green-700', 'hover:bg-green-600');
+                DOMElements.musicToggleButton.classList.add('bg-red-700', 'hover:bg-red-600');
+            }
 
             // Update event flavor text
             const flavorEl = document.getElementById('eventFlavorText');
@@ -2523,7 +2538,8 @@
                 autoClickMultiplier: 1,
                 originalZoneName: null,
                 achievements: [],
-                fractionalBankInterest: 0
+                fractionalBankInterest: 0,
+                musicEnabled: true
             };
         }
 
@@ -2748,6 +2764,36 @@
             return (num / 1000000000000000).toFixed(1) + 'Q';
         }
 
+        function fadeInAudio(audio, targetVolume, duration) {
+            const startVolume = audio.volume;
+            const volumeStep = (targetVolume - startVolume) / (duration / 100);
+            const fadeInterval = setInterval(() => {
+                audio.volume += volumeStep;
+                if (audio.volume >= targetVolume) {
+                    audio.volume = targetVolume;
+                    clearInterval(fadeInterval);
+                }
+            }, 100);
+        }
+
+        function toggleMusic() {
+            gameState.musicEnabled = !gameState.musicEnabled;
+            const audio = document.getElementById('backgroundMusic');
+            if (gameState.musicEnabled) {
+                audio.volume = 0.3;
+                audio.play().catch(e => console.log('Audio play failed:', e));
+                DOMElements.musicToggleButton.textContent = 'Music: On';
+                DOMElements.musicToggleButton.classList.remove('bg-red-700', 'hover:bg-red-600');
+                DOMElements.musicToggleButton.classList.add('bg-green-700', 'hover:bg-green-600');
+            } else {
+                audio.pause();
+                DOMElements.musicToggleButton.textContent = 'Music: Off';
+                DOMElements.musicToggleButton.classList.remove('bg-green-700', 'hover:bg-green-600');
+                DOMElements.musicToggleButton.classList.add('bg-red-700', 'hover:bg-red-600');
+            }
+            updateUI();
+        }
+
         function getClickUpgradeCost() { return Math.floor(100 * Math.pow(1.5, gameState.clickUpgradeLevel) * gameState.efficiencyMultiplier); }
         function getPassiveUpgradeCost() { return Math.floor(200 * Math.pow(1.5, gameState.passiveUpgradeLevel) * gameState.efficiencyMultiplier); }
         function getBankUpgradeCost() { return Math.floor(150 * Math.pow(1.5, gameState.bankUpgradeLevel) * gameState.efficiencyMultiplier); }
@@ -2828,6 +2874,7 @@
                 if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
                 if (typeof gameState.originalZoneName === 'undefined') gameState.originalZoneName = null;
                 if (typeof gameState.fractionalBankInterest === 'undefined') gameState.fractionalBankInterest = 0;
+                if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = true;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
@@ -2983,6 +3030,12 @@
             DOMElements.playerAttack.addEventListener('click', () => { showFullAttack = !showFullAttack; updateUI(); });
             DOMElements.bankedClicks.addEventListener('click', () => { showFullBankedClicks = !showFullBankedClicks; updateUI(); });
 
+            // Music toggle button
+            DOMElements.musicToggleButton.addEventListener('mousedown', () => DOMElements.musicToggleButton.classList.add('pressed'));
+            DOMElements.musicToggleButton.addEventListener('mouseup', () => DOMElements.musicToggleButton.classList.remove('pressed'));
+            DOMElements.musicToggleButton.addEventListener('mouseleave', () => DOMElements.musicToggleButton.classList.remove('pressed'));
+            DOMElements.musicToggleButton.addEventListener('click', toggleMusic);
+
             loadGame();
             loadZone();
             updateUI();
@@ -2992,6 +3045,17 @@
                 updatePassiveIncome();
                 updateUI();
             }, 1000);
+
+            // Play background music on first interaction
+            document.addEventListener('click', () => {
+                const audio = document.getElementById('backgroundMusic');
+                if (audio && audio.paused && gameState.musicEnabled) {
+                    audio.volume = 0;
+                    audio.play().then(() => {
+                        fadeInAudio(audio, 0.3, 2000); // fade to 0.3 over 2 seconds
+                    }).catch(e => console.log('Audio play failed:', e));
+                }
+            }, { once: true });
         }
 
         window.onload = init;
