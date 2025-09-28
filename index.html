@@ -84,13 +84,13 @@
             left: 0;
             width: 0;
             height: 2px;
-            background: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
             animation: trace 0.6s ease forwards;
         }
         @keyframes faintGlow {
-            0%, 100% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.7); }
-            50% { text-shadow: 0 0 15px rgba(255, 255, 255, 1); }
+            0%, 100% { text-shadow: 0 0 8px currentColor; }
+            50% { text-shadow: 0 0 15px currentColor; }
         }
         @keyframes trace {
             0% { width: 0; }
@@ -273,6 +273,7 @@
                 <button id="prestigeButton" data-tooltip="Reset progress to gain prestige points for permanent multipliers. Requires level 50." class="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Prestige</button>
                 <button id="exportSaveButton" data-tooltip="Export your save data to clipboard for sharing or backup" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Export Save</button>
                 <button id="resetProfile" data-tooltip="Reset all progress and start fresh" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Reset Profile</button>
+                <button id="debugButton" data-tooltip="Debug: Toggle essence between 1M and 0" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Debug</button>
             </div>
         </div>
 
@@ -394,23 +395,23 @@
                 </div>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between items-center">
-                        <span>Fire Sprite (Level: 5) (1000 Ess)</span>
+                        <span class="text-gray-500">Fire Sprite (Level: 5) (1000 Ess)</span>
                         <button id="summonFireSprite" data-tooltip="Summon Fire Sprite for +10% click power" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span>Water Nymph (Level: 10) (2000 Ess)</span>
+                        <span class="text-gray-500">Water Nymph (Level: 10) (2000 Ess)</span>
                         <button id="summonWaterNymph" data-tooltip="Summon Water Nymph for +10% passive income" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span>Earth Golem (Level: 15) (3000 Ess)</span>
+                        <span class="text-gray-500">Earth Golem (Level: 15) (3000 Ess)</span>
                         <button id="summonEarthGolem" data-tooltip="Summon Earth Golem for +10% bank capacity" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span>Air Spirit (Level: 20) (4000 Ess)</span>
+                        <span class="text-gray-500">Air Spirit (Level: 20) (4000 Ess)</span>
                         <button id="summonAirSpirit" data-tooltip="Summon Air Spirit for +10% auto-click rate" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span>Shadow Imp (Level: 25) (5000 Ess)</span>
+                        <span class="text-gray-500">Shadow Imp (Level: 25) (5000 Ess)</span>
                         <button id="summonShadowImp" data-tooltip="Summon Shadow Imp for +5% critical chance" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
                     </div>
                 </div>
@@ -1380,6 +1381,19 @@
             checkQuestCompletion();
         }
         
+        function getUpgradeColor(level) {
+            if (level < 10) return '#808080'; // gray
+            if (level < 20) return '#2ecc71'; // green
+            if (level < 30) return '#3498db'; // blue
+            if (level < 40) return '#8e44ad'; // purple
+            if (level < 50) return '#f39c12'; // gold
+            if (level < 60) return '#e74c3c'; // crimson
+            if (level < 70) return '#d35400'; // burnt orange
+            if (level < 80) return '#ffffff'; // white
+            if (level < 90) return '#00ffff'; // cyan
+            return '#ff00ff'; // magenta
+        }
+
         // --- UI Updates ---
         function updateUI() {
             // Stats
@@ -1463,26 +1477,36 @@
                 applyEventEffect(event);
             });
 
-            // Update upgrade labels
+            // Update upgrade labels with rarity colors
             DOMElements.clickLabel.textContent = `Click Power (Lv.${gameState.clickUpgradeLevel})`;
+            DOMElements.clickLabel.style.color = getUpgradeColor(gameState.clickUpgradeLevel);
             DOMElements.upgradeClick.textContent = `Upgrade (${formatNumber(getClickUpgradeCost())} Ess)`;
             DOMElements.passiveLabel.textContent = `Passive Income (Lv.${gameState.passiveUpgradeLevel})`;
+            DOMElements.passiveLabel.style.color = getUpgradeColor(gameState.passiveUpgradeLevel);
             DOMElements.upgradePassive.textContent = `Upgrade (${formatNumber(getPassiveUpgradeCost())} Ess)`;
             DOMElements.bankLabel.textContent = `Bank Capacity (Lv.${gameState.bankUpgradeLevel})`;
+            DOMElements.bankLabel.style.color = getUpgradeColor(gameState.bankUpgradeLevel);
             DOMElements.upgradeBank.textContent = `Upgrade (${formatNumber(getBankUpgradeCost())} Ess)`;
             DOMElements.autoLabel.textContent = `Auto-Clicker (Lv.${gameState.autoClickUpgradeLevel})`;
+            DOMElements.autoLabel.style.color = getUpgradeColor(gameState.autoClickUpgradeLevel);
             DOMElements.upgradeAutoClick.textContent = `Upgrade (${formatNumber(getAutoClickUpgradeCost())} Ess)`;
             DOMElements.critChanceLabel.textContent = `Critical Chance (Lv.${gameState.critChanceUpgradeLevel})`;
+            DOMElements.critChanceLabel.style.color = getUpgradeColor(gameState.critChanceUpgradeLevel);
             DOMElements.upgradeCritChance.textContent = `Upgrade (${formatNumber(getCritChanceUpgradeCost())} Ess)`;
             DOMElements.critMultLabel.textContent = `Critical Multiplier (Lv.${gameState.critMultUpgradeLevel})`;
+            DOMElements.critMultLabel.style.color = getUpgradeColor(gameState.critMultUpgradeLevel);
             DOMElements.upgradeCritMult.textContent = `Upgrade (${formatNumber(getCritMultUpgradeCost())} Ess)`;
             DOMElements.luckLabel.textContent = `Luck (Lv.${gameState.luckUpgradeLevel})`;
+            DOMElements.luckLabel.style.color = getUpgradeColor(gameState.luckUpgradeLevel);
             DOMElements.upgradeLuck.textContent = `Upgrade (${formatNumber(getLuckUpgradeCost())} Ess)`;
             DOMElements.efficiencyLabel.textContent = `Efficiency (Lv.${gameState.efficiencyUpgradeLevel})`;
+            DOMElements.efficiencyLabel.style.color = getUpgradeColor(gameState.efficiencyUpgradeLevel);
             DOMElements.upgradeEfficiency.textContent = `Upgrade (${formatNumber(getEfficiencyUpgradeCost())} Ess)`;
             DOMElements.regenerationLabel.textContent = `Regeneration (Lv.${gameState.regenerationUpgradeLevel})`;
+            DOMElements.regenerationLabel.style.color = getUpgradeColor(gameState.regenerationUpgradeLevel);
             DOMElements.upgradeRegeneration.textContent = `Upgrade (${formatNumber(getRegenerationUpgradeCost())} Ess)`;
             DOMElements.timeCrystalLabel.textContent = `Time Crystal (Lv.${gameState.timeCrystalUpgradeLevel})`;
+            DOMElements.timeCrystalLabel.style.color = getUpgradeColor(gameState.timeCrystalUpgradeLevel);
             DOMElements.upgradeTimeCrystal.textContent = `Upgrade (${formatNumber(getTimeCrystalUpgradeCost())} Ess)`;
 
             // Prestige
@@ -2363,6 +2387,17 @@
             }
         }
 
+        function debugToggle() {
+            if (gameState.essence === 0) {
+                gameState.essence = 1000000;
+                logMessage("Debug: Set essence to 1,000,000", "system");
+            } else {
+                gameState.essence = 0;
+                logMessage("Debug: Reset essence to 0", "system");
+            }
+            updateUI();
+        }
+
         function updateCompanionsList() {
             DOMElements.companionsList.innerHTML = '';
             if (gameState.companions.length === 0) {
@@ -2372,7 +2407,7 @@
             gameState.companions.forEach(companion => {
                 const companionEl = document.createElement('div');
                 companionEl.className = 'flex justify-between items-center text-sm';
-                companionEl.innerHTML = `<span class="text-purple-400">${companion.name}</span><span class="text-green-400">${companion.description}</span>`;
+                companionEl.innerHTML = `<span class="text-white">${companion.name}</span><span class="text-green-400">${companion.description}</span>`;
                 DOMElements.companionsList.appendChild(companionEl);
             });
         }
@@ -2683,6 +2718,7 @@
             DOMElements.prestigeButton.addEventListener('click', prestige);
             DOMElements.exportSaveButton.addEventListener('click', exportSave);
             document.getElementById('resetProfile').addEventListener('click', resetProfile);
+            document.getElementById('debugButton').addEventListener('click', debugToggle);
 
             loadGame();
             loadZone();
