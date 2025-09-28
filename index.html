@@ -1498,8 +1498,8 @@
                     DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
                     DOMElements.actionButtonText.textContent = "Gather";
                 }
-                // Hide action prompt when boss is ready
-                if (bossReady) {
+                // Hide action prompt when boss is ready or bank mode is active
+                if (bossReady || gameState.isBankMode) {
                     DOMElements.actionPrompt.style.display = 'none';
                 } else {
                     DOMElements.actionPrompt.style.display = '';
