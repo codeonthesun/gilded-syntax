@@ -1124,6 +1124,14 @@
                 return;
             }
             gameState.isBankMode = DOMElements.bankModeToggle.checked;
+            if (gameState.isBankMode) {
+                gameState.originalZoneName = DOMElements.zoneName.textContent;
+                DOMElements.zoneName.textContent = "Bank";
+            } else {
+                if (gameState.originalZoneName) {
+                    DOMElements.zoneName.textContent = gameState.originalZoneName;
+                }
+            }
             // Animate container swap
             const zoneEl = document.getElementById('zoneObjectivesContainer');
             const bankEl = document.getElementById('bankContainer');
@@ -2505,6 +2513,7 @@
                 eventBufferCountdown: 0,
                 bankMultiplier: 1,
                 autoClickMultiplier: 1,
+                originalZoneName: null,
                 achievements: []
             };
         }
@@ -2807,6 +2816,7 @@
                 if (typeof gameState.bossFrozen === 'undefined') gameState.bossFrozen = false;
                 if (typeof gameState.guaranteeRareDrop === 'undefined') gameState.guaranteeRareDrop = false;
                 if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
+                if (typeof gameState.originalZoneName === 'undefined') gameState.originalZoneName = null;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
