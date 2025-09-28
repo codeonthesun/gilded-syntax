@@ -2606,10 +2606,10 @@
                 DOMElements.specialMechanicDisplay.innerHTML = '';
                 return;
             }
-            // Hide if boss is ready
+            // Hide if boss is ready or bank mode is active
             if (gameState.currentZoneIndex < gameState.zones.length) {
                 const bossReady = zone.challenges.every(c => c.completed);
-                if (bossReady) {
+                if (bossReady || gameState.isBankMode) {
                     DOMElements.specialMechanicDisplay.innerHTML = '';
                     return;
                 }
