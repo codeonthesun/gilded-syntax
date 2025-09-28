@@ -73,6 +73,29 @@
         #zoneObjectivesContainer, #bankContainer {
             transition: order 0.5s ease-in-out;
         }
+        .glow {
+            animation: faintGlow 1.5s infinite ease-in-out;
+            position: relative;
+        }
+        .glow::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            animation: trace 0.6s ease forwards;
+        }
+        @keyframes faintGlow {
+            0%, 100% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.7); }
+            50% { text-shadow: 0 0 15px rgba(255, 255, 255, 1); }
+        }
+        @keyframes trace {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
         #actionButton.shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
             transform: translate3d(0, 0, 0);
@@ -2616,11 +2639,43 @@
             DOMElements.upgradeEfficiency.addEventListener('click', buyEfficiencyUpgrade);
             DOMElements.upgradeRegeneration.addEventListener('click', buyRegenerationUpgrade);
             DOMElements.upgradeTimeCrystal.addEventListener('click', buyTimeCrystalUpgrade);
+            // Add glow effects for upgrade labels on button hover
+            DOMElements.upgradeClick.addEventListener('mouseenter', () => DOMElements.clickLabel.classList.add('glow'));
+            DOMElements.upgradeClick.addEventListener('mouseleave', () => DOMElements.clickLabel.classList.remove('glow'));
+            DOMElements.upgradePassive.addEventListener('mouseenter', () => DOMElements.passiveLabel.classList.add('glow'));
+            DOMElements.upgradePassive.addEventListener('mouseleave', () => DOMElements.passiveLabel.classList.remove('glow'));
+            DOMElements.upgradeBank.addEventListener('mouseenter', () => DOMElements.bankLabel.classList.add('glow'));
+            DOMElements.upgradeBank.addEventListener('mouseleave', () => DOMElements.bankLabel.classList.remove('glow'));
+            DOMElements.upgradeAutoClick.addEventListener('mouseenter', () => DOMElements.autoLabel.classList.add('glow'));
+            DOMElements.upgradeAutoClick.addEventListener('mouseleave', () => DOMElements.autoLabel.classList.remove('glow'));
+            DOMElements.upgradeCritChance.addEventListener('mouseenter', () => DOMElements.critChanceLabel.classList.add('glow'));
+            DOMElements.upgradeCritChance.addEventListener('mouseleave', () => DOMElements.critChanceLabel.classList.remove('glow'));
+            DOMElements.upgradeCritMult.addEventListener('mouseenter', () => DOMElements.critMultLabel.classList.add('glow'));
+            DOMElements.upgradeCritMult.addEventListener('mouseleave', () => DOMElements.critMultLabel.classList.remove('glow'));
+            DOMElements.upgradeLuck.addEventListener('mouseenter', () => DOMElements.luckLabel.classList.add('glow'));
+            DOMElements.upgradeLuck.addEventListener('mouseleave', () => DOMElements.luckLabel.classList.remove('glow'));
+            DOMElements.upgradeEfficiency.addEventListener('mouseenter', () => DOMElements.efficiencyLabel.classList.add('glow'));
+            DOMElements.upgradeEfficiency.addEventListener('mouseleave', () => DOMElements.efficiencyLabel.classList.remove('glow'));
+            DOMElements.upgradeRegeneration.addEventListener('mouseenter', () => DOMElements.regenerationLabel.classList.add('glow'));
+            DOMElements.upgradeRegeneration.addEventListener('mouseleave', () => DOMElements.regenerationLabel.classList.remove('glow'));
+            DOMElements.upgradeTimeCrystal.addEventListener('mouseenter', () => DOMElements.timeCrystalLabel.classList.add('glow'));
+            DOMElements.upgradeTimeCrystal.addEventListener('mouseleave', () => DOMElements.timeCrystalLabel.classList.remove('glow'));
             DOMElements.summonFireSprite.addEventListener('click', () => summonCompanion('fire_sprite'));
             DOMElements.summonWaterNymph.addEventListener('click', () => summonCompanion('water_nymph'));
             DOMElements.summonEarthGolem.addEventListener('click', () => summonCompanion('earth_golem'));
             DOMElements.summonAirSpirit.addEventListener('click', () => summonCompanion('air_spirit'));
             DOMElements.summonShadowImp.addEventListener('click', () => summonCompanion('shadow_imp'));
+            // Add glow effects for companion names on button hover
+            DOMElements.summonFireSprite.addEventListener('mouseenter', () => DOMElements.summonFireSprite.previousElementSibling.classList.add('glow'));
+            DOMElements.summonFireSprite.addEventListener('mouseleave', () => DOMElements.summonFireSprite.previousElementSibling.classList.remove('glow'));
+            DOMElements.summonWaterNymph.addEventListener('mouseenter', () => DOMElements.summonWaterNymph.previousElementSibling.classList.add('glow'));
+            DOMElements.summonWaterNymph.addEventListener('mouseleave', () => DOMElements.summonWaterNymph.previousElementSibling.classList.remove('glow'));
+            DOMElements.summonEarthGolem.addEventListener('mouseenter', () => DOMElements.summonEarthGolem.previousElementSibling.classList.add('glow'));
+            DOMElements.summonEarthGolem.addEventListener('mouseleave', () => DOMElements.summonEarthGolem.previousElementSibling.classList.remove('glow'));
+            DOMElements.summonAirSpirit.addEventListener('mouseenter', () => DOMElements.summonAirSpirit.previousElementSibling.classList.add('glow'));
+            DOMElements.summonAirSpirit.addEventListener('mouseleave', () => DOMElements.summonAirSpirit.previousElementSibling.classList.remove('glow'));
+            DOMElements.summonShadowImp.addEventListener('mouseenter', () => DOMElements.summonShadowImp.previousElementSibling.classList.add('glow'));
+            DOMElements.summonShadowImp.addEventListener('mouseleave', () => DOMElements.summonShadowImp.previousElementSibling.classList.remove('glow'));
             DOMElements.bankBoostButton.addEventListener('click', useBankBoost);
             DOMElements.hireCEOButton.addEventListener('click', hireCEO);
             DOMElements.bankInvestmentButton.addEventListener('click', useBankInvestment);
