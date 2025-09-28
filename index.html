@@ -898,6 +898,7 @@
             timeCrystalUpgradeLevel: 0,
             bossFrozen: false,
             guaranteeRareDrop: false,
+            fractionalBankInterest: 0,
         };
         
         // DOM Elements
@@ -1472,7 +1473,7 @@
             // Bank
             DOMElements.bankedClicks.textContent = formatNumber(gameState.bankedClicks);
             DOMElements.bankSize.textContent = formatNumber(getBankSize());
-            const interestRate = (0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1);
+            const interestRate = 0.001 * (1 + gameState.bankUpgradeLevel * 0.1);
             document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
             document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.accumulatedBankInterest);
             // Update bank mode UI
@@ -1895,13 +1896,16 @@
             }
 
             // Bank interest (compound, scales with bank upgrades, per second)
-            let bankInterest = Math.floor(gameState.bankedClicks * ((0.005 / 60) * (1 + gameState.bankUpgradeLevel * 0.1)) * timeDiff);
+            let interestThisTick = gameState.bankedClicks * (0.001 * (1 + gameState.bankUpgradeLevel * 0.1)) * timeDiff;
             if (gameState.activeEvents.some(e => e.effect === 'double_bank')) {
-                bankInterest *= 2;
+                interestThisTick *= 2;
             }
-            if (bankInterest > 0) {
-                gameState.bankedClicks += bankInterest;
-                gameState.accumulatedBankInterest += bankInterest;
+            gameState.fractionalBankInterest += interestThisTick;
+            let wholeClicks = Math.floor(gameState.fractionalBankInterest);
+            if (wholeClicks > 0) {
+                gameState.bankedClicks += wholeClicks;
+                gameState.accumulatedBankInterest += wholeClicks;
+                gameState.fractionalBankInterest -= wholeClicks;
             }
 
             // Auto-clicker
@@ -2514,7 +2518,8 @@
                 bankMultiplier: 1,
                 autoClickMultiplier: 1,
                 originalZoneName: null,
-                achievements: []
+                achievements: [],
+                fractionalBankInterest: 0
             };
         }
 
@@ -2817,6 +2822,7 @@
                 if (typeof gameState.guaranteeRareDrop === 'undefined') gameState.guaranteeRareDrop = false;
                 if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
                 if (typeof gameState.originalZoneName === 'undefined') gameState.originalZoneName = null;
+                if (typeof gameState.fractionalBankInterest === 'undefined') gameState.fractionalBankInterest = 0;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
