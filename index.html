@@ -875,6 +875,8 @@
             xpMultiplier: 1,
             accumulatedBankInterest: 0,
             lastBankLogTime: Date.now(),
+            totalBankInterestEarned: 0,
+            totalBankInterestEarned: 0,
             passiveBoostActive: false,
             passiveBoostEndTime: 0,
             ceoActive: false,
@@ -977,6 +979,7 @@
 
         let showFullEssence = false;
         let showFullAttack = false;
+        let showFullBankedClicks = false;
 
         function shakeElements(...elements) {
             elements.forEach(el => {
@@ -1471,11 +1474,11 @@
             DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
 
             // Bank
-            DOMElements.bankedClicks.textContent = formatNumber(gameState.bankedClicks);
+            DOMElements.bankedClicks.textContent = showFullBankedClicks ? gameState.bankedClicks.toLocaleString() : formatNumber(gameState.bankedClicks);
             DOMElements.bankSize.textContent = formatNumber(getBankSize());
             const interestRate = 0.001 * (1 + gameState.bankUpgradeLevel * 0.1);
             document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
-            document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.accumulatedBankInterest);
+            document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.totalBankInterestEarned);
             // Update bank mode UI
             if (bossState.active) {
                 DOMElements.actionButtonText.textContent = "ATTACK!";
@@ -1905,6 +1908,7 @@
             if (wholeClicks > 0) {
                 gameState.bankedClicks += wholeClicks;
                 gameState.accumulatedBankInterest += wholeClicks;
+                gameState.totalBankInterestEarned += wholeClicks;
                 gameState.fractionalBankInterest -= wholeClicks;
             }
 
@@ -2784,6 +2788,7 @@
                 if (typeof gameState.prestigeMultiplier === 'undefined') gameState.prestigeMultiplier = 1;
                 if (typeof gameState.accumulatedBankInterest === 'undefined') gameState.accumulatedBankInterest = 0;
                 if (typeof gameState.lastBankLogTime === 'undefined') gameState.lastBankLogTime = Date.now();
+                if (typeof gameState.totalBankInterestEarned === 'undefined') gameState.totalBankInterestEarned = 0;
                 if (typeof gameState.passiveBoostActive === 'undefined') gameState.passiveBoostActive = false;
                 if (typeof gameState.passiveBoostEndTime === 'undefined') gameState.passiveBoostEndTime = 0;
                 if (typeof gameState.ceoActive === 'undefined') gameState.ceoActive = false;
@@ -2976,6 +2981,7 @@
             document.getElementById('debugButton').addEventListener('click', debugToggle);
             DOMElements.playerEssence.addEventListener('click', () => { showFullEssence = !showFullEssence; updateUI(); });
             DOMElements.playerAttack.addEventListener('click', () => { showFullAttack = !showFullAttack; updateUI(); });
+            DOMElements.bankedClicks.addEventListener('click', () => { showFullBankedClicks = !showFullBankedClicks; updateUI(); });
 
             loadGame();
             loadZone();
