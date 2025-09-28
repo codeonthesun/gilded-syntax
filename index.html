@@ -99,8 +99,8 @@
             0% { width: 0; }
             100% { width: 100%; }
         }
-        #actionButton.shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        .shake {
+            animation: shake 0.7s ease-in-out;
             transform: translate3d(0, 0, 0);
         }
         @keyframes shake {
@@ -115,6 +115,10 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        .pressed {
+            transform: scale(0.95);
+            transition: transform 0.1s ease-out;
         }
 
         /* Rarity Effects */
@@ -344,7 +348,12 @@
 
             <!-- Upgrades -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
-                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Permanent upgrades to boost your progress">Upgrades</h2>
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Permanent upgrades to boost your progress">
+                    <div class="flex items-center gap-2">
+                        <span>Upgrades</span>
+                        <span class="text-xs text-gray-500 text-left" id="upgradeFlavor"></span>
+                    </div>
+                </h2>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between items-center">
                         <span id="clickLabel">Click Power (Lv.0)</span>
@@ -392,7 +401,12 @@
 
             <!-- Companions -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
-                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Summon companions for bonuses">Companions</h2>
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Summon companions for bonuses">
+                    <div class="flex items-center gap-2">
+                        <span>Companions</span>
+                        <span class="text-xs text-gray-500 text-left" id="companionFlavor"></span>
+                    </div>
+                </h2>
                 <div id="companionsList" class="space-y-2 text-sm mb-4">
                     <!-- Companions will be injected here -->
                 </div>
@@ -931,6 +945,7 @@
             upgradeRegeneration: document.getElementById('upgradeRegeneration'),
             upgradeTimeCrystal: document.getElementById('upgradeTimeCrystal'),
             timeCrystalLabel: document.getElementById('timeCrystalLabel'),
+            upgradeFlavor: document.getElementById('upgradeFlavor'),
             luckLabel: document.getElementById('luckLabel'),
             efficiencyLabel: document.getElementById('efficiencyLabel'),
             regenerationLabel: document.getElementById('regenerationLabel'),
@@ -946,6 +961,7 @@
             summonEarthGolem: document.getElementById('summonEarthGolem'),
             summonAirSpirit: document.getElementById('summonAirSpirit'),
             summonShadowImp: document.getElementById('summonShadowImp'),
+            companionFlavor: document.getElementById('companionFlavor'),
             specialMechanicDisplay: document.getElementById('specialMechanicDisplay')
         };
         
@@ -957,6 +973,18 @@
             timeLeft: 0,
             isMiniBoss: false,
         };
+
+        let showFullEssence = false;
+        let showFullAttack = false;
+
+        function shakeElements(...elements) {
+            elements.forEach(el => {
+                if (!el.classList.contains('shake')) {
+                    el.classList.add('shake');
+                    setTimeout(() => el.classList.remove('shake'), 600);
+                }
+            });
+        }
 
         // --- Core Game Logic ---
         
@@ -1126,6 +1154,8 @@
             gameState.passiveBoostEndTime = Date.now() + 60000;
             logMessage("Bank Boost activated! Passive income doubled for 60 seconds.", "system-ok");
             updateUI();
+            DOMElements.bankBoostButton.classList.add('success-click');
+            setTimeout(() => DOMElements.bankBoostButton.classList.remove('success-click'), 500);
         }
 
         function hireCEO() {
@@ -1142,6 +1172,8 @@
             });
             logMessage("Hired CEO of Money! Bonus clicks activated for 2.5 minutes.", "system-ok");
             updateUI();
+            DOMElements.hireCEOButton.classList.add('success-click');
+            setTimeout(() => DOMElements.hireCEOButton.classList.remove('success-click'), 500);
         }
 
         function useBankInvestment() {
@@ -1151,6 +1183,8 @@
             gameState.investmentEndTime = Date.now() + 30000; // 30 seconds
             logMessage("Risky investment activated! Passive income doubled for 30 seconds. Beware of interruptions!", "system-ok");
             updateUI();
+            DOMElements.bankInvestmentButton.classList.add('success-click');
+            setTimeout(() => DOMElements.bankInvestmentButton.classList.remove('success-click'), 500);
         }
 
         function convertClicksToEssence() {
@@ -1161,6 +1195,8 @@
             gameState.bankedClicks = 0;
             logMessage(`Converted ${formatNumber(clicksUsed)} banked clicks to ${formatNumber(essenceGained)} essence!`, "system-ok");
             updateUI();
+            DOMElements.convertClicksButton.classList.add('success-click');
+            setTimeout(() => DOMElements.convertClicksButton.classList.remove('success-click'), 500);
         }
 
         function toggleAutoClicker() {
@@ -1411,14 +1447,16 @@
         // --- UI Updates ---
         function updateUI() {
             // Stats
-            DOMElements.playerTitle.textContent = getPlayerTitle();
+            const currentTitle = getPlayerTitle();
+            DOMElements.playerTitle.textContent = currentTitle;
+            document.title = currentTitle + " - Gilded Syntax";
             DOMElements.playerLevel.textContent = gameState.level;
             const xpProgress = Math.min((gameState.xp / gameState.xpToNextLevel) * 100, 100);
             document.getElementById('xpBar').style.width = `${xpProgress}%`;
             document.getElementById('xpText').textContent = `${formatNumber(gameState.xp)} / ${formatNumber(gameState.xpToNextLevel)}`;
-            DOMElements.playerEssence.textContent = formatNumber(gameState.essence);
+            DOMElements.playerEssence.textContent = showFullEssence ? gameState.essence.toLocaleString() : formatNumber(gameState.essence);
             DOMElements.essencePerClick.textContent = formatNumber(getEssencePerClick());
-            DOMElements.playerAttack.textContent = formatNumber(getAttackDamage());
+            DOMElements.playerAttack.textContent = showFullAttack ? getAttackDamage().toFixed(2) : Math.floor(getAttackDamage());
             DOMElements.passiveIncome.textContent = formatNumber(gameState.passiveIncomeRate);
             DOMElements.playerCritChance.textContent = (gameState.critChance * 100).toFixed(1) + '%';
             DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
@@ -1907,9 +1945,14 @@
                 gameState.essence -= cost;
                 gameState.clickUpgradeLevel++;
                 logMessage("Click Power upgraded! Essence per click increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.clickLabel, DOMElements.upgradeClick);
             }
         }
 
@@ -1919,9 +1962,16 @@
                 gameState.essence -= cost;
                 gameState.passiveUpgradeLevel++;
                 logMessage("Passive Income upgraded! Passive income increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradePassive.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradePassive.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.passiveLabel, DOMElements.upgradePassive);
             }
         }
 
@@ -1931,9 +1981,16 @@
                 gameState.essence -= cost;
                 gameState.bankUpgradeLevel++;
                 logMessage("Bank Capacity upgraded! Bank size increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeBank.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeBank.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.bankLabel, DOMElements.upgradeBank);
             }
         }
 
@@ -1943,9 +2000,16 @@
                 gameState.essence -= cost;
                 gameState.autoClickUpgradeLevel++;
                 logMessage("Auto-Clicker upgraded! Auto-click rate increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeAutoClick.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeAutoClick.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.autoLabel, DOMElements.upgradeAutoClick);
             }
         }
 
@@ -1955,9 +2019,16 @@
                 gameState.essence -= cost;
                 gameState.critChanceUpgradeLevel++;
                 logMessage("Critical Chance upgraded! Critical hit chance increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeCritChance.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeCritChance.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.critChanceLabel, DOMElements.upgradeCritChance);
             }
         }
 
@@ -1967,9 +2038,16 @@
                 gameState.essence -= cost;
                 gameState.critMultUpgradeLevel++;
                 logMessage("Critical Multiplier upgraded! Critical damage increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeCritMult.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeCritMult.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.critMultLabel, DOMElements.upgradeCritMult);
             }
         }
 
@@ -1979,9 +2057,16 @@
                 gameState.essence -= cost;
                 gameState.luckUpgradeLevel++;
                 logMessage("Luck upgraded! Critical hit chance increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeLuck.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeLuck.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.luckLabel, DOMElements.upgradeLuck);
             }
         }
 
@@ -1991,9 +2076,16 @@
                 gameState.essence -= cost;
                 gameState.efficiencyUpgradeLevel++;
                 logMessage("Efficiency upgraded! Upgrade costs reduced.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeEfficiency.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeEfficiency.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.efficiencyLabel, DOMElements.upgradeEfficiency);
             }
         }
 
@@ -2003,9 +2095,16 @@
                 gameState.essence -= cost;
                 gameState.regenerationUpgradeLevel++;
                 logMessage("Regeneration upgraded! Passive income increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeRegeneration.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeRegeneration.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.regenerationLabel, DOMElements.upgradeRegeneration);
             }
         }
 
@@ -2015,9 +2114,16 @@
                 gameState.essence -= cost;
                 gameState.timeCrystalUpgradeLevel++;
                 logMessage("Time Crystal upgraded! Offline progress cap increased.", "system-ok");
+                DOMElements.upgradeFlavor.textContent = "(Leveled up!)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
                 updateUI();
+                DOMElements.upgradeTimeCrystal.classList.add('success-click');
+                setTimeout(() => DOMElements.upgradeTimeCrystal.classList.remove('success-click'), 500);
             } else {
                 logMessage("Not enough Essence for this upgrade.", "system-warn");
+                DOMElements.upgradeFlavor.textContent = "(Not enough Essence)";
+                setTimeout(() => DOMElements.upgradeFlavor.textContent = "", 2000);
+                shakeElements(DOMElements.timeCrystalLabel, DOMElements.upgradeTimeCrystal);
             }
         }
 
@@ -2044,6 +2150,8 @@
             logMessage(`You have prestiged! Gained ${pointsGained} prestige points. Multiplier increased to ${gameState.prestigeMultiplier.toFixed(2)}x`, "victory");
             loadZone();
             updateUI();
+            DOMElements.prestigeButton.classList.add('success-click');
+            setTimeout(() => DOMElements.prestigeButton.classList.remove('success-click'), 500);
         }
 
         function exportSave() {
@@ -2432,6 +2540,30 @@
                 companionEl.innerHTML = `<span class="text-white">${companion.name}</span><span class="text-green-400">${companion.description}</span>`;
                 DOMElements.companionsList.appendChild(companionEl);
             });
+            // Update button states
+            COMPANIONS.forEach(companion => {
+                const buttonEl = DOMElements['summon' + companion.id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')];
+                const isSummoned = gameState.companions.some(c => c.id === companion.id);
+                if (isSummoned) {
+                    buttonEl.disabled = true;
+                    buttonEl.textContent = "Summoned";
+                    buttonEl.classList.remove('bg-red-700', 'hover:bg-red-600', 'bg-blue-700', 'hover:bg-blue-600', 'bg-green-700', 'hover:bg-green-600', 'bg-gray-700', 'hover:bg-gray-600', 'bg-purple-700', 'hover:bg-purple-600');
+                    buttonEl.classList.add('bg-green-600', 'cursor-not-allowed');
+                } else {
+                    buttonEl.disabled = false;
+                    buttonEl.textContent = "Summon";
+                    // Reset to original colors based on companion
+                    const colors = {
+                        fire_sprite: 'bg-red-700 hover:bg-red-600',
+                        water_nymph: 'bg-blue-700 hover:bg-blue-600',
+                        earth_golem: 'bg-green-700 hover:bg-green-600',
+                        air_spirit: 'bg-gray-700 hover:bg-gray-600',
+                        shadow_imp: 'bg-purple-700 hover:bg-purple-600'
+                    };
+                    buttonEl.classList.remove('bg-red-700', 'hover:bg-red-600', 'bg-blue-700', 'hover:bg-blue-600', 'bg-green-700', 'hover:bg-green-600', 'bg-gray-700', 'hover:bg-gray-600', 'bg-purple-700', 'hover:bg-purple-600', 'bg-green-600', 'cursor-not-allowed');
+                    buttonEl.classList.add(...colors[companion.id].split(' '));
+                }
+            });
         }
 
         function updateRelicsList() {
@@ -2486,13 +2618,40 @@
 
         function summonCompanion(companionId) {
             const companion = COMPANIONS.find(c => c.id === companionId);
-            if (!companion || gameState.companions.some(c => c.id === companionId) || gameState.essence < companion.cost || gameState.level < companion.unlockReq.level) return;
+            const buttonEl = DOMElements['summon' + companionId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')];
+            if (!companion) return;
+            if (gameState.companions.some(c => c.id === companionId)) {
+                DOMElements.companionFlavor.textContent = "(Already summoned)";
+                setTimeout(() => DOMElements.companionFlavor.textContent = "", 2000);
+                shakeElements(buttonEl.previousElementSibling, buttonEl);
+                return;
+            }
+            const missingLevel = gameState.level < companion.unlockReq.level;
+            const missingEssence = gameState.essence < companion.cost;
+            if (missingLevel || missingEssence) {
+                let message = "(You need ";
+                if (missingLevel && missingEssence) {
+                    message += "required level and essence)";
+                } else if (missingLevel) {
+                    message += "required level)";
+                } else {
+                    message += "essence)";
+                }
+                DOMElements.companionFlavor.textContent = message;
+                setTimeout(() => DOMElements.companionFlavor.textContent = "", 2000);
+                shakeElements(buttonEl.previousElementSibling, buttonEl);
+                return;
+            }
 
             gameState.essence -= companion.cost;
             gameState.companions.push(companion);
             applyCompanionEffect(companion);
             logMessage(`Summoned ${companion.name}! ${companion.description}`, "system-ok");
+            DOMElements.companionFlavor.textContent = "(Summoned!)";
+            setTimeout(() => DOMElements.companionFlavor.textContent = "", 2000);
             updateUI();
+            buttonEl.classList.add('success-click');
+            setTimeout(() => buttonEl.classList.remove('success-click'), 500);
         }
 
         function applyCompanionEffect(companion) {
@@ -2684,9 +2843,30 @@
 
         // --- Initialization ---
         function init() {
+            // Action button
             DOMElements.actionButton.addEventListener('click', handleActionClick);
+            DOMElements.actionButton.addEventListener('mousedown', () => DOMElements.actionButton.classList.add('pressed'));
+            DOMElements.actionButton.addEventListener('mouseup', () => DOMElements.actionButton.classList.remove('pressed'));
+            DOMElements.actionButton.addEventListener('mouseleave', () => DOMElements.actionButton.classList.remove('pressed'));
+
             DOMElements.bankModeToggle.addEventListener('change', toggleBankMode);
             DOMElements.autoClickButton.addEventListener('click', toggleAutoClicker);
+            DOMElements.autoClickButton.addEventListener('mousedown', () => DOMElements.autoClickButton.classList.add('pressed'));
+            DOMElements.autoClickButton.addEventListener('mouseup', () => DOMElements.autoClickButton.classList.remove('pressed'));
+            DOMElements.autoClickButton.addEventListener('mouseleave', () => DOMElements.autoClickButton.classList.remove('pressed'));
+
+            // Upgrade buttons
+            const upgradeButtons = [
+                DOMElements.upgradeClick, DOMElements.upgradePassive, DOMElements.upgradeBank, DOMElements.upgradeAutoClick,
+                DOMElements.upgradeCritChance, DOMElements.upgradeCritMult, DOMElements.upgradeLuck,
+                DOMElements.upgradeEfficiency, DOMElements.upgradeRegeneration, DOMElements.upgradeTimeCrystal
+            ];
+            upgradeButtons.forEach(button => {
+                button.addEventListener('mousedown', () => button.classList.add('pressed'));
+                button.addEventListener('mouseup', () => button.classList.remove('pressed'));
+                button.addEventListener('mouseleave', () => button.classList.remove('pressed'));
+            });
+
             DOMElements.upgradeClick.addEventListener('click', buyClickUpgrade);
             DOMElements.upgradePassive.addEventListener('click', buyPassiveUpgrade);
             DOMElements.upgradeBank.addEventListener('click', buyBankUpgrade);
@@ -2718,6 +2898,17 @@
             DOMElements.upgradeRegeneration.addEventListener('mouseleave', () => DOMElements.regenerationLabel.classList.remove('glow'));
             DOMElements.upgradeTimeCrystal.addEventListener('mouseenter', () => DOMElements.timeCrystalLabel.classList.add('glow'));
             DOMElements.upgradeTimeCrystal.addEventListener('mouseleave', () => DOMElements.timeCrystalLabel.classList.remove('glow'));
+            // Companion buttons
+            const companionButtons = [
+                DOMElements.summonFireSprite, DOMElements.summonWaterNymph, DOMElements.summonEarthGolem,
+                DOMElements.summonAirSpirit, DOMElements.summonShadowImp
+            ];
+            companionButtons.forEach(button => {
+                button.addEventListener('mousedown', () => button.classList.add('pressed'));
+                button.addEventListener('mouseup', () => button.classList.remove('pressed'));
+                button.addEventListener('mouseleave', () => button.classList.remove('pressed'));
+            });
+
             DOMElements.summonFireSprite.addEventListener('click', () => summonCompanion('fire_sprite'));
             DOMElements.summonWaterNymph.addEventListener('click', () => summonCompanion('water_nymph'));
             DOMElements.summonEarthGolem.addEventListener('click', () => summonCompanion('earth_golem'));
@@ -2734,14 +2925,31 @@
             DOMElements.summonAirSpirit.addEventListener('mouseleave', () => DOMElements.summonAirSpirit.previousElementSibling.classList.remove('glow'));
             DOMElements.summonShadowImp.addEventListener('mouseenter', () => DOMElements.summonShadowImp.previousElementSibling.classList.add('glow'));
             DOMElements.summonShadowImp.addEventListener('mouseleave', () => DOMElements.summonShadowImp.previousElementSibling.classList.remove('glow'));
+            // Bank buttons
+            const bankButtons = [
+                DOMElements.bankBoostButton, DOMElements.hireCEOButton, DOMElements.bankInvestmentButton, DOMElements.convertClicksButton
+            ];
+            bankButtons.forEach(button => {
+                button.addEventListener('mousedown', () => button.classList.add('pressed'));
+                button.addEventListener('mouseup', () => button.classList.remove('pressed'));
+                button.addEventListener('mouseleave', () => button.classList.remove('pressed'));
+            });
+
             DOMElements.bankBoostButton.addEventListener('click', useBankBoost);
             DOMElements.hireCEOButton.addEventListener('click', hireCEO);
             DOMElements.bankInvestmentButton.addEventListener('click', useBankInvestment);
             DOMElements.convertClicksButton.addEventListener('click', convertClicksToEssence);
+
+            // Prestige button
+            DOMElements.prestigeButton.addEventListener('mousedown', () => DOMElements.prestigeButton.classList.add('pressed'));
+            DOMElements.prestigeButton.addEventListener('mouseup', () => DOMElements.prestigeButton.classList.remove('pressed'));
+            DOMElements.prestigeButton.addEventListener('mouseleave', () => DOMElements.prestigeButton.classList.remove('pressed'));
             DOMElements.prestigeButton.addEventListener('click', prestige);
             DOMElements.exportSaveButton.addEventListener('click', exportSave);
             document.getElementById('resetProfile').addEventListener('click', resetProfile);
             document.getElementById('debugButton').addEventListener('click', debugToggle);
+            DOMElements.playerEssence.addEventListener('click', () => { showFullEssence = !showFullEssence; updateUI(); });
+            DOMElements.playerAttack.addEventListener('click', () => { showFullAttack = !showFullAttack; updateUI(); });
 
             loadGame();
             loadZone();
