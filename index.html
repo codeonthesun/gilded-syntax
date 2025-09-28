@@ -1775,15 +1775,25 @@
             msgEl.appendChild(timeEl);
             msgEl.appendChild(textEl);
 
+            // Check if user was at bottom before adding
+            const wasAtBottom = DOMElements.chatLog.scrollTop + DOMElements.chatLog.clientHeight >= DOMElements.chatLog.scrollHeight;
+
             DOMElements.chatLog.appendChild(msgEl);
-            // Limit to 5 messages
-            while (DOMElements.chatLog.children.length > 5) {
-                DOMElements.chatLog.removeChild(DOMElements.chatLog.firstChild);
+
+            // Remove old messages if exceeding limit, and adjust scroll if not at bottom
+            let removedHeight = 0;
+            while (DOMElements.chatLog.children.length > 20) {
+                const removedEl = DOMElements.chatLog.firstChild;
+                removedHeight += removedEl.offsetHeight;
+                DOMElements.chatLog.removeChild(removedEl);
             }
-            // Auto-scroll only if user is near the bottom
-            const isNearBottom = DOMElements.chatLog.scrollTop + DOMElements.chatLog.clientHeight >= DOMElements.chatLog.scrollHeight - 50;
-            if (isNearBottom) {
+
+            // Auto-scroll only if user was at bottom
+            if (wasAtBottom) {
                 DOMElements.chatLog.scrollTop = DOMElements.chatLog.scrollHeight;
+            } else if (removedHeight > 0) {
+                // Adjust scroll position to prevent view shifting when messages are removed from top
+                DOMElements.chatLog.scrollTop -= removedHeight;
             }
         }
         
