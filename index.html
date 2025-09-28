@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             cursor: none !important; /* Hide system cursor globally for custom cursors */
@@ -101,6 +101,239 @@
         @keyframes trace {
             0% { width: 0; }
             100% { width: 100%; }
+        }
+
+        /* --- Generic Button Styles --- */
+        .btn {
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            font-family: 'MedievalSharp', cursive;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            transition: all 0.1s ease-in-out;
+            position: relative;
+            -webkit-tap-highlight-color: transparent; /* Removes blue highlight on mobile tap */
+        }
+
+        /* Fixed size for action buttons */
+        .action-btn {
+            width: 160px;
+            height: 128px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .action-btn .content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .action-btn.gather-mode .gather-content { display: flex; }
+        .action-btn.boss-mode .boss-content { display: flex; }
+        .action-btn.boss-mode .boss-content { display: flex; }
+        .action-btn.boss-mode { height: 96px; }
+        .action-btn.attack-mode .attack-content { display: flex; }
+        .action-btn.attack-mode { height: 72px; }
+        .action-btn.store-mode .store-content { display: flex; }
+
+        .btn:focus {
+            outline: none;
+        }
+
+        /* --- Style 2: Dragon Scale Button --- */
+        .scale-btn {
+            background: linear-gradient(135deg, #6d0000, #a50000);
+            border: 3px solid #3b0000;
+            border-radius: 15px;
+            font-size: 22px;
+            height: 72px;
+            box-shadow: 0 6px 0 #3b0000, 0 8px 12px rgba(0,0,0,0.5), inset 0 0 8px rgba(255,165,0,0.3);
+            overflow: hidden;
+        }
+
+        .scale-btn::before { /* Scale pattern overlay */
+            content: "";
+            position: absolute;
+            top: 0; left: -50%;
+            width: 200%; height: 200%;
+            background-image:
+                radial-gradient(circle at 15px 15px, rgba(255,255,255,0.05) 5px, transparent 5.5px),
+                radial-gradient(circle at 0 0, rgba(255,255,255,0.05) 5px, transparent 5.5px);
+            background-size: 15px 15px;
+        }
+
+        .scale-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 0 #3b0000, 0 12px 20px rgba(0,0,0,0.45), inset 0 0 15px rgba(255,165,0,0.5);
+        }
+
+        .scale-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #3b0000, 0 6px 8px rgba(0,0,0,0.6), inset 0 0 25px rgba(255,165,0,0.7);
+            background: linear-gradient(135deg, #8b0000, #c00);
+        }
+
+        /* --- Style 3: Gold Coin Pile Button --- */
+        .coin-pile-btn {
+            position: relative;
+        }
+        .coin-pile-btn .coin {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, #f0c36b 0%, #d4a24a 60%, #a97f33 100%);
+            border-radius: 50%;
+            box-shadow: 0 5px 0 #6d5220, 0 8px 10px rgba(0,0,0,0.5);
+            transition: all 0.15s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            left: 50%;
+        }
+        .coin-pile-btn .top-coin {
+            font-size: 22px;
+            color: #4d3817;
+            text-shadow: 1px 1px 1px rgba(255, 230, 179, 0.5);
+            z-index: 5;
+            transform: translateX(-50%);
+            top: 10px;
+        }
+        .coin-pile-btn .mid-coin {
+            z-index: 4;
+            transform: translateX(calc(-50% - 10px)) rotate(-10deg);
+            background: radial-gradient(circle, #d4a24a 0%, #a97f33 60%, #8b662b 100%);
+            top: 20px;
+        }
+        .coin-pile-btn .bottom-coin {
+            z-index: 3;
+            transform: translateX(calc(-50% + 10px)) rotate(15deg);
+            background: radial-gradient(circle, #c89b3c 0%, #a97f33 60%, #6d5220 100%);
+            top: 25px;
+        }
+        .coin-pile-btn .left-coin {
+            z-index: 2;
+            transform: translateX(calc(-50% - 35px)) rotate(-20deg);
+            background: radial-gradient(circle, #a97f33 0%, #8b662b 60%, #4d3817 100%);
+            top: 30px;
+        }
+        .coin-pile-btn .right-coin {
+            z-index: 1;
+            transform: translateX(calc(-50% + 35px)) rotate(20deg);
+            background: radial-gradient(circle, #a97f33 0%, #8b662b 60%, #4d3817 100%);
+            top: 35px;
+        }
+        .coin-pile-btn:hover .top-coin {
+            transform: translateX(-50%) translateY(-4px) scale(1.02);
+        }
+        .coin-pile-btn:hover .mid-coin {
+            transform: translateX(calc(-50% - 12px)) translateY(-1px) rotate(-12deg);
+        }
+        .coin-pile-btn:hover .bottom-coin {
+            transform: translateX(calc(-50% + 12px)) translateY(-1px) rotate(17deg);
+        }
+        .coin-pile-btn:hover .left-coin {
+            transform: translateX(calc(-50% - 37px)) translateY(-1px) rotate(-22deg);
+        }
+        .coin-pile-btn:hover .right-coin {
+            transform: translateX(calc(-50% + 37px)) translateY(-1px) rotate(22deg);
+        }
+        .coin-pile-btn:active .coin {
+            transition: all 0.05s ease-in-out;
+        }
+        .coin-pile-btn:active .top-coin {
+            transform: translateX(-50%) translateY(4px);
+            box-shadow: 0 2px 0 #6d5220, 0 4px 5px rgba(0,0,0,0.6), inset 0 0 15px rgba(0,0,0,0.5);
+        }
+        .coin-pile-btn:active .mid-coin {
+            transform: translateX(calc(-50% - 8px)) translateY(2px) rotate(-5deg);
+        }
+        .coin-pile-btn:active .bottom-coin {
+            transform: translateX(calc(-50% + 8px)) translateY(4px) rotate(10deg);
+        }
+        .coin-pile-btn:active .left-coin {
+            transform: translateX(calc(-50% - 30px)) translateY(3px) rotate(-15deg);
+        }
+        .coin-pile-btn:active .right-coin {
+            transform: translateX(calc(-50% + 30px)) translateY(4px) rotate(15deg);
+        }
+
+
+        /* --- Style 4: Arcane Crystal Button --- */
+        .crystal-btn-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .crystal-btn {
+            background: radial-gradient(circle, #4fc3f7 0%, #2596be 100%);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.1;
+            box-shadow: 0 0 15px #2596be, 0 0 25px #2596be, 0 0 35px #81d4fa;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .crystal-btn::before, .crystal-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+        .crystal-btn::before {
+            width: 130px;
+            height: 130px;
+            background: rgba(37, 150, 190, 0.2);
+            animation: pulse 2s infinite;
+        }
+        .crystal-btn::after {
+            width: 150px;
+            height: 150px;
+            background: rgba(37, 150, 190, 0.1);
+            animation: pulse 2s infinite 0.5s;
+        }
+
+        .crystal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px #4fc3f7, 0 0 40px #4fc3f7, 0 0 55px #b3e5fc;
+        }
+
+        .crystal-btn:active {
+            transform: scale(0.95);
+            background: radial-gradient(circle, #81d4fa 0%, #2596be 100%);
+            box-shadow: 0 0 10px #4fc3f7, 0 0 20px #4fc3f7, 0 0 30px #b3e5fc, inset 0 0 20px #fff;
+            transition: all 0.05s ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+            70% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
         }
 
         /* Custom Cursor Styles */
@@ -367,8 +600,17 @@
 
                 <h2 id="zoneName" title="The zone you are currently exploring" class="font-cinzel text-2xl md:text-3xl font-bold text-white mb-4"></h2>
                 <p id="actionPrompt" title="Instructions for gathering essence in this zone" class="text-gray-400 mb-6 text-center"></p>
-                <button id="actionButton" class="w-40 h-32 bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white font-bold rounded-full transition-all duration-200 ease-in-out shadow-lg flex justify-center items-center text-center text-xl transform hover:scale-105 active:scale-100 border-4 border-cyan-800/50">
-                    <span id="actionButtonText">Gather</span>
+                <button id="actionButton" class="btn action-btn gather-mode">
+                    <div class="content gather-content crystal-btn">Gather</div>
+                    <div class="content boss-content scale-btn">BOSS!</div>
+                    <div class="content attack-content scale-btn">ATTACK!</div>
+                    <div class="content store-content coin-pile-btn">
+                        <div class="coin right-coin"></div>
+                        <div class="coin left-coin"></div>
+                        <div class="coin bottom-coin"></div>
+                        <div class="coin mid-coin"></div>
+                        <div class="coin top-coin">Store</div>
+                    </div>
                 </button>
                 <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                 <div id="specialMechanicDisplay" class="mt-4 text-center"></div>
@@ -1222,15 +1464,6 @@
                 zoneEl.parentNode.insertBefore(zoneEl, bankEl);
                 logMessage("Bank mode deactivated. Clicks now generate Essence.", "system");
             }
-            // Remove all color classes first
-            DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-            if (gameState.isBankMode) {
-                DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
-                DOMElements.actionButtonText.textContent = "Store";
-            } else {
-                DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
-                DOMElements.actionButtonText.textContent = "Gather";
-            }
             updateUI();
         }
 
@@ -1362,9 +1595,6 @@
             DOMElements.bossContainer.classList.add('flex');
             DOMElements.zoneName.style.display = 'none';
             DOMElements.actionPrompt.style.display = 'none';
-            DOMElements.actionButton.classList.remove('h-32');
-            DOMElements.actionButton.classList.add('h-20');
-            DOMElements.actionButton.style.height = '5rem';
 
             gameState.isBankMode = false;
             DOMElements.bankModeToggle.checked = false;
@@ -1375,10 +1605,7 @@
                 gameState.investmentActive = false;
                 logMessage(`Investment interrupted! Lost ${formatNumber(loss)} banked clicks.`, "system-warn");
             }
-            DOMElements.actionButtonText.textContent = "ATTACK!";
-            DOMElements.actionButton.classList.add('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-            DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
-
+            DOMElements.actionButton.className = 'btn action-btn attack-mode';
 
             bossState.timer = setInterval(() => {
                 if (!gameState.bossFrozen) {
@@ -1435,13 +1662,8 @@
             DOMElements.bossContainer.classList.remove('flex');
             DOMElements.zoneName.style.display = '';
             DOMElements.actionPrompt.style.display = '';
-            DOMElements.actionButton.classList.remove('h-20');
-            DOMElements.actionButton.classList.add('h-32');
-            DOMElements.actionButton.style.height = '8rem';
 
-            DOMElements.actionButtonText.textContent = "Gather";
-            DOMElements.actionButton.classList.remove('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-            DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+            DOMElements.actionButton.className = 'btn action-btn gather-mode';
 
             if (!bossState.isMiniBoss) {
                 gameState.currentZoneIndex++;
@@ -1476,14 +1698,8 @@
             DOMElements.zoneName.style.display = '';
             DOMElements.actionPrompt.style.display = '';
 
-            DOMElements.actionButton.classList.remove('h-20');
-            DOMElements.actionButton.classList.add('h-32');
-            DOMElements.actionButton.style.height = '8rem';
-
             // Keep challenges completed, just reset button to Gather
-            DOMElements.actionButtonText.textContent = "Gather";
-            DOMElements.actionButton.classList.remove('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-            DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
+            DOMElements.actionButton.className = 'btn action-btn gather-mode';
 
             logMessage("Your failure has reset the zone's challenge.", "system-warn");
             
@@ -1559,7 +1775,7 @@
             document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.totalBankInterestEarned);
             // Update bank mode UI
             if (bossState.active) {
-                DOMElements.actionButtonText.textContent = "ATTACK!";
+                DOMElements.actionButton.className = 'btn action-btn attack-mode';
             } else {
                 // Check if boss is ready
                 let bossReady = false;
@@ -1568,17 +1784,11 @@
                     bossReady = zone.challenges.every(c => c.completed);
                 }
                 if (gameState.isBankMode) {
-                    DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-                    DOMElements.actionButton.classList.add('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
-                    DOMElements.actionButtonText.textContent = "Store";
+                    DOMElements.actionButton.className = 'btn action-btn store-mode';
                 } else if (bossReady) {
-                    DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
-                    DOMElements.actionButton.classList.add('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-                    DOMElements.actionButtonText.textContent = "BOSS!";
+                    DOMElements.actionButton.className = 'btn action-btn boss-mode';
                 } else {
-                    DOMElements.actionButton.classList.remove('bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50', 'bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-                    DOMElements.actionButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50');
-                    DOMElements.actionButtonText.textContent = "Gather";
+                    DOMElements.actionButton.className = 'btn action-btn gather-mode';
                 }
                 // Hide action prompt when boss is ready or bank mode is active
                 if (bossReady || gameState.isBankMode) {
@@ -2390,8 +2600,7 @@
                         DOMElements.actionButton.classList.add('h-20');
                         DOMElements.actionButton.style.height = '5rem';
                         DOMElements.actionButtonText.textContent = "ATTACK!";
-                        DOMElements.actionButton.classList.add('bg-red-600', 'hover:bg-red-500', 'active:bg-red-700', 'border-red-800/50');
-                        DOMElements.actionButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500', 'active:bg-cyan-700', 'border-cyan-800/50', 'bg-green-600', 'hover:bg-green-500', 'active:bg-green-700', 'border-green-800/50');
+                        DOMElements.actionButton.className = 'btn action-btn attack-mode';
                         bossState.timer = setInterval(() => {
                             bossState.timeLeft--;
                             const timerBar = document.getElementById('bossTimerBar');
