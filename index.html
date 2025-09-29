@@ -3178,6 +3178,9 @@
                 if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = true;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
                 if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
+                // Clear any active events on load to prevent them from continuing
+                gameState.activeEvents = [];
+                gameState.pendingEvent = null;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
