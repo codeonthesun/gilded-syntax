@@ -555,6 +555,48 @@
                 box-shadow: 0 0 25px #f1c40f, 0 0 5px #fff inset;
             }
         }
+
+        /* Base label styling */
+        .label-container {
+            background-color: rgba(127, 29, 29, 0.8);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+            border-radius: 0;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* --- Idle Effect 5: Infernal Embers --- */
+        .effect-embers {
+            border-color: rgba(255, 100, 0, 0.3);
+            animation: embers-glow 4s infinite ease-in-out;
+        }
+        .effect-embers .ember {
+            position: absolute;
+            background-color: #ff4500;
+            border-radius: 20% 80% 40% 60% / 60% 30% 70% 40%; /* Irregular shape */
+            opacity: 0;
+            animation: float-ember 8s infinite linear;
+            box-shadow: 0 0 5px #ff8c00, 0 0 10px #ff4500;
+        }
+
+        @keyframes embers-glow {
+             0%, 100% {
+                box-shadow: 0 0 15px rgba(255, 69, 0, 0.2), 0 0 20px rgba(255, 69, 0, 0.1) inset;
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 69, 0, 0.4), 0 0 30px rgba(255, 69, 0, 0.2) inset;
+            }
+        }
+
+        @keyframes float-ember {
+            0% { transform: translateY(0) scale(1.2) rotate(0deg); opacity: 0; }
+            20%, 80% { opacity: 0.9; }
+            100% { transform: translateY(-120px) scale(0.2) rotate(360deg); opacity: 0; }
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
@@ -681,7 +723,7 @@
             <!-- Action Area -->
             <div id="actionArea" class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-hidden min-h-[500px]">
                 <!-- Boss UI will be injected here -->
-                <div id="bossContainer" class="absolute inset-0 bg-red-900/80 backdrop-blur-sm z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
+                <div id="bossContainer" class="absolute inset-0 label-container effect-embers z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
 
                 <h2 id="zoneName" data-tooltip="The zone you are currently exploring" class="font-cinzel text-2xl md:text-3xl font-bold text-white mb-4 tooltip below"></h2>
                 <p id="actionPrompt" title="Instructions for gathering essence in this zone" class="text-gray-400 mb-6 text-center"></p>
@@ -1675,10 +1717,14 @@
 
             logMessage(`A powerful foe appears! The ${boss.name} blocks your path!`, "danger");
             
+            // Clear any existing embers
+            const existingEmbers = DOMElements.bossContainer.querySelectorAll('.ember');
+            existingEmbers.forEach(e => e.remove());
+
             DOMElements.bossContainer.innerHTML = `
                 <div class="fade-in w-full">
-                    <h3 class="font-cinzel text-4xl font-bold text-red-300 drop-shadow-lg">${boss.name}</h3>
-                    <p class="text-red-200 mt-2 mb-4">${boss.flavorText}</p>
+                    <h3 class="font-cinzel text-4xl font-bold text-orange-300 drop-shadow-lg">${boss.name}</h3>
+                    <p class="text-orange-200 mt-2 mb-4">${boss.flavorText}</p>
                     <p id="bossHp" class="text-2xl font-bold text-white">${formatNumber(bossState.hp)} / ${formatNumber(bossState.maxHp)}</p>
                     <div class="w-full bg-gray-700 rounded-full h-4 mt-4 border-2 border-black/50">
                         <div id="bossTimerBar" class="bg-yellow-400 h-full rounded-full" style="width: 100%"></div>
@@ -1686,6 +1732,24 @@
                     <p id="bossTimeLeft" class="text-lg font-bold mt-2">${bossState.timeLeft}s remaining</p>
                 </div>
             `;
+
+            // --- Script for infernal embers effect ---
+            const embersContainer = DOMElements.bossContainer;
+            if (embersContainer) {
+                for (let i = 0; i < 10; i++) {
+                    const ember = document.createElement('div');
+                    ember.classList.add('ember');
+
+                    const size = Math.random() * 4 + 2; // 2px to 6px
+                    ember.style.width = `${size}px`;
+                    ember.style.height = `${size}px`;
+                    ember.style.left = `${Math.random() * 100}%`;
+                    ember.style.animationDelay = `${Math.random() * 8}s`;
+                    ember.style.animationDuration = `${Math.random() * 4 + 6}s`; // 6s to 10s
+
+                    embersContainer.appendChild(ember);
+                }
+            }
             DOMElements.bossContainer.classList.remove('hidden', 'absolute', 'inset-0');
             DOMElements.bossContainer.classList.add('flex');
             DOMElements.zoneName.style.display = 'none';
