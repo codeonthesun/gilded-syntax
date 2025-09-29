@@ -3181,6 +3181,8 @@
                 // Clear any active events on load to prevent them from continuing
                 gameState.activeEvents = [];
                 gameState.pendingEvent = null;
+                gameState.eventBufferCountdown = 0;
+                gameState.nextEventCountdown = 20;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
