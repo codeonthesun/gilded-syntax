@@ -402,6 +402,26 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .objectives-overlay {
+            position: absolute;
+            top: -0.5rem;
+            left: -0.6rem;
+            right: -0.6rem;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f9fafb;
+            font-family: 'Cinzel', serif;
+            font-size: 1.125rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+        /* Global blur effect for visually disabling completed or disabled modules */
+        .module-blur {
+            filter: blur(2px);
+            opacity: 0.7;
+        }
         .pressed {
             transform: scale(0.95);
             transition: transform 0.1s ease-out;
@@ -671,8 +691,8 @@
                             <div class="crystal-btn">Gather</div>
                         </div>
                     </div>
-                    <div class="content boss-content scale-btn">BOSS!</div>
-                    <div class="content attack-content scale-btn">ATTACK!</div>
+                    <div class="content boss-content scale-btn">BOSS</div>
+                    <div class="content attack-content scale-btn">ATTACK</div>
                     <div class="content store-content coin-pile-btn">
                         <div class="coin right-coin"></div>
                         <div class="coin left-coin"></div>
@@ -689,7 +709,7 @@
             <div id="zoneObjectivesContainer" class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
                   <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                       <span class="tooltip" data-tooltip="Current zone challenges to complete">Zone Objectives</span>
-                      <span class="text-xs text-gray-500" id="zoneFlavorText"></span>
+                      <span class="text-xs text-gray-500 tooltip left" id="zoneFlavorText" data-tooltip="Completed objectives / Total objectives for this zone"></span>
                   </h2>
                   <div id="questList" class="space-y-2 text-sm">
                       <!-- Quests will be injected here -->
@@ -2007,14 +2027,15 @@
         }
         
         function updateQuestList() {
-               if (gameState.currentZoneIndex >= gameState.zones.length) {
-                 DOMElements.questList.innerHTML = `<p class="text-green-400">All syntax realms mastered!</p>`;
-                 document.getElementById('zoneFlavorText').textContent = '';
-                 return;
-               }
-             const zone = gameState.zones[gameState.currentZoneIndex];
-             const existing = DOMElements.questList.children;
-             let allCompleted = true;
+                DOMElements.questList.classList.add('relative');
+                if (gameState.currentZoneIndex >= gameState.zones.length) {
+                  DOMElements.questList.innerHTML = `<p class="text-green-400">All syntax realms mastered!</p>`;
+                  document.getElementById('zoneFlavorText').textContent = '';
+                  return;
+                }
+              const zone = gameState.zones[gameState.currentZoneIndex];
+              const existing = DOMElements.questList.children;
+              let allCompleted = true;
              zone.challenges.forEach((challenge, index) => {
                  if (!challenge.completed) allCompleted = false;
                  let questEl;
@@ -2052,10 +2073,26 @@
                  DOMElements.questList.removeChild(existing[existing.length - 1]);
              }
              // Update flavor text
+             let completedCount = 0;
+             zone.challenges.forEach(c => { if (c.completed) completedCount++; });
+             document.getElementById('zoneFlavorText').textContent = `${completedCount} / ${zone.challenges.length}`;
+             // Blur objectives and add overlay if completed
              if (allCompleted) {
-                 document.getElementById('zoneFlavorText').textContent = 'Challenge Boss to Proceed';
+                 for (let child of DOMElements.questList.children) {
+                     if (child.tagName === 'DIV') child.classList.add('module-blur');
+                 }
+                 const existingOverlay = DOMElements.questList.querySelector('.objectives-overlay');
+                 if (existingOverlay) existingOverlay.remove();
+                 const overlay = document.createElement('div');
+                 overlay.className = 'objectives-overlay';
+                 overlay.textContent = 'Challenge Boss To Proceed';
+                 DOMElements.questList.appendChild(overlay);
              } else {
-                 document.getElementById('zoneFlavorText').textContent = 'Clear Objectives to Challenge Boss to Proceed';
+                 for (let child of DOMElements.questList.children) {
+                     child.classList.remove('module-blur');
+                 }
+                 const existingOverlay = DOMElements.questList.querySelector('.objectives-overlay');
+                 if (existingOverlay) existingOverlay.remove();
              }
          }
 
