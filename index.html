@@ -46,11 +46,18 @@
             transform: translateX(-50%) translateY(4px);
             background: #1f2937;
             color: #f9fafb;
-            padding: 10px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.4;
             white-space: normal;
-            max-width: 300px;
+            word-break: break-word;
+            text-align: left;
+            min-width: 200px;
+            max-width: 400px;
+            max-height: 200px;
+            overflow-y: auto;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
@@ -68,8 +75,21 @@
         }
         .tooltip.below::after {
             top: 100%;
+            left: 100%;
             bottom: auto;
-            transform: translateX(-50%) translateY(-8px);
+            transform: translateX(0) translateY(0);
+        }
+        .tooltip.left::after {
+            top: 50%;
+            left: 0;
+            bottom: auto;
+            transform: translateX(-120%) translateY(-50%);
+        }
+        .tooltip.right::after {
+            top: 50%;
+            left: 100%;
+            bottom: auto;
+            transform: translateX(0) translateY(-50%);
         }
         #zoneObjectivesContainer, #bankContainer {
             transition: order 0.5s ease-in-out;
@@ -349,7 +369,6 @@
         }
 
         /* Pulse animation for crystal cursors */
-        .custom-cursor[data-shape="crystal"] svg,
         .custom-cursor[data-shape="fireCrystal"] svg,
         .custom-cursor[data-shape="shadowCrystal"] svg,
         .custom-cursor[data-shape="shardCluster"] svg {
@@ -552,21 +571,21 @@
 
             <!-- Player Stats -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
-                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Your current stats and progress">Adventurer</h2>
+                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip right" data-tooltip="Your current stats and progress">Adventurer</h2>
                 <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Your current adventurer title">Title:</span> <span id="playerTitle" class="font-bold text-amber-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Your adventurer level">Level:</span> <span id="playerLevel" class="font-bold text-white"></span></div>
-                    <div class="w-full bg-gray-700 rounded-full h-2 tooltip" data-tooltip="XP progress to next level">
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Your current adventurer title">Title:</span> <span id="playerTitle" class="font-bold text-amber-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Your adventurer level">Level:</span> <span id="playerLevel" class="font-bold text-white"></span></div>
+                    <div class="w-full bg-gray-700 rounded-full h-2 tooltip right" data-tooltip="XP progress to next level">
                         <div id="xpBar" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                     <div class="text-xs text-gray-400 mt-1" id="xpText">0 / 100</div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Total essence collected">Essence:</span> <span id="playerEssence" class="font-bold text-cyan-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Essence gained per click">Essence/Click:</span> <span id="essencePerClick" class="font-bold text-cyan-300"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Essence gained passively per second">Passive/sec:</span> <span id="passiveIncome" class="font-bold text-green-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Damage dealt per attack during boss fights">Attack:</span> <span id="playerAttack" class="font-bold text-red-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Critical hit chance">Crit Chance:</span> <span id="playerCritChance" class="font-bold text-red-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Critical hit damage multiplier">Crit Multiplier:</span> <span id="playerCritMult" class="font-bold text-red-300"></span></div>
-                    <div class="flex justify-between"><span class="tooltip" data-tooltip="Daily login streak">Streak:</span> <span id="playerStreak" class="font-bold text-orange-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Total essence collected">Essence:</span> <span id="playerEssence" class="font-bold text-cyan-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained per click">Essence/Click:</span> <span id="essencePerClick" class="font-bold text-cyan-300"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained passively per second">Passive/sec:</span> <span id="passiveIncome" class="font-bold text-green-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Damage dealt per attack during boss fights">Attack:</span> <span id="playerAttack" class="font-bold text-red-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit chance">Crit Chance:</span> <span id="playerCritChance" class="font-bold text-red-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit damage multiplier">Crit Multiplier:</span> <span id="playerCritMult" class="font-bold text-red-300"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Daily login streak">Streak:</span> <span id="playerStreak" class="font-bold text-orange-400"></span></div>
                 </div>
             </div>
 
@@ -599,7 +618,7 @@
                 <!-- Boss UI will be injected here -->
                 <div id="bossContainer" class="absolute inset-0 bg-red-900/80 backdrop-blur-sm z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
 
-                <h2 id="zoneName" title="The zone you are currently exploring" class="font-cinzel text-2xl md:text-3xl font-bold text-white mb-4"></h2>
+                <h2 id="zoneName" data-tooltip="The zone you are currently exploring" class="font-cinzel text-2xl md:text-3xl font-bold text-white mb-4 tooltip below"></h2>
                 <p id="actionPrompt" title="Instructions for gathering essence in this zone" class="text-gray-400 mb-6 text-center"></p>
                 <button id="actionButton" class="btn action-btn gather-mode">
                     <div class="content gather-content">
@@ -677,43 +696,43 @@
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between items-center">
                         <span id="clickLabel">Click Power (Lv.0)</span>
-                        <button id="upgradeClick" data-tooltip="Increases essence gained per click by 10% per level" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (100 Ess)</button>
+                        <button id="upgradeClick" data-tooltip="Increases essence gained per click by 10% per level" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (100 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="passiveLabel">Passive Income (Lv.0)</span>
-                        <button id="upgradePassive" data-tooltip="Increases passive essence income by 10% per level" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (200 Ess)</button>
+                        <button id="upgradePassive" data-tooltip="Increases passive essence income by 10% per level" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (200 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="bankLabel">Bank Capacity (Lv.0)</span>
-                        <button id="upgradeBank" data-tooltip="Increases bank capacity by 10% per level" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (150 Ess)</button>
+                        <button id="upgradeBank" data-tooltip="Increases bank capacity by 10% per level" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (150 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="autoLabel">Auto-Clicker (Lv.0)</span>
-                        <button id="upgradeAutoClick" data-tooltip="Increases auto-click rate by 10% per level" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (250 Ess)</button>
+                        <button id="upgradeAutoClick" data-tooltip="Increases auto-click rate by 10% per level" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (250 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="critChanceLabel">Critical Chance (Lv.0)</span>
-                        <button id="upgradeCritChance" data-tooltip="Increases critical hit chance by 5% per level" class="bg-orange-700 hover:bg-orange-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (300 Ess)</button>
+                        <button id="upgradeCritChance" data-tooltip="Increases critical hit chance by 5% per level" class="bg-orange-700 hover:bg-orange-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (300 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="critMultLabel">Critical Multiplier (Lv.0)</span>
-                        <button id="upgradeCritMult" data-tooltip="Increases critical hit damage multiplier by 0.5x per level" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (400 Ess)</button>
+                        <button id="upgradeCritMult" data-tooltip="Increases critical hit damage multiplier by 0.5x per level" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (400 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="luckLabel">Luck (Lv.0)</span>
-                        <button id="upgradeLuck" data-tooltip="Increases critical hit chance by 5% per level" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (500 Ess)</button>
+                        <button id="upgradeLuck" data-tooltip="Increases critical hit chance by 5% per level" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (500 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="efficiencyLabel">Efficiency (Lv.0)</span>
-                        <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (600 Ess)</button>
+                        <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (600 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="regenerationLabel">Regeneration (Lv.0)</span>
-                        <button id="upgradeRegeneration" data-tooltip="Increases passive income rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (700 Ess)</button>
+                        <button id="upgradeRegeneration" data-tooltip="Increases passive income rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (700 Ess)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="timeCrystalLabel">Time Crystal (Lv.0)</span>
-                        <button id="upgradeTimeCrystal" data-tooltip="Increases offline progress cap by 30 minutes per level" class="bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Upgrade (1000 Ess)</button>
+                        <button id="upgradeTimeCrystal" data-tooltip="Increases offline progress cap by 30 minutes per level" class="bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (1000 Ess)</button>
                     </div>
                 </div>
             </div>
@@ -733,23 +752,23 @@
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Fire Sprite (Level: 5) (1000 Ess)</span>
-                        <button id="summonFireSprite" data-tooltip="Summon Fire Sprite for +10% click power" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                        <button id="summonFireSprite" data-tooltip="Summon Fire Sprite for +10% click power" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Water Nymph (Level: 10) (2000 Ess)</span>
-                        <button id="summonWaterNymph" data-tooltip="Summon Water Nymph for +10% passive income" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                        <button id="summonWaterNymph" data-tooltip="Summon Water Nymph for +10% passive income" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Earth Golem (Level: 15) (3000 Ess)</span>
-                        <button id="summonEarthGolem" data-tooltip="Summon Earth Golem for +10% bank capacity" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                        <button id="summonEarthGolem" data-tooltip="Summon Earth Golem for +10% bank capacity" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Air Spirit (Level: 20) (4000 Ess)</span>
-                        <button id="summonAirSpirit" data-tooltip="Summon Air Spirit for +10% auto-click rate" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                        <button id="summonAirSpirit" data-tooltip="Summon Air Spirit for +10% auto-click rate" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Shadow Imp (Level: 25) (5000 Ess)</span>
-                        <button id="summonShadowImp" data-tooltip="Summon Shadow Imp for +5% critical chance" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip">Summon</button>
+                        <button id="summonShadowImp" data-tooltip="Summon Shadow Imp for +5% critical chance" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
                     </div>
                 </div>
             </div>
@@ -1861,12 +1880,12 @@
 
             // Dynamic tooltips
             if (bossState.active) {
-                DOMElements.actionButton.title = "Attack the boss to deal damage and defeat it";
-            } else if (gameState.isBankMode) {
-                DOMElements.actionButton.title = "Store this click in your bank for later use";
-            } else {
-                DOMElements.actionButton.title = "Click to gather essence from this zone";
-            }
+                DOMElements.actionButton.setAttribute('data-tooltip', "Attack the boss to deal damage and defeat it");
+                } else if (gameState.isBankMode) {
+                    DOMElements.actionButton.setAttribute('data-tooltip', "Store this click in your bank for later use");
+                } else {
+                    DOMElements.actionButton.setAttribute('data-tooltip', "Click to gather essence from this zone");
+                }
 
             updateChronicleCollapse();
             checkAchievements();
@@ -1900,48 +1919,57 @@
         }
         
         function updateQuestList() {
-              if (gameState.currentZoneIndex >= gameState.zones.length) {
-                DOMElements.questList.innerHTML = `<p class="text-green-400">All syntax realms mastered!</p>`;
-                document.getElementById('zoneFlavorText').textContent = '';
-                return;
-              }
-            const zone = gameState.zones[gameState.currentZoneIndex];
-            DOMElements.questList.innerHTML = '';
-            let allCompleted = true;
-            zone.challenges.forEach(challenge => {
-                if (!challenge.completed) allCompleted = false;
-                const questEl = document.createElement('div');
-                questEl.className = 'space-y-1 tooltip';
-                questEl.setAttribute('data-tooltip', challenge.description);
-                let progress = 0;
-                let current = 0;
-                switch (challenge.type) {
-                    case 'essence': current = gameState.essence; break;
-                    case 'clicks': current = gameState.totalClicks; break;
-                    case 'level': current = gameState.level; break;
-                    case 'passive': current = gameState.totalPassiveGained; break;
-                }
-                progress = Math.min((current / challenge.requirement) * 100, 100);
-                if (challenge.completed) {
-                    questEl.innerHTML = `<div class="flex justify-between"><span class="text-gray-500 line-through">${challenge.description}</span><span class="text-green-500 font-bold">✓</span></div>`;
-                } else {
-                    questEl.innerHTML = `
-                        <div>${challenge.description}</div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: ${progress}%"></div>
-                        </div>
-                        <div class="text-xs text-gray-400">${formatNumber(current)} / ${formatNumber(challenge.requirement)}</div>
-                    `;
-                }
-                DOMElements.questList.appendChild(questEl);
-            });
-            // Update flavor text
-            if (allCompleted) {
-                document.getElementById('zoneFlavorText').textContent = 'Challenge Boss to Proceed';
-            } else {
-                document.getElementById('zoneFlavorText').textContent = 'Clear Objectives to Challenge Boss to Proceed';
-            }
-        }
+               if (gameState.currentZoneIndex >= gameState.zones.length) {
+                 DOMElements.questList.innerHTML = `<p class="text-green-400">All syntax realms mastered!</p>`;
+                 document.getElementById('zoneFlavorText').textContent = '';
+                 return;
+               }
+             const zone = gameState.zones[gameState.currentZoneIndex];
+             const existing = DOMElements.questList.children;
+             let allCompleted = true;
+             zone.challenges.forEach((challenge, index) => {
+                 if (!challenge.completed) allCompleted = false;
+                 let questEl;
+                 if (existing[index]) {
+                     questEl = existing[index];
+                 } else {
+                     questEl = document.createElement('div');
+                     questEl.className = 'space-y-1 tooltip';
+                     DOMElements.questList.appendChild(questEl);
+                 }
+                 questEl.setAttribute('data-tooltip', challenge.description);
+                 let progress = 0;
+                 let current = 0;
+                 switch (challenge.type) {
+                     case 'essence': current = gameState.essence; break;
+                     case 'clicks': current = gameState.totalClicks; break;
+                     case 'level': current = gameState.level; break;
+                     case 'passive': current = gameState.totalPassiveGained; break;
+                 }
+                 progress = Math.min((current / challenge.requirement) * 100, 100);
+                 if (challenge.completed) {
+                     questEl.innerHTML = `<div class="flex justify-between"><span class="text-gray-500 line-through">${challenge.description}</span><span class="text-green-500 font-bold">✓</span></div>`;
+                 } else {
+                     questEl.innerHTML = `
+                         <div>${challenge.description}</div>
+                         <div class="w-full bg-gray-700 rounded-full h-2">
+                             <div class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                         </div>
+                         <div class="text-xs text-gray-400">${formatNumber(current)} / ${formatNumber(challenge.requirement)}</div>
+                     `;
+                 }
+             });
+             // Remove extra elements if fewer challenges
+             while (existing.length > zone.challenges.length) {
+                 DOMElements.questList.removeChild(existing[existing.length - 1]);
+             }
+             // Update flavor text
+             if (allCompleted) {
+                 document.getElementById('zoneFlavorText').textContent = 'Challenge Boss to Proceed';
+             } else {
+                 document.getElementById('zoneFlavorText').textContent = 'Clear Objectives to Challenge Boss to Proceed';
+             }
+         }
 
         function checkAchievements() {
             ACHIEVEMENTS.forEach(achievement => {
@@ -1960,7 +1988,7 @@
                     const achEl = existing[index];
                     achEl.setAttribute('data-tooltip', achievement.description);
                     achEl.classList.remove('above', 'below');
-                    achEl.classList.add(index < ACHIEVEMENTS.length - 3 ? 'below' : 'above');
+                    achEl.classList.add('below');
                 });
             } else {
                 // Recreate if list changed
@@ -1968,7 +1996,7 @@
                 ACHIEVEMENTS.forEach((achievement, index) => {
                     const achEl = document.createElement('div');
                     achEl.className = 'flex justify-between items-center text-xs tooltip';
-                    achEl.classList.add(index < ACHIEVEMENTS.length - 3 ? 'below' : 'above');
+                    achEl.classList.add('below');
                     achEl.setAttribute('data-tooltip', achievement.description);
                     if (gameState.achievements.includes(achievement.id)) {
                         achEl.innerHTML = `<span class="text-yellow-400 font-bold">${achievement.name}</span><span class="text-green-500">✓</span>`;
@@ -2837,13 +2865,8 @@
         }
 
         function debugToggle() {
-            if (gameState.essence === 0) {
-                gameState.essence = 1000000;
-                logMessage("Debug: Set essence to 1,000,000", "system");
-            } else {
-                gameState.essence = 0;
-                logMessage("Debug: Reset essence to 0", "system");
-            }
+            gameState.essence = 20000000;
+            logMessage("Debug: Set essence to 20,000,000", "system");
             if (gameState.relics.length === 0) {
                 const relic = RELICS[Math.floor(Math.random() * RELICS.length)];
                 gameState.relics.push(relic);
