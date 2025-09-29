@@ -2587,10 +2587,6 @@
                         DOMElements.bossContainer.classList.add('flex');
                         DOMElements.zoneName.style.display = 'none';
                         DOMElements.actionPrompt.style.display = 'none';
-                        DOMElements.actionButton.classList.remove('h-32');
-                        DOMElements.actionButton.classList.add('h-20');
-                        DOMElements.actionButton.style.height = '5rem';
-                        DOMElements.actionButtonText.textContent = "ATTACK!";
                         DOMElements.actionButton.className = 'btn action-btn attack-mode';
                         bossState.timer = setInterval(() => {
                             bossState.timeLeft--;
