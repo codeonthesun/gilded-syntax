@@ -1356,6 +1356,7 @@
         let showFullEssence = false;
         let showFullAttack = false;
         let showFullBankedClicks = false;
+        let previousButtonMode = '';
 
         function shakeElements(...elements) {
             elements.forEach(el => {
@@ -1868,6 +1869,29 @@
             DOMElements.hireCEOButton.disabled = gameState.ceoActive || gameState.bankedClicks < 100;
             DOMElements.bankInvestmentButton.disabled = gameState.investmentActive || gameState.bankedClicks < 100;
             DOMElements.convertClicksButton.disabled = gameState.bankedClicks < 1;
+
+            // Determine current button mode
+            let bossReady = false;
+            if (gameState.currentZoneIndex < gameState.zones.length) {
+                const zone = gameState.zones[gameState.currentZoneIndex];
+                bossReady = zone.challenges.every(c => c.completed);
+            }
+            let currentMode = 'gather-mode';
+            if (bossState.active) {
+                currentMode = 'attack-mode';
+            } else if (gameState.isBankMode) {
+                currentMode = 'store-mode';
+            } else if (bossReady) {
+                currentMode = 'boss-mode';
+            }
+
+            // Clear effects on button state change
+            if (previousButtonMode !== currentMode) {
+                clearAllParticles();
+                previousButtonMode = currentMode;
+            }
+
+            DOMElements.actionButton.className = 'btn action-btn ' + currentMode;
 
             // Update multipliers with diminishing returns after Lv.50
             const softCap = 50;
@@ -3545,6 +3569,9 @@
                 updateUI();
             }, 1000);
 
+            // Clear offscreen particles on scroll
+            window.addEventListener('scroll', clearOffscreenParticles);
+
             // Ensure loading screen shows for at least 1 second to allow UI to settle
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
@@ -3578,7 +3605,7 @@
         // Mana Wisps (Gather Effect)
         function manaWisps(e) {
             for (let i = 0; i < 20; i++) {
-                createParticle(e.clientX, e.clientY, { type: 'wisp' });
+                createParticle(e.clientX, e.clientY + window.scrollY, { type: 'wisp' });
             }
         }
 
@@ -3589,7 +3616,7 @@
             document.body.appendChild(wave);
 
             wave.style.left = `${e.clientX}px`;
-            wave.style.top = `${e.clientY}px`;
+            wave.style.top = `${e.clientY + window.scrollY}px`;
             wave.style.width = '0px';
             wave.style.height = '0px';
 
@@ -3616,7 +3643,7 @@
 
                 const duration = 250;
                 slash.style.left = `${e.clientX}px`;
-                slash.style.top = `${e.clientY}px`;
+                slash.style.top = `${e.clientY + window.scrollY}px`;
                 slash.style.height = '3px';
                 slash.style.width = '150px';
 
@@ -3638,7 +3665,7 @@
 
             // Create impact particles
             for (let i = 0; i < 30; i++) {
-                createParticle(e.clientX, e.clientY, {
+                createParticle(e.clientX, e.clientY + window.scrollY, {
                     type: 'spark',
                     gravity: true,
                     speedMultiplier: 1.0,
@@ -3695,6 +3722,20 @@
                 requestAnimationFrame(animate);
             }
             requestAnimationFrame(animate);
+        }
+
+        function clearOffscreenParticles() {
+            const particles = document.querySelectorAll('.particle');
+            particles.forEach(p => {
+                const rect = p.getBoundingClientRect();
+                if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
+                    p.remove();
+                }
+            });
+        }
+
+        function clearAllParticles() {
+            document.querySelectorAll('.particle').forEach(p => p.remove());
         }
 
         // Custom Cursor Logic
