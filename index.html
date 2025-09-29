@@ -830,6 +830,18 @@
     </div>
 
     <script>
+        // Custom Cursor Logic
+        const customCursor = document.getElementById('custom-cursor');
+
+        function setCursor() {
+            const svgElement = document.getElementById('crystalSVG');
+            const svgContent = svgElement.outerHTML;
+            customCursor.innerHTML = svgContent;
+            customCursor.dataset.shape = 'crystal';
+            customCursor.style.display = 'none'; // Hide until first mouse move
+        }
+
+        setCursor();
         const ZONES = [
             {
                 name: "Whispering Glade",
@@ -3738,20 +3750,11 @@
             document.querySelectorAll('.particle').forEach(p => p.remove());
         }
 
-        // Custom Cursor Logic
-        const customCursor = document.getElementById('custom-cursor');
-
-        function setCursor() {
-            const svgElement = document.getElementById('crystalSVG');
-            const svgContent = svgElement.outerHTML;
-            customCursor.innerHTML = svgContent;
-            customCursor.dataset.shape = 'crystal';
-            customCursor.style.display = 'block';
-        }
-
         // Mouse move for cursor positioning
         document.addEventListener('mousemove', e => {
-            if (customCursor.style.display === 'none') return;
+            if (customCursor.style.display === 'none') {
+                customCursor.style.display = 'block';
+            }
             // Hotspot for the up-left rotated crystal tip
             const hotspotX = 9;
             const hotspotY = 9;
