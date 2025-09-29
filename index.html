@@ -61,7 +61,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
-            z-index: 1001;
+            z-index: 2000;
             border: 2px solid #374151;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
@@ -89,7 +89,7 @@
             top: 50%;
             left: 100%;
             bottom: auto;
-            transform: translateX(0) translateY(-50%);
+            transform: translateX(40px) translateY(10px);
         }
         #zoneObjectivesContainer, #bankContainer {
             transition: order 0.5s ease-in-out;
@@ -587,7 +587,8 @@
         <!-- Left Panel: Chat/Log and Player Stats -->
         <div class="flex flex-col w-full md:w-1/3 md:h-full gap-4">
             <!-- Game Title and Active Events -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 relative">
+                <button id="musicIconButton" class="absolute top-2 left-2 text-white text-xl btn tooltip right" style="z-index: 2001;" data-tooltip="Toggle background music">♪</button>
                 <div class="text-center mb-4">
                     <img src="logo.png" alt="Gilded Syntax" data-tooltip="Gilded Syntax - Clicker Adventure Game" class="h-12 md:h-16 mx-auto tooltip object-contain">
                     <p class="text-sm text-gray-400">Your journey begins...</p>
@@ -647,9 +648,10 @@
                 <p class="text-sm">Prestige Points: <span id="prestigePoints" class="font-bold text-purple-400"></span></p>
                 <button id="prestigeButton" data-tooltip="Reset progress to gain prestige points for permanent multipliers. Requires level 50." class="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Prestige</button>
                 <button id="exportSaveButton" data-tooltip="Export your save data to clipboard for sharing or backup" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Export Save</button>
+                <input id="loadSaveInput" type="text" placeholder="Paste save code here" class="bg-gray-600 text-white px-2 py-1 rounded mr-2 mt-2 w-full">
+                <button id="loadSaveButton" data-tooltip="Load save data from code" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip mt-2">Load Save</button>
                 <button id="resetProfile" data-tooltip="Reset all progress and start fresh" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Reset Profile</button>
                 <button id="debugButton" data-tooltip="Debug: Toggle essence between 1M and 0" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Debug</button>
-                <button id="musicToggleButton" data-tooltip="Toggle background music on/off" class="bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Music: On</button>
             </div>
         </div>
 
@@ -1267,7 +1269,7 @@
             bossFrozen: false,
             guaranteeRareDrop: false,
             fractionalBankInterest: 0,
-            musicEnabled: true,
+            musicEnabled: false,
             chronicleCollapsed: false,
         };
         
@@ -1325,6 +1327,8 @@
             prestigeButton: document.getElementById('prestigeButton'),
             prestigePoints: document.getElementById('prestigePoints'),
             exportSaveButton: document.getElementById('exportSaveButton'),
+            loadSaveInput: document.getElementById('loadSaveInput'),
+            loadSaveButton: document.getElementById('loadSaveButton'),
             achievementsList: document.getElementById('achievementsList'),
             activeEventsList: document.getElementById('activeEventsList'),
             companionsList: document.getElementById('companionsList'),
@@ -1336,7 +1340,7 @@
             summonShadowImp: document.getElementById('summonShadowImp'),
             companionFlavor: document.getElementById('companionFlavor'),
             specialMechanicDisplay: document.getElementById('specialMechanicDisplay'),
-            musicToggleButton: document.getElementById('musicToggleButton'),
+            musicIconButton: document.getElementById('musicIconButton'),
             chronicleCollapseButton: document.getElementById('chronicleCollapseButton')
         };
         
@@ -1944,17 +1948,6 @@
             updateRelicsList();
             updateSpecialMechanicDisplay();
 
-            // Update music toggle button
-            if (gameState.musicEnabled) {
-                DOMElements.musicToggleButton.textContent = 'Music: On';
-                DOMElements.musicToggleButton.classList.remove('bg-red-700', 'hover:bg-red-600');
-                DOMElements.musicToggleButton.classList.add('bg-green-700', 'hover:bg-green-600');
-            } else {
-                DOMElements.musicToggleButton.textContent = 'Music: Off';
-                DOMElements.musicToggleButton.classList.remove('bg-green-700', 'hover:bg-green-600');
-                DOMElements.musicToggleButton.classList.add('bg-red-700', 'hover:bg-red-600');
-            }
-
             // Update event flavor text
             const flavorEl = document.getElementById('eventFlavorText');
             if (gameState.activeEvents.length > 0) {
@@ -1963,6 +1956,15 @@
                 flavorEl.textContent = `Event Incoming in: ${gameState.eventBufferCountdown}s`;
             } else {
                 flavorEl.textContent = '';
+            }
+
+            // Update music icon color
+            if (gameState.musicEnabled) {
+                DOMElements.musicIconButton.classList.remove('text-gray-500');
+                DOMElements.musicIconButton.classList.add('text-white');
+            } else {
+                DOMElements.musicIconButton.classList.remove('text-white');
+                DOMElements.musicIconButton.classList.add('text-gray-500');
             }
 
             saveGame();
@@ -2565,12 +2567,119 @@
         }
 
         function exportSave() {
-            const saveData = JSON.stringify(gameState);
+            const saveData = btoa(JSON.stringify(gameState));
             navigator.clipboard.writeText(saveData).then(() => {
-                logMessage("Save data copied to clipboard!", "system-ok");
+                logMessage("Save code copied to clipboard! Share this code to transfer your save.", "system-ok");
             }).catch(() => {
-                logMessage("Failed to copy save data. Please check clipboard permissions.", "system-warn");
+                logMessage("Failed to copy save code. Please check clipboard permissions.", "system-warn");
             });
+        }
+
+        function loadSave() {
+            const code = DOMElements.loadSaveInput.value.trim();
+            if (!code) {
+                logMessage("Please enter a save code.", "system-warn");
+                return;
+            }
+            try {
+                const decoded = atob(code);
+                const loadedState = JSON.parse(decoded);
+                // Basic validation
+                if (typeof loadedState !== 'object' || !loadedState.essence) {
+                    throw new Error("Invalid save data");
+                }
+                // Merge the loaded state
+                gameState = { ...gameState, ...loadedState };
+                // Ensure new properties are initialized (same as loadGame)
+                if (typeof gameState.accumulatedPassive === 'undefined') gameState.accumulatedPassive = 0;
+                if (typeof gameState.lastPassiveLogTime === 'undefined') gameState.lastPassiveLogTime = Date.now();
+                if (typeof gameState.clickUpgradeLevel === 'undefined') gameState.clickUpgradeLevel = 0;
+                if (typeof gameState.passiveUpgradeLevel === 'undefined') gameState.passiveUpgradeLevel = 0;
+                if (typeof gameState.bankUpgradeLevel === 'undefined') gameState.bankUpgradeLevel = 0;
+                if (typeof gameState.autoClickUpgradeLevel === 'undefined') gameState.autoClickUpgradeLevel = 0;
+                if (typeof gameState.critChanceUpgradeLevel === 'undefined') gameState.critChanceUpgradeLevel = 0;
+                if (typeof gameState.critMultUpgradeLevel === 'undefined') gameState.critMultUpgradeLevel = 0;
+                if (typeof gameState.luckUpgradeLevel === 'undefined') gameState.luckUpgradeLevel = 0;
+                if (typeof gameState.efficiencyUpgradeLevel === 'undefined') gameState.efficiencyUpgradeLevel = 0;
+                if (typeof gameState.regenerationUpgradeLevel === 'undefined') gameState.regenerationUpgradeLevel = 0;
+                if (typeof gameState.critChance === 'undefined') gameState.critChance = 0;
+                if (typeof gameState.critMultiplier === 'undefined') gameState.critMultiplier = 2;
+                if (typeof gameState.prestigePoints === 'undefined') gameState.prestigePoints = 0;
+                if (typeof gameState.prestigeMultiplier === 'undefined') gameState.prestigeMultiplier = 1;
+                if (typeof gameState.accumulatedBankInterest === 'undefined') gameState.accumulatedBankInterest = 0;
+                if (typeof gameState.lastBankLogTime === 'undefined') gameState.lastBankLogTime = Date.now();
+                if (typeof gameState.totalBankInterestEarned === 'undefined') gameState.totalBankInterestEarned = 0;
+                if (typeof gameState.passiveBoostActive === 'undefined') gameState.passiveBoostActive = false;
+                if (typeof gameState.passiveBoostEndTime === 'undefined') gameState.passiveBoostEndTime = 0;
+                if (typeof gameState.ceoActive === 'undefined') gameState.ceoActive = false;
+                if (typeof gameState.ceoEndTime === 'undefined') gameState.ceoEndTime = 0;
+                if (typeof gameState.lastCEOLogTime === 'undefined') gameState.lastCEOLogTime = Date.now();
+                if (typeof gameState.xpMultiplier === 'undefined') gameState.xpMultiplier = 1;
+                if (typeof gameState.isAutoClickerActive === 'undefined') gameState.isAutoClickerActive = false;
+                if (typeof gameState.autoClickCostPerSecond === 'undefined') gameState.autoClickCostPerSecond = 1;
+                // Restore CEO from active events
+                gameState.activeEvents.forEach(event => {
+                    if (event.id === 'ceo_active') {
+                        gameState.ceoActive = true;
+                        gameState.ceoEndTime = event.endTime;
+                    }
+                });
+                if (typeof gameState.activeEvents === 'undefined') gameState.activeEvents = [];
+                if (typeof gameState.companions === 'undefined') gameState.companions = [];
+                if (typeof gameState.relics === 'undefined') gameState.relics = [];
+                if (typeof gameState.currentDebuff === 'undefined') gameState.currentDebuff = null;
+                if (typeof gameState.debuffEndTime === 'undefined') gameState.debuffEndTime = 0;
+                if (typeof gameState.mana === 'undefined') gameState.mana = 0;
+                if (typeof gameState.manaMax === 'undefined') gameState.manaMax = 0;
+                if (typeof gameState.manaBoostActive === 'undefined') gameState.manaBoostActive = false;
+                if (typeof gameState.manaBoostEndTime === 'undefined') gameState.manaBoostEndTime = 0;
+                if (typeof gameState.investmentActive === 'undefined') gameState.investmentActive = false;
+                if (typeof gameState.investmentEndTime === 'undefined') gameState.investmentEndTime = 0;
+                if (typeof gameState.infiniteMode === 'undefined') gameState.infiniteMode = false;
+                if (typeof gameState.startTime === 'undefined') gameState.startTime = Date.now();
+                if (typeof gameState.streak === 'undefined') gameState.streak = 0;
+                if (typeof gameState.lastLoginDate === 'undefined') gameState.lastLoginDate = new Date().toDateString();
+                if (typeof gameState.timeCrystalUpgradeLevel === 'undefined') gameState.timeCrystalUpgradeLevel = 0;
+                if (typeof gameState.nextEventCountdown === 'undefined') gameState.nextEventCountdown = 20;
+                if (typeof gameState.pendingEvent === 'undefined') gameState.pendingEvent = null;
+                if (typeof gameState.eventBufferCountdown === 'undefined') gameState.eventBufferCountdown = 0;
+                if (typeof gameState.bossFrozen === 'undefined') gameState.bossFrozen = false;
+                if (typeof gameState.guaranteeRareDrop === 'undefined') gameState.guaranteeRareDrop = false;
+                if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
+                if (typeof gameState.originalZoneName === 'undefined') gameState.originalZoneName = null;
+                if (typeof gameState.fractionalBankInterest === 'undefined') gameState.fractionalBankInterest = 0;
+                if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = true;
+                if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
+                if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
+                // Clear any active events on load to prevent them from continuing
+                gameState.activeEvents = [];
+                gameState.pendingEvent = null;
+                gameState.eventBufferCountdown = 0;
+                gameState.nextEventCountdown = 20;
+                // Deep copy zones from master list but keep completed status
+                const masterZones = JSON.parse(JSON.stringify(ZONES));
+                gameState.zones = masterZones.map((zone, index) => {
+                    if (loadedState.zones && loadedState.zones[index]) {
+                        zone.challenges.forEach((challenge, cIndex) => {
+                            if(loadedState.zones[index].challenges[cIndex]){
+                                challenge.completed = loadedState.zones[index].challenges[cIndex].completed;
+                            }
+                        });
+                    }
+                    return zone;
+                });
+                // Reset bank mode on load
+                gameState.isBankMode = false;
+                // Recheck quest completion
+                checkQuestCompletion(false);
+                // Skip offline passive and daily login for manual load
+                gameState.lastUpdateTime = Date.now();
+                logMessage("Save loaded successfully!", "system-ok");
+                loadZone();
+                updateUI();
+            } catch (e) {
+                logMessage("Failed to load save: Invalid code or corrupted data.", "system-warn");
+            }
         }
 
         function triggerRandomEvent() {
@@ -3160,14 +3269,8 @@
             if (gameState.musicEnabled) {
                 audio.volume = 0.3;
                 audio.play().catch(e => console.log('Audio play failed:', e));
-                DOMElements.musicToggleButton.textContent = 'Music: On';
-                DOMElements.musicToggleButton.classList.remove('bg-red-700', 'hover:bg-red-600');
-                DOMElements.musicToggleButton.classList.add('bg-green-700', 'hover:bg-green-600');
             } else {
                 audio.pause();
-                DOMElements.musicToggleButton.textContent = 'Music: Off';
-                DOMElements.musicToggleButton.classList.remove('bg-green-700', 'hover:bg-green-600');
-                DOMElements.musicToggleButton.classList.add('bg-red-700', 'hover:bg-red-600');
             }
             updateUI();
         }
@@ -3409,17 +3512,21 @@
             DOMElements.prestigeButton.addEventListener('mouseleave', () => DOMElements.prestigeButton.classList.remove('pressed'));
             DOMElements.prestigeButton.addEventListener('click', prestige);
             DOMElements.exportSaveButton.addEventListener('click', exportSave);
+            DOMElements.loadSaveButton.addEventListener('click', loadSave);
+            DOMElements.loadSaveButton.addEventListener('mousedown', () => DOMElements.loadSaveButton.classList.add('pressed'));
+            DOMElements.loadSaveButton.addEventListener('mouseup', () => DOMElements.loadSaveButton.classList.remove('pressed'));
+            DOMElements.loadSaveButton.addEventListener('mouseleave', () => DOMElements.loadSaveButton.classList.remove('pressed'));
             document.getElementById('resetProfile').addEventListener('click', resetProfile);
             document.getElementById('debugButton').addEventListener('click', debugToggle);
             DOMElements.playerEssence.addEventListener('click', () => { showFullEssence = !showFullEssence; updateUI(); });
             DOMElements.playerAttack.addEventListener('click', () => { showFullAttack = !showFullAttack; updateUI(); });
             DOMElements.bankedClicks.addEventListener('click', () => { showFullBankedClicks = !showFullBankedClicks; updateUI(); });
 
-            // Music toggle button
-            DOMElements.musicToggleButton.addEventListener('mousedown', () => DOMElements.musicToggleButton.classList.add('pressed'));
-            DOMElements.musicToggleButton.addEventListener('mouseup', () => DOMElements.musicToggleButton.classList.remove('pressed'));
-            DOMElements.musicToggleButton.addEventListener('mouseleave', () => DOMElements.musicToggleButton.classList.remove('pressed'));
-            DOMElements.musicToggleButton.addEventListener('click', toggleMusic);
+            // Music icon button
+            DOMElements.musicIconButton.addEventListener('mousedown', () => DOMElements.musicIconButton.classList.add('pressed'));
+            DOMElements.musicIconButton.addEventListener('mouseup', () => DOMElements.musicIconButton.classList.remove('pressed'));
+            DOMElements.musicIconButton.addEventListener('mouseleave', () => DOMElements.musicIconButton.classList.remove('pressed'));
+            DOMElements.musicIconButton.addEventListener('click', toggleMusic);
 
             // Chronicle collapse button
             DOMElements.chronicleCollapseButton.addEventListener('click', toggleChronicleCollapse);
