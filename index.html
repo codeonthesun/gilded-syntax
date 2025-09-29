@@ -437,34 +437,6 @@
             pointer-events: none;
             z-index: 99;
         }
-        /* Base styles for particles */
-        .particle {
-            position: absolute;
-            pointer-events: none; /* Make particles non-interactive */
-            z-index: 100;
-            opacity: 1;
-            transform: translate(-50%, -50%); /* Center the particle on the cursor */
-        }
-        /* Specific particle styles */
-        .wisp {
-            background-color: #00ffff;
-            box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
-            border-radius: 50%;
-        }
-        .force-wave {
-            border-radius: 50%;
-            border: 4px solid white;
-            box-shadow: 0 0 15px white, inset 0 0 15px white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .slash-mark {
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%);
-            transform-origin: center center;
-        }
-        .spark {
-            background-color: hsl(35, 100%, 60%);
-            border-radius: 50%;
-        }
 
         /* Rarity Effects */
         :root {
@@ -722,6 +694,7 @@
 
             <!-- Action Area -->
             <div id="actionArea" class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-hidden min-h-[500px]">
+                <div id="fps-counter" class="absolute top-2 right-2 text-white text-sm font-bold bg-black/50 px-2 py-1 rounded">FPS: 0</div>
                 <!-- Boss UI will be injected here -->
                 <div id="bossContainer" class="absolute inset-0 label-container effect-embers z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
 
@@ -1431,6 +1404,23 @@
         let showFullAttack = false;
         let showFullBankedClicks = false;
         let previousButtonMode = '';
+        let particles = [];
+        let ctx;
+        let canvas;
+        let fps = 0;
+        let frameCount = 0;
+
+        function animateParticles() {
+            if (!ctx) return; // Wait for ctx to be set
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frameCount++;
+            particles.forEach(p => {
+                p.update();
+                p.draw(ctx);
+            });
+            particles = particles.filter(p => p.life > 0 && p.x >= 0 && p.x <= canvas.width && p.y - window.scrollY >= 0 && p.y - window.scrollY <= canvas.height);
+            requestAnimationFrame(animateParticles);
+        }
 
         function shakeElements(...elements) {
             elements.forEach(el => {
@@ -3682,8 +3672,6 @@
                 updateUI();
             }, 1000);
 
-            // Clear offscreen particles on scroll
-            window.addEventListener('scroll', clearOffscreenParticles);
 
             // Ensure loading screen shows for at least 1 second to allow UI to settle
             setTimeout(() => {
@@ -3703,14 +3691,24 @@
             }, { once: true });
 
             // Effect Canvas Setup
-            const canvas = document.getElementById('effect-canvas');
-            const ctx = canvas.getContext('2d');
+            canvas = document.getElementById('effect-canvas');
+            ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             window.addEventListener('resize', () => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
             });
+
+            animateParticles();
+
+            // FPS Counter Update
+            setInterval(() => {
+                fps = frameCount;
+                frameCount = 0;
+                const fpsEl = document.getElementById('fps-counter');
+                if (fpsEl) fpsEl.textContent = `FPS: ${fps}`;
+            }, 1000);
         }
 
         // --- Effect Functions ---
@@ -3724,56 +3722,69 @@
 
         // Force Wave (Store Effect)
         function forceWave(e) {
-            const wave = document.createElement('div');
-            wave.classList.add('particle', 'force-wave');
-            document.body.appendChild(wave);
-
-            wave.style.left = `${e.clientX}px`;
-            wave.style.top = `${e.clientY + window.scrollY}px`;
-            wave.style.width = '0px';
-            wave.style.height = '0px';
-
-            const duration = 600;
-
-            wave.animate([
-                { width: '0px', height: '0px', opacity: 1, borderWidth: '4px' },
-                { width: '400px', height: '400px', opacity: 0, borderWidth: '0px' }
-            ], {
-                duration: duration,
-                easing: 'cubic-bezier(0.25, 1, 0.5, 1)' // fast out
-            });
-
-            setTimeout(() => wave.remove(), duration);
+            const wave = {
+                x: e.clientX,
+                y: e.clientY + window.scrollY,
+                radius: 0,
+                life: 36, // 600ms / 16.67 ~36 frames
+                update() {
+                    this.radius += 8.89; // 320 / 36
+                    this.life--;
+                },
+                draw(ctx) {
+                    const screenY = this.y - window.scrollY;
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 4 * (this.life / 36);
+                    ctx.globalAlpha = this.life / 36;
+                    ctx.beginPath();
+                    ctx.arc(this.x, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            };
+            particles.push(wave);
         }
 
         // Boss Strike (Attack Effect)
         function bossStrike(e) {
             // Create multiple slash marks
             for (let i = 0; i < 4; i++) {
-                const slash = document.createElement('div');
-                slash.classList.add('particle', 'slash-mark');
-                document.body.appendChild(slash);
-
-                const duration = 250;
-                slash.style.left = `${e.clientX}px`;
-                slash.style.top = `${e.clientY + window.scrollY}px`;
-                slash.style.height = '3px';
-                slash.style.width = '150px';
-
-                const rotation = Math.random() * 180;
-                const delay = Math.random() * 100;
-
-                slash.animate([
-                    { transform: `translate(-50%, -50%) rotate(${rotation}deg) scaleX(0)`, opacity: 1 },
-                    { transform: `translate(-50%, -50%) rotate(${rotation}deg) scaleX(1)`, opacity: 1, offset: 0.5 },
-                    { transform: `translate(-50%, -50%) rotate(${rotation}deg) scaleX(0)`, opacity: 1 }
-                ], {
-                    duration: duration,
-                    delay: delay,
-                    easing: 'ease-in-out'
-                });
-
-                setTimeout(() => slash.remove(), duration + delay);
+                const slash = {
+                    x: e.clientX,
+                    y: e.clientY + window.scrollY,
+                    width: 0,
+                    maxWidth: 150,
+                    height: 3,
+                    rotation: Math.random() * 180,
+                    life: 15, // 250ms / 16.67 ~15 frames
+                    delay: Math.floor(Math.random() * 6), // delay in frames
+                    update() {
+                        if (this.delay > 0) {
+                            this.delay--;
+                            return;
+                        }
+                        if (this.width < this.maxWidth) {
+                            this.width += 10; // grow
+                        } else {
+                            this.width -= 10; // shrink
+                        }
+                        this.life--;
+                    },
+                    draw(ctx) {
+                        const screenY = this.y - window.scrollY;
+                        ctx.save();
+                        ctx.translate(this.x, screenY);
+                        ctx.rotate(this.rotation * Math.PI / 180);
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = this.height;
+                        ctx.globalAlpha = this.life / 15;
+                        ctx.beginPath();
+                        ctx.moveTo(-this.width / 2, 0);
+                        ctx.lineTo(this.width / 2, 0);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                };
+                particles.push(slash);
             }
 
             // Create impact particles
@@ -3791,64 +3802,46 @@
         function createParticle(x, y, options = {}) {
             const { type, duration = 2500, speedMultiplier = 0.3, gravity = false } = options;
 
-            const particle = document.createElement('div');
-            particle.classList.add('particle', type);
-            let size = Math.random() * 10 + 5;
-
-            if (type === 'spark') {
-                particle.style.backgroundColor = `hsl(${Math.random() * 20 + 35}, 100%, 60%)`;
-                size = Math.random() * 6 + 2;
-            } else { // Wisp
-                 particle.classList.add('wisp');
-            }
-
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            document.body.appendChild(particle);
+            const particle = {
+                x, y,
+                vx: 0, vy: 0,
+                life: Math.ceil(duration / 16.67), // assuming ~60fps
+                maxLife: Math.ceil(duration / 16.67),
+                size: type === 'spark' ? Math.random() * 4 + 1 : type === 'wisp' ? Math.random() * 8 + 3 : Math.random() * 10 + 5,
+                color: type === 'wisp' ? '#00ffff' : type === 'spark' ? `hsl(${Math.random() * 20 + 35}, 100%, 60%)` : '#fff',
+                gravity,
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.life--;
+                    if (this.gravity) {
+                        this.vy += 0.2; // Gravity effect
+                    } else { // Wisp behavior
+                        this.vx += (Math.random() - 0.5) * 0.1; // Gentle sway
+                        this.vy *= 0.98;
+                    }
+                },
+                draw(ctx) {
+                    const screenY = this.y - window.scrollY;
+                    ctx.fillStyle = this.color;
+                    ctx.globalAlpha = this.life / this.maxLife;
+                    ctx.beginPath();
+                    ctx.arc(this.x, screenY, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            };
 
             const angle = Math.random() * Math.PI * 2;
-            const speed = (Math.random() * 5 + 2);
-            let vx = Math.cos(angle) * speed * speedMultiplier;
-            let vy = Math.sin(angle) * speed * speedMultiplier;
+            const speed = (Math.random() * 5 + 2) * speedMultiplier;
+            particle.vx = Math.cos(angle) * speed;
+            particle.vy = Math.sin(angle) * speed;
 
-            const startTime = performance.now();
-            function animate(currentTime) {
-                const elapsedTime = currentTime - startTime;
-                const progress = elapsedTime / duration;
-                if (progress >= 1) {
-                    particle.remove();
-                    return;
-                }
-                x += vx;
-                y += vy;
-
-                if (gravity) {
-                    vy += 0.2; // Gravity effect
-                } else { // Wisp behavior
-                    vx += (Math.random() - 0.5) * 0.1; // Gentle sway
-                    vy *= 0.98;
-                }
-
-                particle.style.left = `${x}px`;
-                particle.style.top = `${y}px`;
-                particle.style.opacity = 1 - progress;
-                requestAnimationFrame(animate);
-            }
-            requestAnimationFrame(animate);
+            particles.push(particle);
         }
 
-        function clearOffscreenParticles() {
-            const particles = document.querySelectorAll('.particle');
-            particles.forEach(p => {
-                const rect = p.getBoundingClientRect();
-                if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
-                    p.remove();
-                }
-            });
-        }
 
         function clearAllParticles() {
-            document.querySelectorAll('.particle').forEach(p => p.remove());
+            particles = [];
         }
 
         // Mouse move for cursor positioning
