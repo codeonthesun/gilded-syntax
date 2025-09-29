@@ -2191,6 +2191,7 @@
             feedback.style.padding = '4px 8px';
             feedback.style.borderRadius = '4px';
             feedback.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)';
+            feedback.style.zIndex = '101';
 
             // Random position around the button
             const rect = DOMElements.actionButton.getBoundingClientRect();
@@ -2648,7 +2649,7 @@
                 if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
                 if (typeof gameState.originalZoneName === 'undefined') gameState.originalZoneName = null;
                 if (typeof gameState.fractionalBankInterest === 'undefined') gameState.fractionalBankInterest = 0;
-                if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = true;
+                if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = false;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
                 if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
                 // Clear any active events on load to prevent them from continuing
@@ -3012,7 +3013,7 @@
                 originalZoneName: null,
                 achievements: [],
                 fractionalBankInterest: 0,
-                musicEnabled: true,
+                musicEnabled: false,
                 eventCooldownEndTime: 0
             };
         }
@@ -3024,6 +3025,7 @@
                 loadZone();
                 updateUI();
                 logMessage("Profile reset complete. All progress has been cleared.", "system");
+                window.location.reload();
             }
         }
 
