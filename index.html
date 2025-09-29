@@ -482,6 +482,14 @@
 <body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
     <audio id="backgroundMusic" src="664408__seth_makes_sounds__whimsical-melancholic-song-thing.wav" preload="auto" loop></audio>
 
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div class="text-center">
+            <img src="logo.png" alt="Gilded Syntax" class="h-16 mx-auto mb-4 object-contain">
+            <div class="text-gray-400 animate-pulse">Preparing your adventure</div>
+        </div>
+    </div>
+
     <!-- Custom Cursor -->
     <div id="custom-cursor" class="custom-cursor" style="display: none;"></div>
 
@@ -512,18 +520,16 @@
     </div>
 
     <!-- Main Game Container -->
-    <div class="flex flex-col md:flex-row min-h-screen w-full max-w-7xl mx-auto p-2 md:p-4 gap-4">
+    <div id="main-game-container" class="flex flex-col md:flex-row min-h-screen w-full max-w-7xl mx-auto p-2 md:p-4 gap-4" style="display: none;">
 
         <!-- Left Panel: Chat/Log and Player Stats -->
         <div class="flex flex-col w-full md:w-1/3 md:h-full gap-4">
-            <!-- Game Title -->
+            <!-- Game Title and Active Events -->
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
-                <img src="logo.png" alt="Gilded Syntax" data-tooltip="Gilded Syntax - Clicker Adventure Game" class="h-12 md:h-16 mx-auto tooltip object-contain">
-                <p class="text-center text-sm text-gray-400">Your journey begins...</p>
-            </div>
-
-            <!-- Active Events -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+                <div class="text-center mb-4">
+                    <img src="logo.png" alt="Gilded Syntax" data-tooltip="Gilded Syntax - Clicker Adventure Game" class="h-12 md:h-16 mx-auto tooltip object-contain">
+                    <p class="text-sm text-gray-400">Your journey begins...</p>
+                </div>
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                     <span class="tooltip" data-tooltip="Active random events">Active Events</span>
                     <span class="text-xs text-gray-500" id="eventFlavorText"></span>
@@ -2256,7 +2262,7 @@
             }
 
             // Random event trigger (5% chance every second)
-            if (Math.random() < 0.05 && gameState.activeEvents.length === 0 && !gameState.pendingEvent) {
+            if (Math.random() < 0.05 && gameState.activeEvents.length === 0 && !gameState.pendingEvent && Date.now() > gameState.eventCooldownEndTime) {
                 triggerRandomEvent();
                 gameState.nextEventCountdown = 20; // Reset countdown on trigger
             }
@@ -2836,7 +2842,8 @@
                 originalZoneName: null,
                 achievements: [],
                 fractionalBankInterest: 0,
-                musicEnabled: true
+                musicEnabled: true,
+                eventCooldownEndTime: 0
             };
         }
 
@@ -3191,6 +3198,7 @@
                 if (typeof gameState.fractionalBankInterest === 'undefined') gameState.fractionalBankInterest = 0;
                 if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = true;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
+                if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
                   // Deep copy zones from master list but keep completed status
                   const masterZones = JSON.parse(JSON.stringify(ZONES));
                   gameState.zones = masterZones.map((zone, index) => {
@@ -3356,6 +3364,7 @@
             DOMElements.chronicleCollapseButton.addEventListener('click', toggleChronicleCollapse);
 
             loadGame();
+            gameState.eventCooldownEndTime = Date.now() + 10000; // Prevent events for 10 seconds on page load
             loadZone();
             updateUI();
             setCursor();
@@ -3364,6 +3373,12 @@
             setInterval(() => {
                 updatePassiveIncome();
                 updateUI();
+            }, 1000);
+
+            // Ensure loading screen shows for at least 1 second to allow UI to settle
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('main-game-container').style.display = 'flex';
             }, 1000);
 
             // Play background music on first interaction
