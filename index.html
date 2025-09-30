@@ -1706,6 +1706,11 @@
         let fps = 0;
         let frameCount = 0;
 
+        // Wisp clumping system
+        let lastClickTime = 0;
+        let consecutiveClicks = 0;
+        let mousePosition = { x: 0, y: 0 };
+
         function animateParticles() {
             if (!ctx) return; // Wait for ctx to be set
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1823,7 +1828,16 @@
                     logMessage(`CEO of Money helped you earn ${formatNumber(bonusEssence)} extra essence! "${randomFlavor}"`, "system-ok");
                 }
 
-                manaWisps(e);
+                // Track consecutive clicks for wisp clumping
+                const now = Date.now();
+                if (now - lastClickTime < 500) { // 500ms window for consecutive clicks
+                    consecutiveClicks++;
+                } else {
+                    consecutiveClicks = 1;
+                }
+                lastClickTime = now;
+
+                manaWisps(e, consecutiveClicks);
             }
 
             updateUI();
@@ -4040,9 +4054,27 @@
         // --- Effect Functions ---
 
         // Mana Wisps (Gather Effect)
-        function manaWisps(e) {
-            for (let i = 0; i < 20; i++) {
-                createParticle(e.clientX, e.clientY + window.scrollY, { type: 'wisp' });
+        function manaWisps(e, consecutiveClicks = 1) {
+            const baseFloatingWisps = 30; // Original floating wisps
+            const attractedWisps = Math.min(consecutiveClicks * 2, 20); // Up to 20 attracted wisps (reduced)
+
+            // Create original floating wisps (old behavior)
+            for (let i = 0; i < baseFloatingWisps; i++) {
+                createParticle(e.clientX, e.clientY + window.scrollY, {
+                    type: 'wisp',
+                    mouseAttraction: false // Original floating behavior
+                });
+            }
+
+            // Create attracted wisps (new clumping behavior) - always create some when consecutive
+            for (let i = 0; i < attractedWisps; i++) {
+                createParticle(e.clientX, e.clientY + window.scrollY, {
+                    type: 'wisp',
+                    consecutiveClicks: consecutiveClicks,
+                    mouseAttraction: true, // New mouse clumping behavior
+                    duration: 1500, // Faster fade away (1.5 seconds vs 2.5 seconds for floating wisps)
+                    sizeMultiplier: 1.3 // Make enhanced wisps 30% bigger
+                });
             }
         }
 
@@ -4126,34 +4158,91 @@
 
         // Core logic for simple particles
         function createParticle(x, y, options = {}) {
-            const { type, duration = 2500, speedMultiplier = 0.3, gravity = false } = options;
+            const { type, duration = 2500, speedMultiplier = 0.3, gravity = false, consecutiveClicks = 1, mouseAttraction = false, sizeMultiplier = 1.0 } = options;
 
             const particle = {
                 x, y,
                 vx: 0, vy: 0,
                 life: Math.ceil(duration / 16.67), // assuming ~60fps
                 maxLife: Math.ceil(duration / 16.67),
-                size: type === 'spark' ? Math.random() * 4 + 1 : type === 'wisp' ? Math.random() * 8 + 3 : Math.random() * 10 + 5,
+                size: type === 'spark' ? Math.random() * 4 + 1 : type === 'wisp' ? (Math.random() * 8 + 3) * sizeMultiplier : Math.random() * 10 + 5,
                 color: type === 'wisp' ? '#00ffff' : type === 'spark' ? `hsl(${Math.random() * 20 + 35}, 100%, 60%)` : '#fff',
                 gravity,
+                mouseAttraction,
+                consecutiveClicks,
+                originalX: x,
+                originalY: y,
                 update() {
+                    this.life--;
+
+                    if (this.mouseAttraction && this.life > 0) {
+                        // Calculate attraction to mouse position
+                        const dx = mousePosition.x - this.x;
+                        const dy = mousePosition.y - this.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance > 0) {
+                            // Stronger attraction with more consecutive clicks
+                            const attractionStrength = (this.consecutiveClicks * 0.5 + 1) * 0.02;
+                            const maxDistance = 200; // Maximum attraction distance
+
+                            if (distance < maxDistance) {
+                                const attraction = Math.min(attractionStrength * (1 - distance / maxDistance), 0.1);
+                                this.vx += (dx / distance) * attraction;
+                                this.vy += (dy / distance) * attraction;
+                            }
+                        }
+                    }
+
                     this.x += this.vx;
                     this.y += this.vy;
-                    this.life--;
+
                     if (this.gravity) {
                         this.vy += 0.2; // Gravity effect
-                    } else { // Wisp behavior
+                    } else if (!this.mouseAttraction) { // Original wisp behavior for non-attracted wisps
                         this.vx += (Math.random() - 0.5) * 0.1; // Gentle sway
                         this.vy *= 0.98;
+                    } else {
+                        // Apply some drag to mouse-attracted wisps
+                        this.vx *= 0.98;
+                        this.vy *= 0.98;
+
+                        // Keep wisps somewhat contained around the original click area
+                        const dx = this.x - this.originalX;
+                        const dy = this.y - this.originalY;
+                        const containmentDistance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (containmentDistance > 150) {
+                            const containmentStrength = 0.01;
+                            this.vx -= (dx / containmentDistance) * containmentStrength;
+                            this.vy -= (dy / containmentDistance) * containmentStrength;
+                        }
                     }
                 },
                 draw(ctx) {
                     const screenY = this.y - window.scrollY;
                     ctx.fillStyle = this.color;
-                    ctx.globalAlpha = this.life / this.maxLife;
+
+                    // Enhanced alpha based on mouse attraction and consecutive clicks
+                    let baseAlpha = this.life / this.maxLife;
+                    if (this.mouseAttraction) {
+                        // Make wisps more visible when attracted to mouse
+                        baseAlpha = Math.min(baseAlpha * (1 + this.consecutiveClicks * 0.2), 1);
+                    }
+
+                    ctx.globalAlpha = baseAlpha;
                     ctx.beginPath();
                     ctx.arc(this.x, screenY, this.size, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Add a subtle glow effect for mouse-attracted wisps
+                    if (this.mouseAttraction && this.consecutiveClicks > 3) {
+                        ctx.globalAlpha = baseAlpha * 0.3;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(this.x, screenY, this.size * 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
             };
 
@@ -4181,6 +4270,10 @@
             const x = e.clientX - hotspotX;
             const y = e.clientY - hotspotY;
             customCursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+            // Track mouse position for wisp attraction
+            mousePosition.x = e.clientX;
+            mousePosition.y = e.clientY + window.scrollY;
         });
 
         // Clicking animation
