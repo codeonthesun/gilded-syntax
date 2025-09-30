@@ -4194,16 +4194,16 @@
                 }, i * 60); // Tighter delay between ripples
             }
 
-            // Add subtle mouse-attracting sparkles (like enhanced wisps)
-            for (let i = 0; i < 6; i++) { // Reduced number for subtlety
+            // Add visible mouse-attracting sparkles (like enhanced wisps)
+            for (let i = 0; i < 8; i++) { // Increased for better visibility
                 setTimeout(() => {
                     const sparkle = {
                         x: e.clientX + (Math.random() - 0.5) * 50,
                         y: e.clientY + window.scrollY + (Math.random() - 0.5) * 50,
                         vx: (Math.random() - 0.5) * 1.2, // Gentler initial movement
                         vy: (Math.random() - 0.5) * 1.2,
-                        life: 28, // Shorter life for subtlety
-                        maxLife: 28,
+                        life: 70, // Much longer life for sustained effect
+                        maxLife: 70,
                         mouseAttraction: true,
                         originalX: e.clientX,
                         originalY: e.clientY + window.scrollY,
@@ -4251,19 +4251,19 @@
                             const screenY = this.y - window.scrollY;
                             const alpha = this.life / this.maxLife;
 
-                            // Very subtle white sparkles
-                            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`; // Reduced opacity
-                            ctx.globalAlpha = alpha * 0.7; // Overall more subtle
+                            // More visible white sparkles
+                            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`; // Increased opacity
+                            ctx.globalAlpha = alpha * 1.0; // Full opacity
 
-                            const size = (1.5 + Math.random() * 1.5) * alpha; // Much smaller
+                            const size = (2.5 + Math.random() * 2) * alpha; // Larger size
                             ctx.beginPath();
                             ctx.arc(this.x, screenY, size, 0, Math.PI * 2);
                             ctx.fill();
 
-                            // Simple, subtle sparkle effect
-                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
-                            ctx.lineWidth = 0.8; // Thinner lines
-                            const sparkleSize = 3 * alpha; // Much smaller sparkle
+                            // More visible sparkle effect
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+                            ctx.lineWidth = 1.2; // Thicker lines
+                            const sparkleSize = 5 * alpha; // Larger sparkle
                             ctx.beginPath();
                             ctx.moveTo(this.x - sparkleSize, screenY);
                             ctx.lineTo(this.x + sparkleSize, screenY);
@@ -4271,12 +4271,12 @@
                             ctx.lineTo(this.x, screenY + sparkleSize);
                             ctx.stroke();
 
-                            // Very subtle glow effect (only for bright sparkles)
-                            if (alpha > 0.7) {
-                                ctx.globalAlpha = alpha * 0.15; // Much more subtle
-                                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.2})`;
+                            // More visible glow effect (for brighter sparkles)
+                            if (alpha > 0.6) {
+                                ctx.globalAlpha = alpha * 0.3; // Increased glow intensity
+                                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
                                 ctx.beginPath();
-                                ctx.arc(this.x, screenY, size * 1.2, 0, Math.PI * 2);
+                                ctx.arc(this.x, screenY, size * 1.8, 0, Math.PI * 2); // Larger glow
                                 ctx.fill();
                             }
                         }
