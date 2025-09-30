@@ -1426,7 +1426,7 @@
                     <button id="hireCEOButton" data-tooltip="Spend 100 banked clicks to hire CEO for 2.5 minutes, providing bonus clicks on every manual click" class="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
                         Hire CEO (100 Clicks)
                     </button>
-                    <button id="bankInvestmentButton" data-tooltip="Spend 100 banked clicks for risky investment: 2x passive income for 30 seconds, but lose 20% of bank if interrupted by boss fight" class="bg-orange-700 hover:bg-orange-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                    <button id="bankInvestmentButton" data-tooltip="Spend 100 banked clicks on a risky investment: randomly quadruple one stat for 60 seconds or get no effect" class="bg-orange-700 hover:bg-orange-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
                         Risky Investment (100 Clicks)
                     </button>
                     <button id="convertClicksButton" data-tooltip="Convert banked clicks to essence (1 click = 2 essence)" class="bg-teal-700 hover:bg-teal-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
@@ -2240,6 +2240,8 @@
             efficiencyMultiplier: 1,
             regenerationMultiplier: 1,
             xpMultiplier: 1,
+            investmentStatBoost: null,
+            investmentStatEndTime: 0,
             accumulatedBankInterest: 0,
             lastBankLogTime: Date.now(),
             totalBankInterestEarned: 0,
@@ -2258,8 +2260,6 @@
             manaMax: 0,
             manaBoostActive: false,
             manaBoostEndTime: 0,
-            investmentActive: false,
-            investmentEndTime: 0,
             infiniteMode: false,
             startTime: Date.now(),
             streak: 0,
@@ -2579,6 +2579,13 @@
             gameState.bankedClicks -= 50;
             gameState.passiveBoostActive = true;
             gameState.passiveBoostEndTime = Date.now() + 60000;
+            gameState.activeEvents.push({
+                id: 'bank_boost',
+                name: '⛁ Bank Boost',
+                description: 'Passive income x2',
+                startTime: Date.now(),
+                endTime: Date.now() + 60000
+            });
             logMessage("Bank Boost activated! Passive income doubled for 60 seconds.", "system-ok");
             updateUI(); // Re-check button states after spending banked clicks
             DOMElements.bankBoostButton.classList.add('success-click');
@@ -2592,7 +2599,7 @@
             gameState.ceoEndTime = Date.now() + 150000; // 2.5 minutes
             gameState.activeEvents.push({
                 id: 'ceo_active',
-                name: 'CEO of Money',
+                name: '⛁ Hire CEO',
                 description: 'Bonus clicks on every manual click',
                 startTime: Date.now(),
                 endTime: Date.now() + 150000
@@ -2604,11 +2611,33 @@
         }
 
         function useBankInvestment() {
-            if (gameState.bankedClicks < 100 || gameState.investmentActive) return;
+            if (gameState.bankedClicks < 100) return;
             gameState.bankedClicks -= 100;
-            gameState.investmentActive = true;
-            gameState.investmentEndTime = Date.now() + 30000; // 30 seconds
-            logMessage("Risky investment activated! Passive income doubled for 30 seconds. Beware of interruptions!", "system-ok");
+            // Randomly select stat or no effect
+            const stats = [
+                { name: 'Essence per click', key: 'clickMultiplier' },
+                { name: 'Passive income', key: 'passiveMultiplier' },
+                { name: 'Attack damage', key: 'attackMultiplier' },
+                { name: 'Critical chance', key: 'critChance' },
+                { name: 'Critical multiplier', key: 'critMultiplier' },
+                { name: 'no effect', key: null }
+            ];
+            const randomIndex = Math.floor(Math.random() * stats.length);
+            const selected = stats[randomIndex];
+            if (selected.key) {
+                gameState.investmentStatBoost = selected.key;
+                gameState.investmentStatEndTime = Date.now() + 60000; // 60 seconds
+                gameState.activeEvents.push({
+                    id: 'risky_investment_boost',
+                    name: '⛁ Risky Investment',
+                    description: `${selected.name} x4`,
+                    startTime: Date.now(),
+                    endTime: Date.now() + 60000
+                });
+                logMessage(`Risky investment successful! ${selected.name} x4 for 60 seconds.`, "system-ok");
+            } else {
+                logMessage("Risky investment failed! No effect.", "system-warn");
+            }
             updateUI(); // Re-check button states after spending banked clicks
             DOMElements.bankInvestmentButton.classList.add('success-click');
             setTimeout(() => DOMElements.bankInvestmentButton.classList.remove('success-click'), 500);
@@ -2735,13 +2764,6 @@
 
             gameState.isBankMode = false;
             DOMElements.bankModeToggle.checked = false;
-            // Check investment risk
-            if (gameState.investmentActive) {
-                const loss = Math.floor(gameState.bankedClicks * 0.2);
-                gameState.bankedClicks -= loss;
-                gameState.investmentActive = false;
-                logMessage(`Investment interrupted! Lost ${formatNumber(loss)} banked clicks.`, "system-warn");
-            }
             DOMElements.actionButton.className = 'btn action-btn attack-mode';
 
             bossState.timer = setInterval(() => {
@@ -2992,7 +3014,7 @@
             // Removed title to prevent duplicate tooltips with custom data-tooltip
             DOMElements.bankBoostButton.disabled = gameState.passiveBoostActive || gameState.bankedClicks < 50;
             DOMElements.hireCEOButton.disabled = gameState.ceoActive || gameState.bankedClicks < 100;
-            DOMElements.bankInvestmentButton.disabled = gameState.investmentActive || gameState.bankedClicks < 100;
+            DOMElements.bankInvestmentButton.disabled = gameState.bankedClicks < 100;
             DOMElements.convertClicksButton.disabled = gameState.bankedClicks < 1;
 
             // Determine current button mode
@@ -3039,6 +3061,13 @@
             gameState.critChance = Math.min(0.5, (0.05 * gameState.critChanceUpgradeLevel) * gameState.luckMultiplier);
             gameState.critMultiplier = 2 + 0.5 * gameState.critMultUpgradeLevel;
 
+            // Apply temporary stat boost from risky investment
+            if (gameState.investmentStatBoost && Date.now() < gameState.investmentStatEndTime) {
+                gameState[gameState.investmentStatBoost] *= 4;
+            } else if (gameState.investmentStatBoost) {
+                gameState.investmentStatBoost = null;
+            }
+
             // Reset multipliers that are affected by relics before applying effects
             gameState.attackMultiplier = 1;
             gameState.xpMultiplier = 1;
@@ -3053,6 +3082,11 @@
             gameState.activeEvents.forEach(event => {
                 applyEventEffect(event);
             });
+
+            // Apply temporary attack boost after relics
+            if (gameState.investmentStatBoost === 'attackMultiplier' && Date.now() < gameState.investmentStatEndTime) {
+                gameState.attackMultiplier *= 4;
+            }
 
             // Update upgrade labels with rarity colors
             DOMElements.clickLabel.textContent = `Click Power (Lv.${gameState.clickUpgradeLevel})`;
@@ -3436,13 +3470,6 @@
                 gameState.passiveBoostActive = false;
                 updateUI();
             }
-            if (gameState.investmentActive && now < gameState.investmentEndTime) {
-                passiveRate *= 2;
-            } else if (gameState.investmentActive) {
-                gameState.investmentActive = false;
-                logMessage("Risky investment completed successfully!", "system-ok");
-                updateUI();
-            }
             // Apply debuff to passive
             if (gameState.currentDebuff && now < gameState.debuffEndTime) {
                 passiveRate = Math.floor(passiveRate / 2);
@@ -3799,6 +3826,8 @@
                 if (typeof gameState.ceoEndTime === 'undefined') gameState.ceoEndTime = 0;
                 if (typeof gameState.lastCEOLogTime === 'undefined') gameState.lastCEOLogTime = Date.now();
                 if (typeof gameState.xpMultiplier === 'undefined') gameState.xpMultiplier = 1;
+                if (typeof gameState.investmentStatBoost === 'undefined') gameState.investmentStatBoost = null;
+                if (typeof gameState.investmentStatEndTime === 'undefined') gameState.investmentStatEndTime = 0;
                 if (typeof gameState.isAutoClickerActive === 'undefined') gameState.isAutoClickerActive = false;
                 if (typeof gameState.autoClickCostPerSecond === 'undefined') gameState.autoClickCostPerSecond = 1;
                 // Restore CEO from active events
@@ -3817,8 +3846,6 @@
                 if (typeof gameState.manaMax === 'undefined') gameState.manaMax = 0;
                 if (typeof gameState.manaBoostActive === 'undefined') gameState.manaBoostActive = false;
                 if (typeof gameState.manaBoostEndTime === 'undefined') gameState.manaBoostEndTime = 0;
-                if (typeof gameState.investmentActive === 'undefined') gameState.investmentActive = false;
-                if (typeof gameState.investmentEndTime === 'undefined') gameState.investmentEndTime = 0;
                 if (typeof gameState.infiniteMode === 'undefined') gameState.infiniteMode = false;
                 if (typeof gameState.startTime === 'undefined') gameState.startTime = Date.now();
                 if (typeof gameState.streak === 'undefined') gameState.streak = 0;
@@ -3830,6 +3857,8 @@
                 if (typeof gameState.bossFrozen === 'undefined') gameState.bossFrozen = false;
                 if (typeof gameState.guaranteeRareDrop === 'undefined') gameState.guaranteeRareDrop = false;
                 if (typeof gameState.attackMultiplier === 'undefined') gameState.attackMultiplier = 1;
+                if (typeof gameState.investmentStatBoost === 'undefined') gameState.investmentStatBoost = null;
+                if (typeof gameState.investmentStatEndTime === 'undefined') gameState.investmentStatEndTime = 0;
                 if (typeof gameState.originalZoneName === 'undefined') gameState.originalZoneName = null;
                 if (typeof gameState.fractionalBankInterest === 'undefined') gameState.fractionalBankInterest = 0;
                 if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = false;
@@ -4042,7 +4071,7 @@
                     if (event.id === 'ceo_active') {
                         gameState.ceoActive = false;
                         logMessage("CEO of Money's contract has expired.", "system");
-                    } else {
+                    } else if (!event.name.startsWith('⛁ ')) {
                         logMessage(`Event ended: ${event.name}`, "system");
                     }
                     return false;
@@ -4119,8 +4148,12 @@
                 const timeLeft = Math.ceil((event.endTime - Date.now()) / 1000);
                 const eventEl = document.createElement('div');
                 eventEl.className = 'flex justify-between items-center text-sm';
-                const rarityClass = event.rarity.toLowerCase();
-                eventEl.innerHTML = `<span><span class="rarity-prefix ${rarityClass}"><span>(${event.rarity})</span></span>${event.name}</span><span class="text-gray-400">${timeLeft}s</span>`;
+                let nameHtml = event.name;
+                if (event.rarity) {
+                    const rarityClass = event.rarity.toLowerCase();
+                    nameHtml = `<span class="rarity-prefix ${rarityClass}"><span>(${event.rarity})</span></span>${event.name}`;
+                }
+                eventEl.innerHTML = `<span>${nameHtml}</span><span class="text-gray-400">${timeLeft}s</span>`;
                 DOMElements.activeEventsList.appendChild(eventEl);
             });
         }
@@ -4162,6 +4195,8 @@
                 efficiencyMultiplier: 1,
                 regenerationMultiplier: 1,
                 xpMultiplier: 1,
+                investmentStatBoost: null,
+                investmentStatEndTime: 0,
                 accumulatedBankInterest: 0,
                 lastBankLogTime: Date.now(),
                 passiveBoostActive: false,
@@ -4178,8 +4213,6 @@
                 manaMax: 0,
                 manaBoostActive: false,
                 manaBoostEndTime: 0,
-                investmentActive: false,
-                investmentEndTime: 0,
                 infiniteMode: false,
                 startTime: Date.now(),
                 streak: 0,
@@ -4530,8 +4563,6 @@
                 if (typeof gameState.manaMax === 'undefined') gameState.manaMax = 0;
                 if (typeof gameState.manaBoostActive === 'undefined') gameState.manaBoostActive = false;
                 if (typeof gameState.manaBoostEndTime === 'undefined') gameState.manaBoostEndTime = 0;
-                if (typeof gameState.investmentActive === 'undefined') gameState.investmentActive = false;
-                if (typeof gameState.investmentEndTime === 'undefined') gameState.investmentEndTime = 0;
                 if (typeof gameState.infiniteMode === 'undefined') gameState.infiniteMode = false;
                 if (typeof gameState.startTime === 'undefined') gameState.startTime = Date.now();
                 if (typeof gameState.streak === 'undefined') gameState.streak = 0;
