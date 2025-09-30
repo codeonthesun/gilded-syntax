@@ -763,7 +763,7 @@
                         <div class="coin left-coin"></div>
                         <div class="coin bottom-coin"></div>
                         <div class="coin mid-coin"></div>
-                        <div class="coin top-coin">Store</div>
+                        <div class="coin top-coin">Vault</div>
                     </div>
                 </button>
                 <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
@@ -4115,26 +4115,141 @@
 
         // Force Wave (Store Effect)
         function forceWave(e) {
+            // Main wave ring - MORE VISIBLE
             const wave = {
                 x: e.clientX,
                 y: e.clientY + window.scrollY,
                 radius: 0,
-                life: 36, // 600ms / 16.67 ~36 frames
+                life: 35, // Increased duration for better visibility
                 update() {
-                    this.radius += 8.89; // 320 / 36
+                    this.radius += 8.0; // Faster expansion for more prominent effect
                     this.life--;
                 },
                 draw(ctx) {
                     const screenY = this.y - window.scrollY;
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 4 * (this.life / 36);
-                    ctx.globalAlpha = this.life / 36;
+
+                    // Enhanced golden gradient with higher opacity
+                    const gradient = ctx.createRadialGradient(this.x, screenY, 0, this.x, screenY, this.radius);
+                    gradient.addColorStop(0, `rgba(255, 215, 0, ${Math.min(this.life / 35 * 1.2, 1)})`); // Gold center - boosted alpha
+                    gradient.addColorStop(0.6, `rgba(255, 165, 0, ${Math.min((this.life / 35) * 1.1, 0.9)})`); // Orange middle - boosted alpha
+                    gradient.addColorStop(1, `rgba(255, 140, 0, ${Math.min((this.life / 35) * 0.8, 0.7)})`); // Dark orange edge - boosted alpha
+
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 12 * (this.life / 35); // Much thicker line for visibility
+                    ctx.globalAlpha = Math.min(this.life / 35 * 1.3, 1); // Higher overall alpha
+                    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                    ctx.shadowBlur = 8 * (this.life / 35);
                     ctx.beginPath();
                     ctx.arc(this.x, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Remove shadow for next elements
+                    ctx.shadowBlur = 0;
+
+                    // Bright inner highlight ring - more prominent
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min((this.life / 35) * 0.9, 0.8)})`;
+                    ctx.lineWidth = 4 * (this.life / 35);
+                    ctx.globalAlpha = Math.min((this.life / 35) * 1.2, 1);
+                    ctx.beginPath();
+                    ctx.arc(this.x, screenY, this.radius * 0.25, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Add a second inner ring for extra definition
+                    ctx.strokeStyle = `rgba(255, 235, 100, ${Math.min((this.life / 35) * 0.7, 0.6)})`;
+                    ctx.lineWidth = 2 * (this.life / 35);
+                    ctx.globalAlpha = Math.min((this.life / 35) * 0.9, 0.8);
+                    ctx.beginPath();
+                    ctx.arc(this.x, screenY, this.radius * 0.45, 0, Math.PI * 2);
                     ctx.stroke();
                 }
             };
             particles.push(wave);
+
+            // Secondary ripple rings - also more visible
+            for (let i = 1; i <= 3; i++) {
+                setTimeout(() => {
+                    const ripple = {
+                        x: e.clientX,
+                        y: e.clientY + window.scrollY,
+                        radius: 0,
+                        delay: i * 4, // Tighter stagger
+                        life: 28 - i * 2, // Longer life for each ring
+                        ringIndex: i,
+                        update() {
+                            if (this.delay > 0) {
+                                this.delay--;
+                                return;
+                            }
+                            this.radius += 9.5 - this.ringIndex * 1.2; // Faster expansion
+                            this.life--;
+                        },
+                        draw(ctx) {
+                            if (this.delay > 0) return;
+
+                            const screenY = this.y - window.scrollY;
+                            const alpha = Math.min((this.life / (28 - this.ringIndex * 2)) * (1.0 - this.ringIndex * 0.1), 1);
+
+                            // Enhanced golden rings with higher opacity
+                            const colors = [
+                                `rgba(255, 215, 0, ${alpha * 0.9})`,
+                                `rgba(255, 165, 0, ${alpha * 0.8})`,
+                                `rgba(255, 140, 0, ${alpha * 0.7})`
+                            ];
+                            ctx.strokeStyle = colors[this.ringIndex - 1] || `rgba(255, 215, 0, ${alpha * 0.9})`;
+                            ctx.lineWidth = (6 - this.ringIndex * 1.2) * alpha; // Thicker lines
+                            ctx.globalAlpha = alpha;
+                            ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+                            ctx.shadowBlur = 4 * alpha;
+                            ctx.beginPath();
+                            ctx.arc(this.x, screenY, this.radius, 0, Math.PI * 2);
+                            ctx.stroke();
+                            ctx.shadowBlur = 0;
+                        }
+                    };
+                    particles.push(ripple);
+                }, i * 60); // Tighter delay between ripples
+            }
+
+            // Add some banking-themed sparkles
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const sparkle = {
+                        x: e.clientX + (Math.random() - 0.5) * 60,
+                        y: e.clientY + window.scrollY + (Math.random() - 0.5) * 60,
+                        vx: (Math.random() - 0.5) * 3,
+                        vy: (Math.random() - 0.5) * 3,
+                        life: 20,
+                        maxLife: 20,
+                        update() {
+                            this.x += this.vx;
+                            this.y += this.vy;
+                            this.vx *= 0.95;
+                            this.vy *= 0.95;
+                            this.life--;
+                        },
+                        draw(ctx) {
+                            const screenY = this.y - window.scrollY;
+                            const alpha = this.life / this.maxLife;
+                            ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+                            ctx.globalAlpha = alpha;
+                            ctx.beginPath();
+                            ctx.arc(this.x, screenY, 3 * alpha, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Add sparkle effect
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(this.x - 5, screenY);
+                            ctx.lineTo(this.x + 5, screenY);
+                            ctx.moveTo(this.x, screenY - 5);
+                            ctx.lineTo(this.x, screenY + 5);
+                            ctx.stroke();
+                        }
+                    };
+                    particles.push(sparkle);
+                }, Math.random() * 200); // Random timing for sparkles
+            }
         }
 
         // Boss Strike (Attack Effect)
