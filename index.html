@@ -296,6 +296,20 @@
             animation: float 6s ease-in-out infinite;
         }
 
+        .crystal-btn-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background: radial-gradient(ellipse at center, rgba(37, 150, 190, 0.4) 0%, rgba(37, 150, 190, 0.1) 70%, transparent 100%);
+            border-radius: 50%;
+            animation: shadowFloat 6s ease-in-out infinite;
+            z-index: -1;
+        }
+
         .crystal-btn {
             width: 120px;
             height: 120px;
@@ -340,6 +354,27 @@
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
+        }
+
+        @keyframes shadowFloat {
+            0% {
+                width: 80px;
+                height: 20px;
+                opacity: 0.6;
+                bottom: -40px;
+            }
+            50% {
+                width: 120px;
+                height: 30px;
+                opacity: 0.3;
+                bottom: -55px;
+            }
+            100% {
+                width: 80px;
+                height: 20px;
+                opacity: 0.6;
+                bottom: -40px;
+            }
         }
 
         @keyframes pulse {
