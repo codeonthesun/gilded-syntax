@@ -4128,17 +4128,12 @@
                 draw(ctx) {
                     const screenY = this.y - window.scrollY;
 
-                    // Enhanced golden gradient with higher opacity
-                    const gradient = ctx.createRadialGradient(this.x, screenY, 0, this.x, screenY, this.radius);
-                    gradient.addColorStop(0, `rgba(255, 215, 0, ${Math.min(this.life / 35 * 1.2, 1)})`); // Gold center - boosted alpha
-                    gradient.addColorStop(0.6, `rgba(255, 165, 0, ${Math.min((this.life / 35) * 1.1, 0.9)})`); // Orange middle - boosted alpha
-                    gradient.addColorStop(1, `rgba(255, 140, 0, ${Math.min((this.life / 35) * 0.8, 0.7)})`); // Dark orange edge - boosted alpha
-
-                    ctx.strokeStyle = gradient;
-                    ctx.lineWidth = 12 * (this.life / 35); // Much thicker line for visibility
-                    ctx.globalAlpha = Math.min(this.life / 35 * 1.3, 1); // Higher overall alpha
-                    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-                    ctx.shadowBlur = 8 * (this.life / 35);
+                    // Subtle white wave
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(this.life / 35 * 0.7, 0.6)})`;
+                    ctx.lineWidth = 6 * (this.life / 35); // Reduced thickness
+                    ctx.globalAlpha = Math.min(this.life / 35 * 0.8, 0.7); // Reduced opacity
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+                    ctx.shadowBlur = 4 * (this.life / 35); // Reduced shadow
                     ctx.beginPath();
                     ctx.arc(this.x, screenY, this.radius, 0, Math.PI * 2);
                     ctx.stroke();
@@ -4146,21 +4141,15 @@
                     // Remove shadow for next elements
                     ctx.shadowBlur = 0;
 
-                    // Bright inner highlight ring - more prominent
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min((this.life / 35) * 0.9, 0.8)})`;
-                    ctx.lineWidth = 4 * (this.life / 35);
-                    ctx.globalAlpha = Math.min((this.life / 35) * 1.2, 1);
+                    // Subtle white inner highlight ring
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min((this.life / 35) * 0.6, 0.5)})`;
+                    ctx.lineWidth = 2 * (this.life / 35); // Reduced thickness
+                    ctx.globalAlpha = Math.min((this.life / 35) * 0.8, 0.6);
                     ctx.beginPath();
                     ctx.arc(this.x, screenY, this.radius * 0.25, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Add a second inner ring for extra definition
-                    ctx.strokeStyle = `rgba(255, 235, 100, ${Math.min((this.life / 35) * 0.7, 0.6)})`;
-                    ctx.lineWidth = 2 * (this.life / 35);
-                    ctx.globalAlpha = Math.min((this.life / 35) * 0.9, 0.8);
-                    ctx.beginPath();
-                    ctx.arc(this.x, screenY, this.radius * 0.45, 0, Math.PI * 2);
-                    ctx.stroke();
+                    // Remove second inner ring for subtlety
                 }
             };
             particles.push(wave);
@@ -4189,17 +4178,12 @@
                             const screenY = this.y - window.scrollY;
                             const alpha = Math.min((this.life / (28 - this.ringIndex * 2)) * (1.0 - this.ringIndex * 0.1), 1);
 
-                            // Enhanced golden rings with higher opacity
-                            const colors = [
-                                `rgba(255, 215, 0, ${alpha * 0.9})`,
-                                `rgba(255, 165, 0, ${alpha * 0.8})`,
-                                `rgba(255, 140, 0, ${alpha * 0.7})`
-                            ];
-                            ctx.strokeStyle = colors[this.ringIndex - 1] || `rgba(255, 215, 0, ${alpha * 0.9})`;
-                            ctx.lineWidth = (6 - this.ringIndex * 1.2) * alpha; // Thicker lines
-                            ctx.globalAlpha = alpha;
-                            ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
-                            ctx.shadowBlur = 4 * alpha;
+                            // Subtle white rings
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`; // Reduced opacity
+                            ctx.lineWidth = (3 - this.ringIndex * 0.6) * alpha; // Thinner lines
+                            ctx.globalAlpha = alpha * 0.6; // Reduced overall alpha
+                            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                            ctx.shadowBlur = 2 * alpha; // Reduced shadow
                             ctx.beginPath();
                             ctx.arc(this.x, screenY, this.radius, 0, Math.PI * 2);
                             ctx.stroke();
@@ -4210,45 +4194,95 @@
                 }, i * 60); // Tighter delay between ripples
             }
 
-            // Add some banking-themed sparkles
-            for (let i = 0; i < 8; i++) {
+            // Add subtle mouse-attracting sparkles (like enhanced wisps)
+            for (let i = 0; i < 6; i++) { // Reduced number for subtlety
                 setTimeout(() => {
                     const sparkle = {
-                        x: e.clientX + (Math.random() - 0.5) * 60,
-                        y: e.clientY + window.scrollY + (Math.random() - 0.5) * 60,
-                        vx: (Math.random() - 0.5) * 3,
-                        vy: (Math.random() - 0.5) * 3,
-                        life: 20,
-                        maxLife: 20,
+                        x: e.clientX + (Math.random() - 0.5) * 50,
+                        y: e.clientY + window.scrollY + (Math.random() - 0.5) * 50,
+                        vx: (Math.random() - 0.5) * 1.2, // Gentler initial movement
+                        vy: (Math.random() - 0.5) * 1.2,
+                        life: 28, // Shorter life for subtlety
+                        maxLife: 28,
+                        mouseAttraction: true,
+                        originalX: e.clientX,
+                        originalY: e.clientY + window.scrollY,
                         update() {
+                            this.life--;
+
+                            if (this.mouseAttraction && this.life > 0) {
+                                // Gentler mouse attraction for subtlety
+                                const dx = mousePosition.x - this.x;
+                                const dy = mousePosition.y - this.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                                if (distance > 0) {
+                                    const attractionStrength = 0.012; // Much gentler attraction
+                                    const maxDistance = 150; // Smaller range
+
+                                    if (distance < maxDistance) {
+                                        const attraction = Math.min(attractionStrength * (1 - distance / maxDistance), 0.06);
+                                        this.vx += (dx / distance) * attraction;
+                                        this.vy += (dy / distance) * attraction;
+                                    }
+                                }
+                            }
+
                             this.x += this.vx;
                             this.y += this.vy;
-                            this.vx *= 0.95;
-                            this.vy *= 0.95;
-                            this.life--;
+
+                            if (this.mouseAttraction) {
+                                this.vx *= 0.97; // More drag for gentler movement
+                                this.vy *= 0.97;
+
+                                // Tighter containment for subtler effect
+                                const dx = this.x - this.originalX;
+                                const dy = this.y - this.originalY;
+                                const containmentDistance = Math.sqrt(dx * dx + dy * dy);
+
+                                if (containmentDistance > 100) { // Much smaller area
+                                    const containmentStrength = 0.006;
+                                    this.vx -= (dx / containmentDistance) * containmentStrength;
+                                    this.vy -= (dy / containmentDistance) * containmentStrength;
+                                }
+                            }
                         },
                         draw(ctx) {
                             const screenY = this.y - window.scrollY;
                             const alpha = this.life / this.maxLife;
-                            ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
-                            ctx.globalAlpha = alpha;
+
+                            // Very subtle white sparkles
+                            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`; // Reduced opacity
+                            ctx.globalAlpha = alpha * 0.7; // Overall more subtle
+
+                            const size = (1.5 + Math.random() * 1.5) * alpha; // Much smaller
                             ctx.beginPath();
-                            ctx.arc(this.x, screenY, 3 * alpha, 0, Math.PI * 2);
+                            ctx.arc(this.x, screenY, size, 0, Math.PI * 2);
                             ctx.fill();
 
-                            // Add sparkle effect
-                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
-                            ctx.lineWidth = 1;
+                            // Simple, subtle sparkle effect
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                            ctx.lineWidth = 0.8; // Thinner lines
+                            const sparkleSize = 3 * alpha; // Much smaller sparkle
                             ctx.beginPath();
-                            ctx.moveTo(this.x - 5, screenY);
-                            ctx.lineTo(this.x + 5, screenY);
-                            ctx.moveTo(this.x, screenY - 5);
-                            ctx.lineTo(this.x, screenY + 5);
+                            ctx.moveTo(this.x - sparkleSize, screenY);
+                            ctx.lineTo(this.x + sparkleSize, screenY);
+                            ctx.moveTo(this.x, screenY - sparkleSize);
+                            ctx.lineTo(this.x, screenY + sparkleSize);
                             ctx.stroke();
+
+                            // Very subtle glow effect (only for bright sparkles)
+                            if (alpha > 0.7) {
+                                ctx.globalAlpha = alpha * 0.15; // Much more subtle
+                                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.2})`;
+                                ctx.beginPath();
+                                ctx.arc(this.x, screenY, size * 1.2, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
                         }
                     };
                     particles.push(sparkle);
-                }, Math.random() * 200); // Random timing for sparkles
+                }, Math.random() * 150); // Shorter timing for subtler effect
             }
         }
 
