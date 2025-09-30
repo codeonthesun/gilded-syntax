@@ -2363,6 +2363,7 @@
         let canvas;
         let fps = 0;
         let frameCount = 0;
+        let isReset = false;
 
         // Wisp clumping system
         let lastClickTime = 0;
@@ -2924,7 +2925,24 @@
             DOMElements.headerEssence.textContent = gameState.essence.toLocaleString();
             DOMElements.essencePerClick.textContent = formatNumber(getEssencePerClick());
             DOMElements.playerAttack.textContent = showFullAttack ? getAttackDamage().toFixed(2) : Math.floor(getAttackDamage());
-            DOMElements.passiveIncome.textContent = formatNumber(gameState.passiveIncomeRate);
+            // Calculate effective passive income rate including boosts
+            let effectivePassiveRate = gameState.passiveIncomeRate;
+            if (gameState.passiveBoostActive && Date.now() < gameState.passiveBoostEndTime) {
+                effectivePassiveRate *= 2;
+            }
+            if (gameState.investmentActive && Date.now() < gameState.investmentEndTime) {
+                effectivePassiveRate *= 2;
+            }
+            // Apply debuff
+            if (gameState.currentDebuff && Date.now() < gameState.debuffEndTime) {
+                effectivePassiveRate = Math.floor(effectivePassiveRate / 2);
+            }
+            // Apply mana boost
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            if (zone && zone.specialMechanic && zone.specialMechanic.type === 'mana' && gameState.manaBoostActive && Date.now() < gameState.manaBoostEndTime) {
+                effectivePassiveRate = Math.floor(effectivePassiveRate * zone.specialMechanic.boostMultiplier);
+            }
+            DOMElements.passiveIncome.textContent = formatNumber(effectivePassiveRate);
             DOMElements.playerCritChance.textContent = (gameState.critChance * 100).toFixed(1) + '%';
             DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
 
@@ -3109,7 +3127,9 @@
                 DOMElements.musicIconButton.classList.add('text-gray-500');
             }
 
-            saveGame();
+            if (!isReset && (gameState.essence > 0 || gameState.level > 1 || gameState.prestigePoints > 0)) {
+                saveGame();
+            }
         }
         
         function updateQuestList() {
@@ -4184,11 +4204,13 @@
 
         function resetProfile() {
             if (confirm("Are you sure you want to reset your progress? This will delete all saved data and cannot be undone.")) {
+                isReset = true;
                 gameState = getInitialGameState();
                 localStorage.removeItem('gildedSyntaxSave');
                 loadZone();
                 updateUI();
                 logMessage("Profile reset complete. All progress has been cleared.", "system");
+                isReset = false;
                 window.location.reload();
             }
         }
@@ -4204,7 +4226,9 @@
                 gameState.relics = [];
                 logMessage("Debug: Removed all relics", "system");
             }
+            isReset = true;
             updateUI();
+            isReset = false;
         }
 
         function updateCompanionsList() {
