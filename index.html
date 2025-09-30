@@ -438,6 +438,13 @@
             z-index: 99;
         }
 
+        /* Background Particle Canvas */
+        #particleCanvas {
+            z-index: -1;
+            pointer-events: none;
+            background-color: #111827;
+        }
+
         /* Rarity Effects */
         :root {
             --common: #808080;
@@ -530,14 +537,17 @@
 
         /* Base label styling */
         .label-container {
-            background-color: rgba(127, 29, 29, 0.8);
-            border: 1px solid rgba(55, 65, 81, 0.3);
+            background-color: #6b1a1a;
+            border: 1px solid #374151;
             border-radius: 0;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
+        }
+
+        /* UI Background */
+        .ui-bg {
+            background-color: #18212f;
         }
 
         /* --- Idle Effect 5: Infernal Embers --- */
@@ -571,11 +581,11 @@
 
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 overflow-auto min-h-screen">
+<body class="ui-bg text-gray-200 overflow-auto min-h-screen">
     <audio id="backgroundMusic" src="664408__seth_makes_sounds__whimsical-melancholic-song-thing.wav" preload="auto" loop></audio>
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+    <div id="loading-screen" class="fixed inset-0 ui-bg flex items-center justify-center z-50">
         <div class="text-center">
             <img src="logo.png" alt="Gilded Syntax" class="h-16 mx-auto mb-4 object-contain">
             <div class="text-gray-400 animate-pulse">Preparing your adventure</div>
@@ -587,6 +597,7 @@
     <!-- Custom Cursor -->
     <div id="custom-cursor" class="custom-cursor" style="display: none;"></div>
 
+    <canvas id="particleCanvas"></canvas>
     <canvas id="effect-canvas"></canvas>
 
     <!-- SVG Definitions -->
@@ -621,7 +632,7 @@
         <!-- Left Panel: Chat/Log and Player Stats -->
         <div class="flex flex-col w-full md:w-1/3 md:h-full gap-4">
             <!-- Game Title and Active Events -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 relative">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700 relative">
                 <button id="musicIconButton" class="absolute top-2 left-2 text-white text-xl btn tooltip right" style="z-index: 2001;" data-tooltip="Toggle background music">♪</button>
                 <div class="text-center mb-4">
                     <img src="logo.png" alt="Gilded Syntax" data-tooltip="Gilded Syntax - Clicker Adventure Game" class="h-12 md:h-16 mx-auto tooltip object-contain">
@@ -637,7 +648,7 @@
             </div>
 
             <!-- Chat Log -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col border border-gray-700 h-full">
+            <div class="ui-bg rounded-lg p-4 shadow-lg flex-grow flex flex-col border border-gray-700 h-full">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                     <span class="tooltip" data-tooltip="Game log and messages">Chronicle</span>
                     <button id="chronicleCollapseButton" class="btn text-sm px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded"><span style="font-family: monospace;">▼</span> Collapse</button>
@@ -648,7 +659,7 @@
             </div>
 
             <!-- Player Stats -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip right" data-tooltip="Your current stats and progress">Adventurer</h2>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Your current adventurer title">Title:</span> <span id="playerTitle" class="font-bold text-amber-400"></span></div>
@@ -668,7 +679,7 @@
             </div>
 
             <!-- Achievements -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Unlocked achievements and milestones">Achievements</h2>
                 <div id="achievementsList" class="space-y-1 text-sm">
                     <!-- Achievements will be injected here -->
@@ -676,7 +687,7 @@
             </div>
 
             <!-- Prestige -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Prestige system for resetting progress and gaining permanent multipliers">Prestige</h2>
                 <p class="text-sm text-gray-400 mb-2">Reset your progress for prestige points. Requires Level 50.</p>
                 <p class="text-sm">Prestige Points: <span id="prestigePoints" class="font-bold text-purple-400"></span></p>
@@ -693,7 +704,7 @@
         <div class="flex flex-col w-full md:w-2/3 md:h-full gap-4">
 
             <!-- Action Area -->
-            <div id="actionArea" class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-hidden min-h-[500px]">
+            <div id="actionArea" class="ui-bg rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-hidden min-h-[500px]">
                 <div id="fps-counter" class="absolute top-2 right-2 text-white text-sm font-bold bg-black/50 px-2 py-1 rounded">FPS: 0</div>
                 <!-- Boss UI will be injected here -->
                 <div id="bossContainer" class="absolute inset-0 label-container effect-embers z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
@@ -721,7 +732,7 @@
             </div>
 
             <!-- Quests/Challenges -->
-            <div id="zoneObjectivesContainer" class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
+            <div id="zoneObjectivesContainer" class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
                   <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                       <span class="tooltip" data-tooltip="Current zone challenges to complete">Zone Objectives</span>
                       <span class="text-xs text-gray-500 tooltip left" id="zoneFlavorText" data-tooltip="Completed objectives / Total objectives for this zone"></span>
@@ -732,7 +743,7 @@
             </div>
             
             <!-- Bank Mode -->
-            <div id="bankContainer" class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
+            <div id="bankContainer" class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700 transition-all duration-500 ease-in-out">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <span class="tooltip" data-tooltip="Bank system for storing clicks">Essence Bank</span>
@@ -766,7 +777,7 @@
             </div>
 
             <!-- Upgrades -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center tooltip" data-tooltip="Permanent upgrades to boost your progress">
                     <div class="flex items-center gap-2">
                         <span>Upgrades</span>
@@ -820,7 +831,7 @@
 
 
             <!-- Companions -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Summon companions for bonuses">
                     <div class="flex items-center gap-2">
                         <span>Companions</span>
@@ -855,7 +866,7 @@
             </div>
 
             <!-- Relics -->
-            <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg border border-gray-700">
+            <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip" data-tooltip="Collected relics from boss fights">Relics</h2>
                 <div id="relicsList" class="space-y-2 text-sm">
                     <!-- Relics will be injected here -->
@@ -1154,6 +1165,274 @@
                 }
             }
         ];
+
+        // Background Particle System Variables
+        const particleCanvas = document.getElementById('particleCanvas');
+        const particleCtx = particleCanvas.getContext('2d');
+        let particlesArray;
+        let currentStyle = 'combined'; // Will be set randomly
+        let mouse = {
+            x: null,
+            y: null,
+            radius: 150
+        };
+
+        // Background Particle Class
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.originX = x;
+                this.originY = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+
+            draw() {
+                particleCtx.beginPath();
+                particleCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                particleCtx.fillStyle = this.color;
+                particleCtx.fill();
+            }
+
+            update() {
+                // Repel from mouse
+                if (mouse.x !== null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < mouse.radius + this.size){
+                       if(mouse.x < this.x && this.x < particleCanvas.width - this.size * 5) this.x += 3;
+                       if(mouse.x > this.x && this.x > this.size * 5) this.x -= 3;
+                       if(mouse.y < this.y && this.y < particleCanvas.height - this.size * 5) this.y += 3;
+                       if(mouse.y > this.y && this.y > this.size * 5) this.y -= 3;
+                    }
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+
+                // Boundary check
+                if (currentStyle !== 'overlay') { // Falling stars has its own boundary logic
+                    if (this.x > particleCanvas.width || this.x < 0) this.directionX = -this.directionX;
+                    if (this.y > particleCanvas.height || this.y < 0) this.directionY = -this.directionY;
+                } else {
+                    // Reset particles that fall off the bottom
+                    if (this.y > particleCanvas.height + this.size) {
+                        this.y = 0 - this.size;
+                        this.x = Math.random() * particleCanvas.width;
+                    }
+                }
+
+                this.draw();
+            }
+        }
+
+        // Background Particle System Variables
+        const backgroundParticleCanvas = document.getElementById('particleCanvas');
+        const backgroundParticleCtx = backgroundParticleCanvas.getContext('2d');
+        let backgroundParticlesArray;
+        let backgroundCurrentStyle = 'combined'; // Will be set randomly
+        let backgroundMouse = {
+            x: null,
+            y: null,
+            radius: 150
+        };
+
+        // Background Particle Class
+        class BackgroundParticle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.originX = x;
+                this.originY = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+
+            draw() {
+                backgroundParticleCtx.beginPath();
+                backgroundParticleCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                backgroundParticleCtx.fillStyle = this.color;
+                backgroundParticleCtx.fill();
+            }
+
+            update() {
+                // Repel from mouse
+                if (backgroundMouse.x !== null) {
+                    let dx = backgroundMouse.x - this.x;
+                    let dy = backgroundMouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < backgroundMouse.radius + this.size){
+                       if(backgroundMouse.x < this.x && this.x < backgroundParticleCanvas.width - this.size * 5) this.x += 3;
+                       if(backgroundMouse.x > this.x && this.x > this.size * 5) this.x -= 3;
+                       if(backgroundMouse.y < this.y && this.y < backgroundParticleCanvas.height - this.size * 5) this.y += 3;
+                       if(backgroundMouse.y > this.y && this.y > this.size * 5) this.y -= 3;
+                    }
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+
+                // Boundary check
+                if (backgroundCurrentStyle !== 'overlay') { // Falling stars has its own boundary logic
+                    if (this.x > backgroundParticleCanvas.width || this.x < 0) this.directionX = -this.directionX;
+                    if (this.y > backgroundParticleCanvas.height || this.y < 0) this.directionY = -this.directionY;
+                } else {
+                    // Reset particles that fall off the bottom
+                    if (this.y > backgroundParticleCanvas.height + this.size) {
+                        this.y = 0 - this.size;
+                        this.x = Math.random() * backgroundParticleCanvas.width;
+                    }
+                }
+
+                this.draw();
+            }
+        }
+
+        // Background Particle Functions
+        function setCanvasSize() {
+            backgroundParticleCanvas.width = window.innerWidth;
+            backgroundParticleCanvas.height = window.innerHeight;
+        }
+
+        function initBackgroundParticles() {
+            backgroundParticlesArray = [];
+            let numberOfParticles = (backgroundParticleCanvas.height * backgroundParticleCanvas.width) / 9000;
+
+            if (backgroundCurrentStyle === 'combined') {
+                 for (let i = 0; i < numberOfParticles; i++) {
+                    let size = (Math.random() * 2) + 1;
+                    let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                    let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                    let directionX = (Math.random() * .4) - 0.2;
+                    let directionY = (Math.random() * .4) - 0.2;
+                    let color = 'rgba(255, 255, 255, 0.8)'; // White color
+                    backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
+                }
+            } else if (backgroundCurrentStyle === 'overlay') {
+                // "Falling Stars" style
+                for (let i = 0; i < numberOfParticles * 1.5; i++) { // More particles for a denser effect
+                    let size = (Math.random() * 1.5) + 0.5;
+                    let x = Math.random() * backgroundParticleCanvas.width;
+                    let y = Math.random() * backgroundParticleCanvas.height;
+                    let directionX = 0;
+                    let directionY = (Math.random() * 0.8) + 0.2; // Move downwards
+                    let color = `rgba(255, 255, 255, ${Math.random() * 0.6 + 0.2})`;
+                    backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
+                }
+            }
+            else if (backgroundCurrentStyle === 'style3') {
+                // Half nebula particles
+                for (let i = 0; i < numberOfParticles / 2; i++) {
+                    let size = (Math.random() * 3.5) + 1.5; // Nebula particles are a bit larger in Style 3
+                    let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                    let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                    let directionX = (Math.random() * .4) - 0.2;
+                    let directionY = (Math.random() * .4) - 0.2;
+                    const colors = ['rgba(236, 72, 153, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(59, 130, 246, 0.8)'];
+                    let color = colors[Math.floor(Math.random() * colors.length)];
+                    backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
+                }
+                // Half starfield particles
+                for (let i = 0; i < numberOfParticles / 2; i++) {
+                    let size = (Math.random() * 2) + 1;
+                    let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                    let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                    let directionX = (Math.random() * .4) - 0.2;
+                    let directionY = (Math.random() * .4) - 0.2;
+                    let color = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.2})`;
+                    backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
+                }
+            }
+        }
+
+        function animateBackgroundParticles() {
+            requestAnimationFrame(animateBackgroundParticles);
+            backgroundParticleCtx.clearRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < backgroundParticlesArray.length; i++) {
+                backgroundParticlesArray[i].update();
+            }
+
+            connectBackground();
+        }
+
+        function connectBackground() {
+            let opacityValue = 1;
+            let connectDistance = (backgroundParticleCanvas.width / 7) * (backgroundParticleCanvas.height / 7);
+
+            for (let a = 0; a < backgroundParticlesArray.length; a++) {
+                for (let b = a; b < backgroundParticlesArray.length; b++) {
+                    let shouldConnect = false;
+                    if (backgroundCurrentStyle === 'combined') {
+                        shouldConnect = true; // Connect all particles
+                    } else if (backgroundCurrentStyle === 'style3') {
+                        // Only connect starfield particles, but check for nebula obstructions
+                        if (backgroundParticlesArray[a].color.startsWith('rgba(255,') && backgroundParticlesArray[b].color.startsWith('rgba(255,')) {
+                            let isBlocked = false;
+                            // Check against all other particles to see if they are a nebula particle in the way
+                            for (let i = 0; i < backgroundParticlesArray.length; i++) {
+                                if (i !== a && i !== b && !backgroundParticlesArray[i].color.startsWith('rgba(255,')) {
+                                    if (isNebulaBlocking(backgroundParticlesArray[a], backgroundParticlesArray[b], backgroundParticlesArray[i])) {
+                                        isBlocked = true;
+                                        break; // Found a blocker, no need to check others
+                                    }
+                                }
+                            }
+                            if (!isBlocked) {
+                                shouldConnect = true;
+                            }
+                        }
+                    }
+
+                    if (shouldConnect) {
+                        let distance = ((backgroundParticlesArray[a].x - backgroundParticlesArray[b].x) * (backgroundParticlesArray[a].x - backgroundParticlesArray[b].x)) +
+                                      ((backgroundParticlesArray[a].y - backgroundParticlesArray[b].y) * (backgroundParticlesArray[a].y - backgroundParticlesArray[b].y));
+
+                        if (distance < connectDistance) {
+                            opacityValue = 1 - (distance/20000);
+                            let lineColor = `rgba(140, 180, 255, ${opacityValue})`;
+                            backgroundParticleCtx.strokeStyle = lineColor;
+                            backgroundParticleCtx.lineWidth = 1;
+                            backgroundParticleCtx.beginPath();
+                            backgroundParticleCtx.moveTo(backgroundParticlesArray[a].x, backgroundParticlesArray[a].y);
+                            backgroundParticleCtx.lineTo(backgroundParticlesArray[b].x, backgroundParticlesArray[b].y);
+                            backgroundParticleCtx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Checks if a nebula particle is blocking the path between two starfield particles.
+         * @param {BackgroundParticle} pA - The first starfield particle.
+         * @param {BackgroundParticle} pB - The second starfield particle.
+         * @param {BackgroundParticle} nebulaParticle - The potential blocking nebula particle.
+         * @returns {boolean} - True if the nebula particle intersects the line segment.
+         */
+        function isNebulaBlocking(pA, pB, nebulaParticle) {
+            const L2 = Math.pow(pB.x - pA.x, 2) + Math.pow(pB.y - pA.y, 2);
+            if (L2 == 0.0) return false;
+
+            // Find the projection of the nebula particle's center onto the line segment
+            const t = Math.max(0, Math.min(1, ((nebulaParticle.x - pA.x) * (pB.x - pA.x) + (nebulaParticle.y - pA.y) * (pB.y - pA.y)) / L2));
+
+            // Get the coordinates of the closest point on the line segment
+            const closestX = pA.x + t * (pB.x - pA.x);
+            const closestY = pA.y + t * (pB.y - pA.y);
+
+            // Calculate the distance from this closest point to the nebula's center
+            const dx = nebulaParticle.x - closestX;
+            const dy = nebulaParticle.y - closestY;
+            const distanceSquared = Math.pow(dx, 2) + Math.pow(dy, 2);
+
+            // Check for collision by comparing distance to the nebula particle's radius (size)
+            return distanceSquared < Math.pow(nebulaParticle.size, 2);
+        }
 
         const TITLES = [
             { level: 1, name: "Neophyte" },
@@ -3665,6 +3944,29 @@
             loadZone();
             updateUI();
             setCursor();
+
+            // Initialize background particles
+            const styles = ['combined', 'overlay', 'style3'];
+            backgroundCurrentStyle = styles[Math.floor(Math.random() * styles.length)];
+            setCanvasSize();
+            initBackgroundParticles();
+            animateBackgroundParticles();
+
+            // Background particle event listeners
+            window.addEventListener('resize', () => {
+                setCanvasSize();
+                initBackgroundParticles();
+            });
+
+            window.addEventListener('mousemove', (event) => {
+                backgroundMouse.x = event.x;
+                backgroundMouse.y = event.y;
+            });
+
+            window.addEventListener('mouseout', () => {
+                backgroundMouse.x = null;
+                backgroundMouse.y = null;
+            });
 
             // Passive income every second
             setInterval(() => {
