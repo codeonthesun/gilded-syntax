@@ -462,6 +462,15 @@
             transition: transform 0.1s ease-out;
         }
 
+        .disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .disabled:hover {
+            transform: none;
+        }
+
         /* Effect Canvas and Particles */
         canvas {
             position: fixed;
@@ -1920,10 +1929,15 @@
             gameState.isBankMode = DOMElements.bankModeToggle.checked;
             if (gameState.isBankMode) {
                 gameState.originalZoneName = DOMElements.zoneName.textContent;
+                gameState.originalActionPrompt = DOMElements.actionPrompt.textContent;
                 DOMElements.zoneName.textContent = "Bank";
+                DOMElements.actionPrompt.textContent = "Store clicks in your bank.";
             } else {
                 if (gameState.originalZoneName) {
                     DOMElements.zoneName.textContent = gameState.originalZoneName;
+                }
+                if (gameState.originalActionPrompt) {
+                    DOMElements.actionPrompt.textContent = gameState.originalActionPrompt;
                 }
             }
             // Animate container swap
@@ -2285,14 +2299,18 @@
                 } else {
                     DOMElements.actionButton.className = 'btn action-btn gather-mode';
                 }
-                // Hide action prompt when boss is ready or bank mode is active
-                if (bossReady || gameState.isBankMode) {
+                // Hide action prompt when boss is ready and not in bank mode
+                if (bossReady && !gameState.isBankMode) {
                     DOMElements.actionPrompt.style.display = 'none';
                 } else {
                     DOMElements.actionPrompt.style.display = '';
                 }
             }
             DOMElements.bankModeToggle.checked = gameState.isBankMode;
+            if (gameState.isBankMode) {
+                DOMElements.zoneName.textContent = "Bank" + (gameState.bankedClicks >= getBankSize() ? " (Full)" : "");
+                DOMElements.actionPrompt.textContent = "Store clicks in your bank.";
+            }
             DOMElements.autoClickButton.textContent = gameState.isAutoClickerActive ? "Auto-Clicker: On" : "Auto-Clicker: Off";
             DOMElements.autoClickRate.textContent = getAutoClickRate();
             // Removed title to prevent duplicate tooltips with custom data-tooltip
@@ -2323,6 +2341,13 @@
             }
 
             DOMElements.actionButton.className = 'btn action-btn ' + currentMode;
+
+            // Disable button if bank is full in store mode
+            if (gameState.isBankMode && gameState.bankedClicks >= getBankSize()) {
+                DOMElements.actionButton.classList.add('disabled');
+            } else {
+                DOMElements.actionButton.classList.remove('disabled');
+            }
 
             // Update multipliers with diminishing returns after Lv.50
             const softCap = 50;
@@ -3483,6 +3508,7 @@
                 bankMultiplier: 1,
                 autoClickMultiplier: 1,
                 originalZoneName: null,
+                originalActionPrompt: null,
                 achievements: [],
                 fractionalBankInterest: 0,
                 musicEnabled: false,
@@ -4115,6 +4141,11 @@
 
         // Force Wave (Store Effect)
         function forceWave(e) {
+            // Get button center for attraction
+            const buttonRect = DOMElements.actionButton.getBoundingClientRect();
+            const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+            const buttonCenterY = buttonRect.top + buttonRect.height / 2 + window.scrollY;
+
             // Main wave ring - MORE VISIBLE
             const wave = {
                 x: e.clientX,
@@ -4194,57 +4225,56 @@
                 }, i * 60); // Tighter delay between ripples
             }
 
-            // Add visible mouse-attracting sparkles (like enhanced wisps)
-            for (let i = 0; i < 8; i++) { // Increased for better visibility
-                setTimeout(() => {
+            // Add visible button-attracting sparkles (spawn away and get sucked in, gradually increasing)
+            let sparkleCount = 0;
+            const maxSparkles = 12;
+            const batchSizes = [1, 2, 3, 3, 3]; // Gradually increase batch size
+            let batchIndex = 0;
+
+            const sparkleInterval = setInterval(() => {
+                if (sparkleCount >= maxSparkles || batchIndex >= batchSizes.length) {
+                    clearInterval(sparkleInterval);
+                    return;
+                }
+
+                const batchSize = batchSizes[batchIndex];
+                for (let i = 0; i < batchSize && sparkleCount < maxSparkles; i++) {
+                    // Spawn at random distance and angle away from button center
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 150 + Math.random() * 100; // 150-250 pixels away
                     const sparkle = {
-                        x: e.clientX + (Math.random() - 0.5) * 50,
-                        y: e.clientY + window.scrollY + (Math.random() - 0.5) * 50,
-                        vx: (Math.random() - 0.5) * 1.2, // Gentler initial movement
-                        vy: (Math.random() - 0.5) * 1.2,
-                        life: 70, // Much longer life for sustained effect
-                        maxLife: 70,
-                        mouseAttraction: true,
-                        originalX: e.clientX,
-                        originalY: e.clientY + window.scrollY,
+                        x: buttonCenterX + Math.cos(angle) * distance,
+                        y: buttonCenterY + Math.sin(angle) * distance,
+                        vx: (Math.random() - 0.5) * 0.5, // Gentler initial movement
+                        vy: (Math.random() - 0.5) * 0.5,
+                        life: 90, // Longer life for sustained effect
+                        maxLife: 90,
+                        buttonAttraction: true,
+                        buttonCenterX: buttonCenterX,
+                        buttonCenterY: buttonCenterY,
                         update() {
                             this.life--;
 
-                            if (this.mouseAttraction && this.life > 0) {
-                                // Gentler mouse attraction for subtlety
-                                const dx = mousePosition.x - this.x;
-                                const dy = mousePosition.y - this.y;
+                            if (this.buttonAttraction && this.life > 0) {
+                                // Attract towards button center
+                                const dx = this.buttonCenterX - this.x;
+                                const dy = this.buttonCenterY - this.y;
                                 const distance = Math.sqrt(dx * dx + dy * dy);
 
                                 if (distance > 0) {
-                                    const attractionStrength = 0.012; // Much gentler attraction
-                                    const maxDistance = 150; // Smaller range
-
-                                    if (distance < maxDistance) {
-                                        const attraction = Math.min(attractionStrength * (1 - distance / maxDistance), 0.06);
-                                        this.vx += (dx / distance) * attraction;
-                                        this.vy += (dy / distance) * attraction;
-                                    }
+                                    const attractionStrength = 0.08; // Stronger attraction to suck in
+                                    const attraction = Math.min(attractionStrength, distance * 0.02);
+                                    this.vx += (dx / distance) * attraction;
+                                    this.vy += (dy / distance) * attraction;
                                 }
                             }
 
                             this.x += this.vx;
                             this.y += this.vy;
 
-                            if (this.mouseAttraction) {
-                                this.vx *= 0.97; // More drag for gentler movement
-                                this.vy *= 0.97;
-
-                                // Tighter containment for subtler effect
-                                const dx = this.x - this.originalX;
-                                const dy = this.y - this.originalY;
-                                const containmentDistance = Math.sqrt(dx * dx + dy * dy);
-
-                                if (containmentDistance > 100) { // Much smaller area
-                                    const containmentStrength = 0.006;
-                                    this.vx -= (dx / containmentDistance) * containmentStrength;
-                                    this.vy -= (dy / containmentDistance) * containmentStrength;
-                                }
+                            if (this.buttonAttraction) {
+                                this.vx *= 0.98; // Less drag for stronger pull
+                                this.vy *= 0.98;
                             }
                         },
                         draw(ctx) {
@@ -4255,7 +4285,7 @@
                             ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`; // Increased opacity
                             ctx.globalAlpha = alpha * 1.0; // Full opacity
 
-                            const size = (2.5 + Math.random() * 2) * alpha; // Larger size
+                            const size = (3 + Math.random() * 2) * alpha; // Larger size
                             ctx.beginPath();
                             ctx.arc(this.x, screenY, size, 0, Math.PI * 2);
                             ctx.fill();
@@ -4263,7 +4293,7 @@
                             // More visible sparkle effect
                             ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
                             ctx.lineWidth = 1.2; // Thicker lines
-                            const sparkleSize = 5 * alpha; // Larger sparkle
+                            const sparkleSize = 6 * alpha; // Larger sparkle
                             ctx.beginPath();
                             ctx.moveTo(this.x - sparkleSize, screenY);
                             ctx.lineTo(this.x + sparkleSize, screenY);
@@ -4273,17 +4303,19 @@
 
                             // More visible glow effect (for brighter sparkles)
                             if (alpha > 0.6) {
-                                ctx.globalAlpha = alpha * 0.3; // Increased glow intensity
-                                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                                ctx.globalAlpha = alpha * 0.4; // Increased glow intensity
+                                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
                                 ctx.beginPath();
-                                ctx.arc(this.x, screenY, size * 1.8, 0, Math.PI * 2); // Larger glow
+                                ctx.arc(this.x, screenY, size * 2, 0, Math.PI * 2); // Larger glow
                                 ctx.fill();
                             }
                         }
                     };
                     particles.push(sparkle);
-                }, Math.random() * 150); // Shorter timing for subtler effect
-            }
+                    sparkleCount++;
+                }
+                batchIndex++;
+            }, 150); // Add batches every 150ms
         }
 
         // Boss Strike (Attack Effect)
