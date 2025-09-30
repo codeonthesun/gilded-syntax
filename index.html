@@ -308,6 +308,7 @@
             border-radius: 50%;
             animation: shadowFloat 6s ease-in-out infinite;
             z-index: -1;
+            pointer-events: none;
         }
 
         .crystal-btn {
@@ -2056,6 +2057,7 @@
         }
 
         function startBossFight() {
+            clearAllParticles(); // Clear any lingering particles
             const zone = gameState.zones[gameState.currentZoneIndex];
             const boss = zone.boss;
             bossState.active = true;
@@ -4116,7 +4118,7 @@
 
         // Mana Wisps (Gather Effect)
         function manaWisps(e, consecutiveClicks = 1) {
-            const baseFloatingWisps = 30; // Original floating wisps
+            const baseFloatingWisps = 20; // Original floating wisps
             const attractedWisps = Math.min(consecutiveClicks * 2, 20); // Up to 20 attracted wisps (reduced)
 
             // Create original floating wisps (old behavior)
