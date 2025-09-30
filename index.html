@@ -565,12 +565,12 @@
         }
 
         @keyframes embers-glow {
-             0%, 100% {
-                box-shadow: 0 0 15px rgba(255, 69, 0, 0.2), 0 0 20px rgba(255, 69, 0, 0.1) inset;
-            }
-            50% {
-                box-shadow: 0 0 25px rgba(255, 69, 0, 0.4), 0 0 30px rgba(255, 69, 0, 0.2) inset;
-            }
+              0%, 100% {
+                 box-shadow: 0 0 15px rgba(255, 69, 0, 0.2), 0 0 20px rgba(255, 69, 0, 0.1) inset;
+             }
+             50% {
+                 box-shadow: 0 0 25px rgba(255, 69, 0, 0.4), 0 0 30px rgba(255, 69, 0, 0.2) inset;
+             }
         }
 
         @keyframes float-ember {
@@ -698,6 +698,10 @@
                 <button id="resetProfile" data-tooltip="Reset all progress and start fresh" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Reset Profile</button>
                 <button id="debugButton" data-tooltip="Debug: Toggle essence between 1M and 0" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">Debug</button>
             </div>
+
+            <!-- Unique Viewers Counter -->
+            <div class="text-xs text-gray-500 mt-2 text-center" id="viewerCounter">Unique Viewers: 1</div>
+            <div class="text-xs text-gray-500 text-center">(Credits)</div>
         </div>
 
         <!-- Right Panel: Action, Quests, Bank -->
@@ -1303,24 +1307,36 @@
             let numberOfParticles = (backgroundParticleCanvas.height * backgroundParticleCanvas.width) / 9000;
 
             if (backgroundCurrentStyle === 'combined') {
-                 for (let i = 0; i < numberOfParticles; i++) {
-                    let size = (Math.random() * 2) + 1;
-                    let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
-                    let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
-                    let directionX = (Math.random() * .4) - 0.2;
-                    let directionY = (Math.random() * .4) - 0.2;
-                    let color = 'rgba(255, 255, 255, 0.56)'; // White color, 30% less opacity
-                    backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
-                }
+                  for (let i = 0; i < numberOfParticles; i++) {
+                     let size = (Math.random() * 2) + 1;
+                     let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                     let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                     let directionX = (Math.random() * .2) - 0.1; // Slower movement
+                     let directionY = (Math.random() * .2) - 0.1; // Slower movement
+                     let color = 'rgba(255, 255, 255, 0.25)'; // Much more subtle opacity
+                     backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
+                 }
             } else if (backgroundCurrentStyle === 'overlay') {
                 // "Falling Stars" style
+                const jewelColors = [
+                    'rgba(255, 215, 0,', // gold
+                    'rgba(255, 0, 0,', // red
+                    'rgba(0, 255, 0,', // green
+                    'rgba(0, 0, 255,', // blue
+                    'rgba(255, 0, 255,', // magenta
+                    'rgba(255, 165, 0,', // orange
+                    'rgba(128, 0, 128,', // purple
+                    'rgba(255, 255, 0,', // yellow
+                    'rgba(0, 255, 255,', // cyan
+                ];
                 for (let i = 0; i < numberOfParticles * 1.5; i++) { // More particles for a denser effect
                     let size = (Math.random() * 1.5) + 0.5;
                     let x = Math.random() * backgroundParticleCanvas.width;
                     let y = Math.random() * backgroundParticleCanvas.height;
                     let directionX = 0;
-                    let directionY = (Math.random() * 0.8) + 0.2; // Move downwards
-                    let color = `rgba(255, 255, 255, ${Math.random() * 0.42 + 0.14})`; // 30% less opacity
+                    let directionY = (Math.random() * 0.4) + 0.1; // Slower falling speed
+                    let baseColor = jewelColors[Math.floor(Math.random() * jewelColors.length)];
+                    let color = `${baseColor}${Math.random() * 0.2 + 0.15})`; // Increased opacity for better visibility
                     backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
                 }
             }
@@ -1330,9 +1346,9 @@
                     let size = (Math.random() * 3.5) + 1.5; // Nebula particles are a bit larger in Style 3
                     let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
                     let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
-                    let directionX = (Math.random() * .4) - 0.2;
-                    let directionY = (Math.random() * .4) - 0.2;
-                    const colors = ['rgba(236, 72, 153, 0.56)', 'rgba(139, 92, 246, 0.56)', 'rgba(59, 130, 246, 0.56)']; // 30% less opacity
+                    let directionX = (Math.random() * .2) - 0.1; // Slower movement
+                    let directionY = (Math.random() * .2) - 0.1; // Slower movement
+                    const colors = ['rgba(236, 72, 153, 0.2)', 'rgba(139, 92, 246, 0.2)', 'rgba(59, 130, 246, 0.2)']; // Much more subtle opacity
                     let color = colors[Math.floor(Math.random() * colors.length)];
                     backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
                 }
@@ -1341,9 +1357,9 @@
                     let size = (Math.random() * 2) + 1;
                     let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
                     let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
-                    let directionX = (Math.random() * .4) - 0.2;
-                    let directionY = (Math.random() * .4) - 0.2;
-                    let color = `rgba(255, 255, 255, ${Math.random() * 0.35 + 0.14})`; // 30% less opacity
+                    let directionX = (Math.random() * .2) - 0.1; // Slower movement
+                    let directionY = (Math.random() * .2) - 0.1; // Slower movement
+                    let color = `rgba(255, 255, 255, ${Math.random() * 0.15 + 0.05})`; // Much more subtle opacity
                     backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
                 }
             }
@@ -1362,7 +1378,7 @@
 
         function connectBackground() {
             let opacityValue = 1;
-            let connectDistance = (backgroundParticleCanvas.width / 7) * (backgroundParticleCanvas.height / 7);
+            let connectDistance = (backgroundParticleCanvas.width / 12) * (backgroundParticleCanvas.height / 12); // Reduced distance for fewer lines
 
             for (let a = 0; a < backgroundParticlesArray.length; a++) {
                 for (let b = a; b < backgroundParticlesArray.length; b++) {
@@ -1394,9 +1410,9 @@
 
                         if (distance < connectDistance) {
                             opacityValue = 1 - (distance/20000);
-                            let lineColor = `rgba(140, 180, 255, ${opacityValue})`;
+                            let lineColor = `rgba(140, 180, 255, ${opacityValue * 0.4})`; // Fainter lines
                             backgroundParticleCtx.strokeStyle = lineColor;
-                            backgroundParticleCtx.lineWidth = 1;
+                            backgroundParticleCtx.lineWidth = 0.5; // Thinner lines
                             backgroundParticleCtx.beginPath();
                             backgroundParticleCtx.moveTo(backgroundParticlesArray[a].x, backgroundParticlesArray[a].y);
                             backgroundParticleCtx.lineTo(backgroundParticlesArray[b].x, backgroundParticlesArray[b].y);
@@ -3940,6 +3956,13 @@
             DOMElements.chronicleCollapseButton.addEventListener('click', toggleChronicleCollapse);
 
             loadGame();
+            // Initialize viewer counter - unique per user
+            if (!localStorage.getItem('hasVisited')) {
+                localStorage.setItem('hasVisited', 'true');
+                document.getElementById('viewerCounter').textContent = 'Unique Viewers: 1';
+            } else {
+                document.getElementById('viewerCounter').textContent = 'Unique Viewers: 1';
+            }
             gameState.eventCooldownEndTime = Date.now() + 10000; // Prevent events for 10 seconds on page load
             loadZone();
             updateUI();
