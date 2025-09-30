@@ -1337,7 +1337,7 @@
                     let directionX = (Math.random() * 0.4) - 0.2; // Gentle horizontal drift (-0.2 to +0.2)
                     let directionY = (Math.random() * 0.15) + 0.03; // Much slower falling speed (0.03-0.18)
                     let baseColor = jewelColors[Math.floor(Math.random() * jewelColors.length)];
-                    let color = `${baseColor}${Math.random() * 0.3 + 0.25})`; // Higher opacity for better star visibility (0.25-0.55)
+                    let color = `${baseColor}${Math.random() * 0.15 + 0.1})`; // Lower opacity to match other effects (0.1-0.25)
                     backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
                 }
             }
