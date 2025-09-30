@@ -995,43 +995,76 @@
             transform: none;
         }
 
-        /* Boss Ready Checkbox Styling */
+        /* Boss Ready Confirmation Square Styling */
         #bossReadyContainer {
             animation: fadeIn 0.5s ease-in-out;
         }
 
-        #bossReadyCheckbox + div {
+        .ready-confirmation-square {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #374151 0%, #4b5563 50%, #6b7280 100%);
+            border: 3px solid #9ca3af;
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
             transition: all 0.3s ease-in-out;
+            box-shadow:
+                inset 0 0 10px rgba(0, 0, 0, 0.5),
+                0 4px 0 #374151,
+                0 6px 15px rgba(0, 0, 0, 0.4);
         }
 
-        #bossReadyCheckbox:checked + div {
-            /* No special glow effect when checked */
+        .ready-confirmation-square:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                inset 0 0 15px rgba(0, 0, 0, 0.4),
+                0 6px 0 #374151,
+                0 8px 20px rgba(0, 0, 0, 0.5);
+            border-color: #d1d5db;
         }
 
-        #bossReadyContainer label {
-            transition: all 0.3s ease-in-out;
+        .ready-confirmation-square:active {
+            transform: translateY(2px);
+            box-shadow:
+                inset 0 0 20px rgba(0, 0, 0, 0.6),
+                0 2px 0 #374151,
+                0 4px 10px rgba(0, 0, 0, 0.4);
         }
 
-        #bossReadyContainer:hover label {
-            transform: translateY(-1px);
+        .ready-confirmation-square.active {
+            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+            border-color: #10b981;
+            box-shadow:
+                inset 0 0 15px rgba(16, 185, 129, 0.3),
+                0 4px 0 #047857,
+                0 6px 15px rgba(16, 185, 129, 0.4),
+                0 0 20px rgba(16, 185, 129, 0.5);
         }
 
-        #bossReadyContainer label span {
-            transition: all 0.3s ease-in-out;
+        .ready-checkmark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            color: #10b981;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
 
-        #bossReadyContainer:hover label span:first-child {
-            color: #f3f4f6;
-            text-shadow: 0 0 8px rgba(243, 244, 246, 0.5);
+        .ready-confirmation-square.active .ready-checkmark {
+            opacity: 1;
         }
 
-        #bossReadyContainer:hover label span:nth-child(2) {
-            color: #fbbf24;
-            text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
-            transform: scale(1.05);
+        #bossReadyContainer:hover .ready-confirmation-square:not(.active) {
+            border-color: #fbbf24;
+            box-shadow:
+                inset 0 0 12px rgba(251, 191, 36, 0.2),
+                0 4px 0 #374151,
+                0 6px 15px rgba(0, 0, 0, 0.4);
         }
-
-        /* No special styling for ready-glow class */
 
         /* Effect Canvas and Particles */
         canvas {
@@ -1340,17 +1373,20 @@
                 <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                 <div id="specialMechanicDisplay" class="mt-4 text-center"></div>
 
-                <!-- Boss Ready Checkbox -->
+                <!-- Boss Ready Confirmation -->
                 <div id="bossReadyContainer" class="mt-6 text-center" style="display: none;">
                     <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-600 inline-block">
-                        <label class="flex items-center justify-center gap-3 text-gray-200 cursor-pointer">
+                        <div class="flex items-center justify-center gap-3 text-gray-200">
                             <span class="font-cinzel text-xl text-amber-400">Ready?</span>
                             <div class="relative">
-                                <input type="checkbox" id="bossReadyCheckbox" class="sr-only peer">
-                                <div class="w-12 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 peer-checked:border-green-500"></div>
+                                <button id="bossReadyButton" class="ready-confirmation-square" aria-label="Confirm ready for battle">
+                                    <svg id="readyCheckmark" class="ready-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+                                    </svg>
+                                </button>
                             </div>
-                        </label>
-                        <p class="text-sm text-gray-400 mt-2">Check when prepared for battle</p>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">Click to confirm you're ready for battle</p>
                     </div>
                 </div>
             </div>
@@ -2306,7 +2342,7 @@
             musicIconButton: document.getElementById('musicIconButton'),
             chronicleCollapseButton: document.getElementById('chronicleCollapseButton'),
             bossReadyContainer: document.getElementById('bossReadyContainer'),
-            bossReadyCheckbox: document.getElementById('bossReadyCheckbox')
+            bossReadyButton: document.getElementById('bossReadyButton')
         };
         
         let bossState = {
@@ -2640,7 +2676,7 @@
 
         function startBossFight() {
             // Check if player is ready
-            if (!DOMElements.bossReadyCheckbox.checked) {
+            if (!DOMElements.bossReadyButton.classList.contains('active')) {
                 logMessage("You must confirm you're ready for battle first!", "system-warn");
                 shakeElements(DOMElements.bossReadyContainer);
                 return;
@@ -2763,8 +2799,8 @@
             DOMElements.zoneName.style.display = '';
             DOMElements.actionPrompt.style.display = '';
 
-            // Reset boss ready checkbox after boss fight
-            DOMElements.bossReadyCheckbox.checked = false;
+            // Reset boss ready button after boss fight
+            DOMElements.bossReadyButton.classList.remove('active');
 
             // Show boss ready checkbox again if boss is still ready
             let currentBossReady = false;
@@ -2811,8 +2847,8 @@
             DOMElements.zoneName.style.display = '';
             DOMElements.actionPrompt.style.display = '';
 
-            // Reset boss ready checkbox after losing boss fight
-            DOMElements.bossReadyCheckbox.checked = false;
+            // Reset boss ready button after losing boss fight
+            DOMElements.bossReadyButton.classList.remove('active');
 
             // Show boss ready checkbox again if boss is still ready
             let currentBossReady = false;
@@ -2967,7 +3003,7 @@
             // Disable button if bank is full in store mode, or if boss is ready but not confirmed
             if (gameState.isBankMode && gameState.bankedClicks >= getBankSize()) {
                 DOMElements.actionButton.classList.add('disabled');
-            } else if (bossReady && !DOMElements.bossReadyCheckbox.checked) {
+            } else if (bossReady && !DOMElements.bossReadyButton.classList.contains('active')) {
                 DOMElements.actionButton.classList.add('disabled');
             } else {
                 DOMElements.actionButton.classList.remove('disabled');
@@ -3041,7 +3077,7 @@
                 DOMElements.actionButton.setAttribute('data-tooltip', "Attack the boss to deal damage and defeat it");
                 } else if (gameState.isBankMode) {
                     DOMElements.actionButton.setAttribute('data-tooltip', "Store this click in your bank for later use");
-                } else if (bossReady && !DOMElements.bossReadyCheckbox.checked) {
+                } else if (bossReady && !DOMElements.bossReadyButton.classList.contains('active')) {
                     DOMElements.actionButton.setAttribute('data-tooltip', "Confirm you're ready for battle first");
                 } else {
                     DOMElements.actionButton.setAttribute('data-tooltip', "Click to gather essence from this zone");
@@ -3207,8 +3243,8 @@
             }
             updateSpecialMechanicDisplay();
 
-            // Always reset boss ready checkbox when loading a new zone
-            DOMElements.bossReadyCheckbox.checked = false;
+            // Always reset boss ready button when loading a new zone
+            DOMElements.bossReadyButton.classList.remove('active');
         }
 
         function generateInfiniteZone(zoneIndex) {
@@ -4537,6 +4573,19 @@
             }
         }
 
+        // Boss ready button toggle function
+        function toggleBossReady() {
+            const isActive = DOMElements.bossReadyButton.classList.contains('active');
+            if (isActive) {
+                DOMElements.bossReadyButton.classList.remove('active');
+                logMessage("Not ready for battle. Click when prepared.", "system");
+            } else {
+                DOMElements.bossReadyButton.classList.add('active');
+                logMessage("Ready for battle! The boss awaits.", "system-ok");
+            }
+            updateUI(); // Update button state
+        }
+
         // --- Initialization ---
         function init() {
             // Action button
@@ -4661,14 +4710,11 @@
             // Chronicle collapse button
             DOMElements.chronicleCollapseButton.addEventListener('click', toggleChronicleCollapse);
 
-            // Boss ready checkbox
-            DOMElements.bossReadyCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    logMessage("Ready for battle! The boss awaits.", "system-ok");
-                } else {
-                    logMessage("Not ready for battle. Check when prepared.", "system");
-                }
-            });
+            // Boss ready button
+            DOMElements.bossReadyButton.addEventListener('click', toggleBossReady);
+            DOMElements.bossReadyButton.addEventListener('mousedown', () => DOMElements.bossReadyButton.classList.add('pressed'));
+            DOMElements.bossReadyButton.addEventListener('mouseup', () => DOMElements.bossReadyButton.classList.remove('pressed'));
+            DOMElements.bossReadyButton.addEventListener('mouseleave', () => DOMElements.bossReadyButton.classList.remove('pressed'));
 
             loadGame();
             // Initialize viewer counter - unique per user
