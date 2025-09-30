@@ -1317,7 +1317,7 @@
                      backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
                  }
             } else if (backgroundCurrentStyle === 'overlay') {
-                // "Falling Stars" style
+                // "Star Shower" style - more immersive falling stars
                 const jewelColors = [
                     'rgba(255, 215, 0,', // gold
                     'rgba(255, 0, 0,', // red
@@ -1328,15 +1328,16 @@
                     'rgba(128, 0, 128,', // purple
                     'rgba(255, 255, 0,', // yellow
                     'rgba(0, 255, 255,', // cyan
+                    'rgba(255, 255, 255,', // white for realistic stars
                 ];
-                for (let i = 0; i < numberOfParticles * 1.5; i++) { // More particles for a denser effect
-                    let size = (Math.random() * 1.5) + 0.5;
+                for (let i = 0; i < numberOfParticles * 2.5; i++) { // Even more particles for denser shower effect
+                    let size = (Math.random() * 2.5) + 0.3; // More varied sizes for realistic stars (0.3-2.8)
                     let x = Math.random() * backgroundParticleCanvas.width;
                     let y = Math.random() * backgroundParticleCanvas.height;
-                    let directionX = 0;
-                    let directionY = (Math.random() * 0.4) + 0.1; // Slower falling speed
+                    let directionX = (Math.random() * 0.4) - 0.2; // Gentle horizontal drift (-0.2 to +0.2)
+                    let directionY = (Math.random() * 0.15) + 0.03; // Much slower falling speed (0.03-0.18)
                     let baseColor = jewelColors[Math.floor(Math.random() * jewelColors.length)];
-                    let color = `${baseColor}${Math.random() * 0.2 + 0.15})`; // Increased opacity for better visibility
+                    let color = `${baseColor}${Math.random() * 0.3 + 0.25})`; // Higher opacity for better star visibility (0.25-0.55)
                     backgroundParticlesArray.push(new BackgroundParticle(x, y, directionX, directionY, size, color));
                 }
             }
