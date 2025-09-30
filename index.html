@@ -342,6 +342,11 @@
             100% { transform: translateY(0px); }
         }
 
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%); opacity: 0.7; }
+            70% { transform: translate(-50%, -50%); opacity: 0; }
+            100% { transform: translate(-50%, -50%); opacity: 0; }
+        }
 
         /* Custom Cursor Styles */
         .custom-cursor {
@@ -635,7 +640,7 @@
             <div class="bg-gray-800/50 rounded-lg p-4 shadow-lg flex-grow flex flex-col border border-gray-700 h-full">
                 <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 flex justify-between items-center">
                     <span class="tooltip" data-tooltip="Game log and messages">Chronicle</span>
-                    <button id="chronicleCollapseButton" class="btn text-sm px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">▼ Collapse</button>
+                    <button id="chronicleCollapseButton" class="btn text-sm px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded"><span style="font-family: monospace;">▼</span> Collapse</button>
                 </h2>
                 <div id="chatLog" class="chat-log h-72 overflow-y-auto pr-2 space-y-2 text-sm">
                     <!-- Messages will be injected here -->
@@ -3367,11 +3372,11 @@
             const log = DOMElements.chatLog;
             if (gameState.chronicleCollapsed) {
                 log.classList.add('collapsed');
-                button.textContent = '▶ Expand';
+                button.innerHTML = '<span style="font-family: monospace;">▶</span> Expand';
             } else {
                 log.classList.remove('collapsed');
                 log.style.height = '';
-                button.textContent = '▼ Collapse';
+                button.innerHTML = '<span style="font-family: monospace;">▼</span> Collapse';
             }
         }
 
