@@ -1269,6 +1269,7 @@
         }
 
         .common { color: var(--common); }
+        .bank { color: white; }
         .uncommon {
             color: var(--uncommon);
             animation: uncommon-glow 1000s infinite ease-in-out;
@@ -1496,7 +1497,7 @@
                     <div class="text-xs text-gray-400 mt-1" id="xpText">0 / 100</div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Total essence collected">Essence:</span> <span id="playerEssence" class="font-bold text-cyan-400"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained per click">Essence/Click:</span> <span id="essencePerClick" class="font-bold text-cyan-300"></span></div>
-                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained passively per second">Passive/sec:</span> <span id="passiveIncome" class="font-bold text-green-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained passively per second">Passive Essence/sec:</span> <span id="passiveIncome" class="font-bold text-green-400"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Damage dealt per attack during boss fights">Attack:</span> <span id="playerAttack" class="font-bold text-red-400"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit chance">Crit Chance:</span> <span id="playerCritChance" class="font-bold text-red-400"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit damage multiplier">Crit Multiplier:</span> <span id="playerCritMult" class="font-bold text-red-300"></span></div>
@@ -1667,7 +1668,7 @@
                             </div>
                     <div class="flex justify-between items-center">
                         <span id="regenerationLabel">Regeneration (Lv.0)</span>
-                        <button id="upgradeRegeneration" data-tooltip="Increases passive income rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (700)</button>
+                        <button id="upgradeRegeneration" data-tooltip="Increases passive essence rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (700)</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span id="timeCrystalLabel">Time Crystal (Lv.0)</span>
@@ -1695,7 +1696,7 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Water Nymph (Level: 10) (2000)</span>
-                        <button id="summonWaterNymph" data-tooltip="Summon Water Nymph for +10% passive income" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
+                        <button id="summonWaterNymph" data-tooltip="Summon Water Nymph for +10% passive essence" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Summon</button>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Earth Golem (Level: 15) (3000)</span>
@@ -2356,28 +2357,28 @@
             { id: 'click_penalty', name: 'Click Fatigue', description: 'Reduces click power by 25% for 20 seconds', duration: 20000, effect: 'quarter_click', type: 'negative', rarity: 'Common' },
             { id: 'minor_luck', name: 'Minor Luck', description: 'Increases luck by 10% for 30 seconds', duration: 30000, effect: 'luck_boost', type: 'positive', rarity: 'Common' },
             // Uncommon (30% chance, medium)
-            { id: 'passive_surge', name: 'Passive Surge', description: 'Triples passive income', duration: 60000, effect: 'triple_passive', type: 'positive', rarity: 'Uncommon' },
+            { id: 'passive_surge', name: 'Passive Surge', description: 'Triples passive essence', duration: 60000, effect: 'triple_passive', type: 'positive', rarity: 'Uncommon' },
             { id: 'crit_frenzy', name: 'Critical Frenzy', description: '100% critical hit chance', duration: 20000, effect: 'max_crit', type: 'positive', rarity: 'Uncommon' },
-            { id: 'essence_drain', name: 'Essence Drain', description: 'Halves passive income for 30 seconds', duration: 30000, effect: 'half_passive', type: 'negative', rarity: 'Uncommon' },
+            { id: 'essence_drain', name: 'Essence Drain', description: 'Halves passive essence for 30 seconds', duration: 30000, effect: 'half_passive', type: 'negative', rarity: 'Uncommon' },
             { id: 'bank_bonus', name: 'Bank Windfall', description: 'Doubles bank interest rate for 45 seconds', duration: 45000, effect: 'double_bank', type: 'positive', rarity: 'Uncommon' },
             // Rare (20% chance, stronger)
             { id: 'cost_reduction', name: 'Bargain Day', description: 'Halves upgrade costs', duration: 45000, effect: 'half_costs', type: 'positive', rarity: 'Rare' },
-            { id: 'mega_passive', name: 'Mega Passive', description: 'Quadruples passive income', duration: 45000, effect: 'quad_passive', type: 'positive', rarity: 'Rare' },
+            { id: 'mega_passive', name: 'Mega Passive', description: 'Quadruples passive essence', duration: 45000, effect: 'quad_passive', type: 'positive', rarity: 'Rare' },
             { id: 'crit_storm', name: 'Critical Storm', description: '150% critical hit chance and 2x multiplier', duration: 30000, effect: 'super_crit', type: 'positive', rarity: 'Rare' },
             { id: 'essence_storm', name: 'Essence Storm', description: 'Doubles essence gain but attracts a mini-boss in 10 seconds', duration: 30000, effect: 'double_click', type: 'chained', chain: 'mini_boss', rarity: 'Rare' },
             // Epic (7% chance, very strong)
             { id: 'godlike_boost', name: 'Godlike Boost', description: 'Quintuples essence gain from clicks', duration: 60000, effect: 'quintuple_click', type: 'positive', rarity: 'Epic' },
             { id: 'infinite_crit', name: 'Infinite Critical', description: '100% critical hit chance with 3x multiplier', duration: 45000, effect: 'infinite_crit', type: 'positive', rarity: 'Epic' },
-            { id: 'epic_passive', name: 'Epic Passive Surge', description: 'Decuples passive income for 60 seconds', duration: 60000, effect: 'decuple_passive', type: 'positive', rarity: 'Epic' },
+            { id: 'epic_passive', name: 'Epic Passive Surge', description: 'Decuples passive essence for 60 seconds', duration: 60000, effect: 'decuple_passive', type: 'positive', rarity: 'Epic' },
             // Legendary (3% chance, game-changing)
-            { id: 'legendary_harvest', name: 'Harvest of Legends', description: 'Sextuples essence gain and passive income', duration: 120000, effect: 'legendary_boost', type: 'positive', rarity: 'Legendary' },
+            { id: 'legendary_harvest', name: 'Harvest of Legends', description: 'Sextuples essence gain and passive essence', duration: 120000, effect: 'legendary_boost', type: 'positive', rarity: 'Legendary' },
             { id: 'time_warp', name: 'Time Warp', description: 'Freezes time for bosses (no timer) for 30 seconds', duration: 30000, effect: 'freeze_boss', type: 'positive', rarity: 'Legendary' },
             { id: 'ascended_luck', name: 'Ascended Luck', description: 'Guarantees rare+ drops from next boss', duration: 60000, effect: 'guarantee_rare', type: 'positive', rarity: 'Legendary' },
         ];
 
         const COMPANIONS = [
             { id: 'fire_sprite', name: 'Fire Sprite', description: '+10% click power', cost: 1000, effect: 'click_mult', value: 1.1, unlockReq: { level: 5 } },
-            { id: 'water_nymph', name: 'Water Nymph', description: '+10% passive income', cost: 2000, effect: 'passive_mult', value: 1.1, unlockReq: { level: 10 } },
+            { id: 'water_nymph', name: 'Water Nymph', description: '+10% passive essence', cost: 2000, effect: 'passive_mult', value: 1.1, unlockReq: { level: 10 } },
             { id: 'earth_golem', name: 'Earth Golem', description: '+10% bank capacity', cost: 3000, effect: 'bank_mult', value: 1.1, unlockReq: { level: 15 } },
             { id: 'air_spirit', name: 'Air Spirit', description: '+10% auto-click rate', cost: 4000, effect: 'auto_mult', value: 1.1, unlockReq: { level: 20 } },
             { id: 'shadow_imp', name: 'Shadow Imp', description: '+5% critical chance', cost: 5000, effect: 'crit_chance_add', value: 0.05, unlockReq: { level: 25 } },
@@ -2386,7 +2387,7 @@
         const RELICS = [
             { id: 'crit_relic', name: 'Crystal of Precision', description: '+5% critical chance', effect: 'crit_chance_add', value: 0.05, rarity: 'Common' },
             { id: 'click_relic', name: 'Orb of Power', description: '+10% click power', effect: 'click_mult', value: 1.1, rarity: 'Common' },
-            { id: 'passive_relic', name: 'Amulet of Flow', description: '+10% passive income', effect: 'passive_mult', value: 1.1, rarity: 'Uncommon' },
+            { id: 'passive_relic', name: 'Amulet of Flow', description: '+10% passive essence', effect: 'passive_mult', value: 1.1, rarity: 'Uncommon' },
             { id: 'luck_relic', name: 'Charm of Fortune', description: '+10% luck', effect: 'luck_mult', value: 1.1, rarity: 'Rare' },
             { id: 'efficiency_relic', name: 'Tome of Thrift', description: '+5% efficiency', effect: 'efficiency_mult', value: 1.05, rarity: 'Epic' },
             // Add more relics for variety
@@ -2556,6 +2557,7 @@
         let fps = 0;
         let frameCount = 0;
         let isReset = false;
+let isTransitioning = false;
 
         // Wisp clumping system
         let lastClickTime = 0;
@@ -2597,9 +2599,12 @@
                 const zone = gameState.zones[gameState.currentZoneIndex];
                 const bossReady = zone.challenges.every(c => c.completed);
                 if (bossReady) {
+                    if (isTransitioning) return;
+                    isTransitioning = true;
                     // Show bouncing dots transition before starting boss fight
                     showTransition('bouncing-dots', 2000, () => {
                         startBossFight();
+                        isTransitioning = false;
                     });
                     return;
                 }
@@ -2776,7 +2781,7 @@
             gameState.passiveBoostEndTime = Date.now() + 60000;
             gameState.activeEvents.push({
                 id: 'passive_surge',
-                name: '⛁ Passive Surge',
+                name: '(Bank) Passive Surge',
                 description: 'Passive essence x2',
                 startTime: Date.now(),
                 endTime: Date.now() + 60000
@@ -2794,7 +2799,7 @@
             gameState.ceoEndTime = Date.now() + 150000; // 2.5 minutes
             gameState.activeEvents.push({
                 id: 'ceo_active',
-                name: '⛁ Hire CEO',
+                name: '(Bank) Hire CEO',
                 description: 'Bonus clicks on every manual click',
                 startTime: Date.now(),
                 endTime: Date.now() + 150000
@@ -2824,7 +2829,7 @@
                 gameState.investmentStatEndTime = Date.now() + 60000; // 60 seconds
                 gameState.activeEvents.push({
                     id: 'risky_investment_boost',
-                    name: '⛁ Risky Investment',
+                    name: '(Bank) Risky Investment',
                     description: `${selected.name} x4`,
                     startTime: Date.now(),
                     endTime: Date.now() + 60000
@@ -3838,7 +3843,7 @@
 
             // Log accumulated passive every 10 seconds
             if (now - gameState.lastPassiveLogTime > 10000 && gameState.accumulatedPassive > 0) {
-                logMessage(`You gained ${formatNumber(gameState.accumulatedPassive)} Essence from passive income.`, "system-ok");
+                logMessage(`You gained ${formatNumber(gameState.accumulatedPassive)} Essence from passive essence.`, "system-ok");
                 gameState.accumulatedPassive = 0;
                 gameState.lastPassiveLogTime = now;
             }
@@ -4257,17 +4262,17 @@
                 case 'double_click': effectDesc = "Doubles essence gained from clicks"; break;
                 case 'half_click': effectDesc = "Halves essence gained from clicks"; break;
                 case 'quarter_click': effectDesc = "Reduces click power by 25%"; break;
-                case 'triple_passive': effectDesc = "Triples passive income"; break;
-                case 'half_passive': effectDesc = "Halves passive income"; break;
+                case 'triple_passive': effectDesc = "Triples passive essence"; break;
+                case 'half_passive': effectDesc = "Halves passive essence"; break;
                 case 'max_crit': effectDesc = "Grants 100% critical hit chance"; break;
                 case 'half_costs': effectDesc = "Halves upgrade costs"; break;
                 case 'double_bank': effectDesc = "Doubles bank interest rate"; break;
-                case 'quad_passive': effectDesc = "Quadruples passive income"; break;
+                case 'quad_passive': effectDesc = "Quadruples passive essence"; break;
                 case 'super_crit': effectDesc = "150% crit chance with 2x multiplier"; break;
                 case 'quintuple_click': effectDesc = "Quintuples essence from clicks"; break;
                 case 'infinite_crit': effectDesc = "100% crit chance with 3x multiplier"; break;
-                case 'decuple_passive': effectDesc = "Decuples passive income"; break;
-                case 'legendary_boost': effectDesc = "Sextuples clicks and passive income"; break;
+                case 'decuple_passive': effectDesc = "Decuples passive essence"; break;
+                case 'legendary_boost': effectDesc = "Sextuples clicks and passive essence"; break;
                 case 'freeze_boss': effectDesc = "Freezes boss timer for 30 seconds"; break;
                 case 'guarantee_rare': effectDesc = "Guarantees rare+ boss drops"; break;
                 case 'luck_boost': effectDesc = "Increases luck by 10%"; break;
@@ -4460,7 +4465,9 @@
                 const eventEl = document.createElement('div');
                 eventEl.className = 'flex justify-between items-center text-sm';
                 let nameHtml = event.name;
-                if (event.rarity) {
+                if (event.name.startsWith('(Bank)')) {
+                    nameHtml = `<span class="rarity-prefix bank"><span>(Bank)</span></span>${event.name.substring(7)}`;
+                } else if (event.rarity) {
                     const rarityClass = event.rarity.toLowerCase();
                     nameHtml = `<span class="rarity-prefix ${rarityClass}"><span>(${event.rarity})</span></span>${event.name}`;
                 }
@@ -4882,7 +4889,7 @@
                     gameStateManager.addEssence(passiveGained, 'offline_passive');
                     gainXP(Math.floor(passiveGained / 100));
                     const timeStr = timeDiff > maxOfflineTime ? ` (capped at ${Math.floor(maxOfflineTime / 3600)}h)` : '';
-                    logMessage(`While you were away from Gilded Syntax, you gained ${formatNumber(passiveGained)} Essence from passive income${timeStr}.`, "system-ok");
+                    logMessage(`While you were away from Gilded Syntax, you gained ${formatNumber(passiveGained)} Essence from passive essence${timeStr}.`, "system-ok");
                 }
                 gameState.lastUpdateTime = now;
                 // Check daily login
