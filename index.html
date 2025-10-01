@@ -1662,9 +1662,9 @@
                         <button id="upgradeLuck" data-tooltip="Increases critical hit chance by 5% per level" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (500)</button>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span id="efficiencyLabel">Efficiency (Lv.0)</span>
-                        <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (600)</button>
-                    </div>
+                                <span id="efficiencyLabel">Efficiency (Lv.0)</span>
+                                <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (600)</button>
+                            </div>
                     <div class="flex justify-between items-center">
                         <span id="regenerationLabel">Regeneration (Lv.0)</span>
                         <button id="upgradeRegeneration" data-tooltip="Increases passive income rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (700)</button>
@@ -3760,7 +3760,7 @@
         }
 
         function getPassiveIncomeRate() {
-            return Math.floor((Math.floor(gameState.level / 10) + gameState.currentZoneIndex) * gameState.passiveMultiplier * gameState.prestigeMultiplier);
+            return Math.floor((Math.max(1, Math.floor(gameState.level / 5)) * Math.pow(1.2, gameState.currentZoneIndex)) * gameState.passiveMultiplier * gameState.prestigeMultiplier);
         }
 
         function updatePassiveIncome() {
@@ -5089,9 +5089,19 @@
                                           Math.pow(1.05, Math.max(gameState.clickUpgradeLevel - softCap, 0));
                 this.setMultiplier('clickMultiplier', newClickMultiplier, reason);
 
-                const newPassiveMultiplier = Math.pow(1.1, Math.min(gameState.passiveUpgradeLevel, softCap)) *
-                                            Math.pow(1.05, Math.max(gameState.passiveUpgradeLevel - softCap, 0));
-                this.setMultiplier('passiveMultiplier', newPassiveMultiplier, reason);
+                // Tiered passive upgrade growth
+                let passiveMult = 1;
+                const level = gameState.passiveUpgradeLevel;
+                if (level <= 20) {
+                    passiveMult = Math.pow(1.15, level);
+                } else if (level <= 50) {
+                    passiveMult = Math.pow(1.15, 20) * Math.pow(1.1, level - 20);
+                } else if (level <= 100) {
+                    passiveMult = Math.pow(1.15, 20) * Math.pow(1.1, 30) * Math.pow(1.05, level - 50);
+                } else {
+                    passiveMult = Math.pow(1.15, 20) * Math.pow(1.1, 30) * Math.pow(1.05, 50) * Math.pow(1.02, level - 100);
+                }
+                this.setMultiplier('passiveMultiplier', passiveMult, reason);
 
                 const newBankMultiplier = Math.pow(1.1, Math.min(gameState.bankUpgradeLevel, softCap)) *
                                          Math.pow(1.05, Math.max(gameState.bankUpgradeLevel - softCap, 0));
@@ -5106,7 +5116,7 @@
                 this.setMultiplier('luckMultiplier', newLuckMultiplier, reason);
 
                 const newEfficiencyMultiplier = Math.pow(0.95, Math.min(gameState.efficiencyUpgradeLevel, softCap)) *
-                                               Math.pow(0.98, Math.max(gameState.efficiencyUpgradeLevel - softCap, 0));
+                                                Math.pow(0.98, Math.max(gameState.efficiencyUpgradeLevel - softCap, 0));
                 this.setMultiplier('efficiencyMultiplier', newEfficiencyMultiplier, reason);
 
                 const newRegenerationMultiplier = Math.pow(1.1, Math.min(gameState.regenerationUpgradeLevel, softCap)) *
