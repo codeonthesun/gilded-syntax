@@ -1378,6 +1378,33 @@
             100% { transform: translateY(-120px) scale(0.2) rotate(360deg); opacity: 0; }
         }
 
+        /* Bouncing Dots Transition Animation */
+        .bouncing-dots-transition {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+        .bouncing-dots-transition div {
+            width: 25px;
+            height: 25px;
+            background-color: rgba(240, 195, 107, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(240, 195, 107, 0.8);
+            animation: bounceTransition 1.4s infinite ease-in-out both;
+        }
+        .bouncing-dots-transition .dot1 { animation-delay: -0.32s; }
+        .bouncing-dots-transition .dot2 { animation-delay: -0.16s; }
+        .bouncing-dots-transition .dot3 { animation-delay: 0s; }
+        @keyframes bounceTransition {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1.0); opacity: 1; }
+        }
+
     </style>
 </head>
 <body class="ui-bg text-gray-200 overflow-auto min-h-screen">
@@ -2565,7 +2592,10 @@
                 const zone = gameState.zones[gameState.currentZoneIndex];
                 const bossReady = zone.challenges.every(c => c.completed);
                 if (bossReady) {
-                    startBossFight();
+                    // Show bouncing dots transition before starting boss fight
+                    showTransition('bouncing-dots', 2000, () => {
+                        startBossFight();
+                    });
                     return;
                 }
             }
@@ -3610,6 +3640,91 @@
             setTimeout(() => {
                 feedback.remove();
             }, 1000);
+        }
+
+        // --- Transition System ---
+        // Reusable transition system for delayed screen changes within specific containers
+        // Usage examples:
+        // showTransition('bouncing-dots', 2000, () => { /* callback after animation */ });
+        // showTransition('spinner', 1000, () => { /* different transition type */ }, containerElement);
+        // showTransition('bouncing-dots', 1500, () => { /* zone change */ }, document.getElementById('actionArea'));
+        // Can be used anywhere in the game for delayed transitions within specific modules
+        function showTransition(transitionType, duration = 2000, callback = null, container = null) {
+            // Remove any existing transition
+            const existingTransition = document.querySelector('.transition-overlay');
+            if (existingTransition) {
+                existingTransition.remove();
+            }
+
+            // Default to action area if no container specified
+            const targetContainer = container || document.getElementById('actionArea');
+
+            // Create transition overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'transition-overlay';
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle at center, rgba(26, 32, 44, 0.8) 0%, rgba(26, 32, 44, 0.4) 60%, rgba(26, 32, 44, 0.1) 100%);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 100;
+                pointer-events: none;
+                border-radius: inherit;
+            `;
+
+            // Create transition content based on type
+            let transitionContent;
+            if (transitionType === 'bouncing-dots') {
+                transitionContent = document.createElement('div');
+                transitionContent.className = 'bouncing-dots-transition';
+                transitionContent.innerHTML = `
+                    <div class="dot1"></div>
+                    <div class="dot2"></div>
+                    <div class="dot3"></div>
+                `;
+            } else {
+                // Default transition - simple fade
+                transitionContent = document.createElement('div');
+                transitionContent.style.cssText = `
+                    width: 50px;
+                    height: 50px;
+                    border: 4px solid rgba(240, 195, 107, 0.9);
+                    border-top: 4px solid transparent;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                `;
+
+                // Add spin animation
+                if (!document.querySelector('#spin-keyframes')) {
+                    const style = document.createElement('style');
+                    style.id = 'spin-keyframes';
+                    style.textContent = `
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+
+            overlay.appendChild(transitionContent);
+            targetContainer.appendChild(overlay);
+
+            // Remove transition after duration and call callback
+            setTimeout(() => {
+                if (overlay && overlay.parentNode) {
+                    overlay.remove();
+                }
+                if (callback && typeof callback === 'function') {
+                    callback();
+                }
+            }, duration);
         }
 
         // --- Utility Functions ---
