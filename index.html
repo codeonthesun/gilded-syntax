@@ -3230,10 +3230,10 @@
 
             DOMElements.actionButton.className = 'btn action-btn ' + currentMode;
 
-            // Disable button if bank is full in store mode, or if boss is ready but not confirmed
+            // Disable button if bank is full in store mode, or if boss is ready but not confirmed (but not in bank mode)
             if (gameState.isBankMode && gameState.bankedClicks >= getBankSize()) {
                 DOMElements.actionButton.classList.add('disabled');
-            } else if (bossReady && !DOMElements.bossReadyButton.classList.contains('active')) {
+            } else if (bossReady && !gameState.isBankMode && !DOMElements.bossReadyButton.classList.contains('active')) {
                 DOMElements.actionButton.classList.add('disabled');
             } else {
                 DOMElements.actionButton.classList.remove('disabled');
@@ -5727,3 +5727,4 @@
     </script>
 </body>
 </html>
+
