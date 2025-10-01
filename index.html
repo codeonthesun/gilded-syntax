@@ -1607,8 +1607,8 @@
                     <button id="autoClickButton" data-tooltip="Toggle auto-clicker on/off. Costs 1 banked click per second." class="bg-green-700 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
                         Auto-Clicker: Off
                     </button>
-                    <button id="bankBoostButton" data-tooltip="Spend 50 banked clicks to double passive income for 60 seconds" class="bg-blue-700 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
-                        Bank Boost (50 Clicks)
+                    <button id="passiveSurgeButton" data-tooltip="Spend 50 banked clicks to double passive essence for 60 seconds" class="bg-blue-700 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
+                        Passive Surge (50 Clicks)
                     </button>
                     <button id="hireCEOButton" data-tooltip="Spend 100 banked clicks to hire CEO for 2.5 minutes, providing bonus clicks on every manual click" class="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
                         Hire CEO (100 Clicks)
@@ -2488,7 +2488,7 @@
             autoClickButton: document.getElementById('autoClickButton'),
             autoClickCost: document.getElementById('autoClickCost'),
             autoClickRate: document.getElementById('autoClickRate'),
-            bankBoostButton: document.getElementById('bankBoostButton'),
+            passiveSurgeButton: document.getElementById('passiveSurgeButton'),
             hireCEOButton: document.getElementById('hireCEOButton'),
             bankInvestmentButton: document.getElementById('bankInvestmentButton'),
             convertClicksButton: document.getElementById('convertClicksButton'),
@@ -2769,22 +2769,22 @@
         }
 
 
-        function useBankBoost() {
+        function usePassiveSurge() {
             if (gameState.bankedClicks < 50 || gameState.passiveBoostActive) return;
-            gameStateManager.addBankedClicks(-50, 'bank_boost');
+            gameStateManager.addBankedClicks(-50, 'passive_surge');
             gameState.passiveBoostActive = true;
             gameState.passiveBoostEndTime = Date.now() + 60000;
             gameState.activeEvents.push({
-                id: 'bank_boost',
-                name: '⛁ Bank Boost',
-                description: 'Passive income x2',
+                id: 'passive_surge',
+                name: '⛁ Passive Surge',
+                description: 'Passive essence x2',
                 startTime: Date.now(),
                 endTime: Date.now() + 60000
             });
-            logMessage("Bank Boost activated! Passive income doubled for 60 seconds.", "system-ok");
+            logMessage("Passive Surge activated! Passive essence doubled for 60 seconds.", "system-ok");
             updateUI(); // Re-check button states after spending banked clicks
-            DOMElements.bankBoostButton.classList.add('success-click');
-            setTimeout(() => DOMElements.bankBoostButton.classList.remove('success-click'), 500);
+            DOMElements.passiveSurgeButton.classList.add('success-click');
+            setTimeout(() => DOMElements.passiveSurgeButton.classList.remove('success-click'), 500);
         }
 
         function hireCEO() {
@@ -3221,9 +3221,9 @@
             // Update bank upgrade tooltips with cooldown indicators
             if (gameState.passiveBoostActive) {
                 const timeLeft = Math.ceil((gameState.passiveBoostEndTime - Date.now()) / 1000);
-                DOMElements.bankBoostButton.setAttribute('data-tooltip', `Active: Doubles passive income (${timeLeft}s remaining)`);
+                DOMElements.passiveSurgeButton.setAttribute('data-tooltip', `Active: Doubles passive essence (${timeLeft}s remaining)`);
             } else {
-                DOMElements.bankBoostButton.setAttribute('data-tooltip', 'Spend 50 banked clicks to double passive income for 60 seconds');
+                DOMElements.passiveSurgeButton.setAttribute('data-tooltip', 'Spend 50 banked clicks to double passive essence for 60 seconds');
             }
 
             if (gameState.ceoActive) {
@@ -3240,7 +3240,7 @@
                 DOMElements.bankInvestmentButton.setAttribute('data-tooltip', 'Spend 100 banked clicks on a risky investment: randomly quadruple one stat for 60 seconds or get no effect');
             }
             // Removed title to prevent duplicate tooltips with custom data-tooltip
-            DOMElements.bankBoostButton.disabled = gameState.passiveBoostActive || gameState.bankedClicks < 50;
+            DOMElements.passiveSurgeButton.disabled = gameState.passiveBoostActive || gameState.bankedClicks < 50;
             DOMElements.hireCEOButton.disabled = gameState.ceoActive || gameState.bankedClicks < 100;
             DOMElements.bankInvestmentButton.disabled = gameState.bankedClicks < 100 || (gameState.investmentStatEndTime > Date.now());
             DOMElements.convertClicksButton.disabled = gameState.bankedClicks < 1;
@@ -5330,7 +5330,7 @@
             DOMElements.summonShadowImp.addEventListener('mouseleave', () => DOMElements.summonShadowImp.previousElementSibling.classList.remove('glow'));
             // Bank buttons
             const bankButtons = [
-                DOMElements.bankBoostButton, DOMElements.hireCEOButton, DOMElements.bankInvestmentButton, DOMElements.convertClicksButton
+                DOMElements.passiveSurgeButton, DOMElements.hireCEOButton, DOMElements.bankInvestmentButton, DOMElements.convertClicksButton
             ];
             bankButtons.forEach(button => {
                 button.addEventListener('mousedown', () => button.classList.add('pressed'));
@@ -5338,7 +5338,7 @@
                 button.addEventListener('mouseleave', () => button.classList.remove('pressed'));
             });
 
-            DOMElements.bankBoostButton.addEventListener('click', useBankBoost);
+            DOMElements.passiveSurgeButton.addEventListener('click', usePassiveSurge);
             DOMElements.hireCEOButton.addEventListener('click', hireCEO);
             DOMElements.bankInvestmentButton.addEventListener('click', useBankInvestment);
             DOMElements.convertClicksButton.addEventListener('click', convertClicksToEssence);
