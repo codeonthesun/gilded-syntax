@@ -160,7 +160,7 @@
         .action-btn.gather-mode { width: 128px; height: 128px; }
         .action-btn.boss-mode .boss-content { display: flex; }
         .action-btn.boss-mode .boss-content { display: flex; }
-        .action-btn.boss-mode { height: 80px; }
+        .action-btn.boss-mode { width: 160px; height: 80px; }
         .action-btn.attack-mode .attack-content { display: flex; }
         .action-btn.attack-mode { height: 80px; }
         .action-btn.store-mode .store-content { display: flex; }
@@ -169,8 +169,8 @@
             outline: none;
         }
 
-        /* --- Style 2: Dragon Scale Button --- */
-        .scale-btn {
+        /* --- Style 2: Boss Button --- */
+        .boss-btn {
             background:
                 /* Main red gradient - much more red */
                 linear-gradient(135deg, #7f1d1d 0%, #991b1b 15%, #b91c1c 30%, #dc2626 50%, #ef4444 75%, #f87171 100%),
@@ -200,7 +200,38 @@
             transition: all 0.3s ease-in-out;
         }
 
-        .scale-btn::before { /* Subtle texture overlay */
+        /* --- Attack Scale Button (copy of Dragon Scale) --- */
+        .attack-scale-btn {
+            background:
+                /* Main red gradient - much more red */
+                linear-gradient(135deg, #7f1d1d 0%, #991b1b 15%, #b91c1c 30%, #dc2626 50%, #ef4444 75%, #f87171 100%),
+                /* Dark red undertones for depth */
+                radial-gradient(circle at 30% 70%, rgba(127, 29, 29, 0.9) 0%, transparent 60%),
+                /* Base dark red */
+                linear-gradient(135deg, #450a0a, #7f1d1d);
+            border: 3px solid #450a0a;
+            border-radius: 12px;
+            font-size: 22px;
+            height: 72px;
+            /* Enhanced shadows with red glow */
+            box-shadow:
+                /* Inner shadow for depth */
+                inset 0 0 15px rgba(0, 0, 0, 0.5),
+                inset 0 0 25px rgba(139, 27, 27, 0.3),
+                /* Main drop shadow */
+                0 6px 0 #450a0a,
+                0 10px 20px rgba(0, 0, 0, 0.6),
+                0 15px 25px rgba(127, 29, 29, 0.4),
+                /* Red glow */
+                0 0 20px rgba(185, 28, 28, 0.5),
+                0 0 40px rgba(220, 38, 38, 0.3),
+                0 0 60px rgba(239, 68, 68, 0.2);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .boss-btn::before { /* Subtle texture overlay */
             content: "";
             position: absolute;
             top: 0;
@@ -216,7 +247,41 @@
             z-index: 1;
         }
 
-        .scale-btn::after { /* Fire sweep effect */
+        .attack-scale-btn::before { /* Subtle texture overlay */
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                /* Simple texture pattern */
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 3px, transparent 3.5px),
+                radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 2px, transparent 2.5px),
+                radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.05) 1px, transparent 1.5px);
+            background-size: 15px 15px, 12px 12px, 8px 8px;
+            z-index: 1;
+        }
+
+        .boss-btn::after { /* Fire sweep effect */
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(251, 146, 60, 0.3) 20%,
+                rgba(239, 68, 68, 0.5) 40%,
+                rgba(220, 38, 38, 0.7) 60%,
+                rgba(251, 146, 60, 0.3) 80%,
+                transparent 100%);
+            animation: fireSweep 3s ease-in-out infinite;
+            z-index: 1; /* Behind text but above texture */
+        }
+
+        .attack-scale-btn::after { /* Fire sweep effect */
             content: "";
             position: absolute;
             top: 0;
@@ -235,52 +300,98 @@
         }
 
         /* Ensure text content appears above all effects */
-        .scale-btn {
+        .boss-btn {
             position: relative;
         }
 
-        .scale-btn::after {
+        .boss-btn::after {
             pointer-events: none; /* Allow clicks to pass through */
         }
 
         /* Force text content to be above effects */
-        .scale-btn {
+        .boss-btn {
             z-index: 0; /* Reset */
         }
 
-        .scale-btn::before,
-        .scale-btn::after {
+        .boss-btn::before,
+        .boss-btn::after {
+            z-index: -1; /* Put effects behind everything */
+        }
+
+        /* Ensure text content appears above all effects */
+        .attack-scale-btn {
+            position: relative;
+        }
+
+        .attack-scale-btn::after {
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+
+        /* Force text content to be above effects */
+        .attack-scale-btn {
+            z-index: 0; /* Reset */
+        }
+
+        .attack-scale-btn::before,
+        .attack-scale-btn::after {
             z-index: -1; /* Put effects behind everything */
         }
 
         /* Disable only animations when button is disabled - keep visual styling */
-        .scale-btn.disabled::before {
+        .boss-btn.disabled::before {
             animation-play-state: paused !important;
             /* Keep opacity but make texture more subtle */
             opacity: 0.5 !important;
         }
 
-        .scale-btn.disabled::after {
+        .boss-btn.disabled::after {
             animation-play-state: paused !important;
             opacity: 0 !important; /* Hide the sweeping effect only */
         }
 
-        .scale-btn.disabled {
+        .boss-btn.disabled {
             filter: grayscale(30%) brightness(0.9) !important; /* Subtle disabled look */
             /* Keep all the visual styling - no background override */
         }
 
         /* Also target action-btn disabled state specifically */
-        .action-btn.disabled .scale-btn::before {
+        .action-btn.disabled .boss-btn::before {
             animation-play-state: paused !important;
         }
 
-        .action-btn.disabled .scale-btn::after {
+        .action-btn.disabled .boss-btn::after {
             animation-play-state: paused !important;
             opacity: 0 !important;
         }
 
-        .scale-btn:hover {
+        /* Disable only animations when button is disabled - keep visual styling */
+        .attack-scale-btn.disabled::before {
+            animation-play-state: paused !important;
+            /* Keep opacity but make texture more subtle */
+            opacity: 0.5 !important;
+        }
+
+        .attack-scale-btn.disabled::after {
+            animation-play-state: paused !important;
+            opacity: 0 !important; /* Hide the sweeping effect only */
+        }
+
+        .attack-scale-btn.disabled {
+            filter: grayscale(30%) brightness(0.9) !important; /* Subtle disabled look */
+            /* Keep all the visual styling - no background override */
+        }
+
+        /* Also target action-btn disabled state specifically */
+        .action-btn.disabled .attack-scale-btn::before {
+            animation-play-state: paused !important;
+        }
+
+        .action-btn.disabled .attack-scale-btn::after {
+            animation-play-state: paused !important;
+            opacity: 0 !important;
+        }
+
+        .boss-btn:hover {
             transform: translateY(-2px) scale(1.02);
             background:
                 /* Brighter red hover gradient - no pink/white */
@@ -305,7 +416,56 @@
             filter: brightness(1.1) contrast(1.1);
         }
 
-        .scale-btn:active {
+        .attack-scale-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            background:
+                /* Brighter red hover gradient - no pink/white */
+                linear-gradient(135deg, #991b1b 0%, #b91c1c 15%, #dc2626 35%, #ef4444 60%, #f87171 85%, #fca5a5 100%),
+                /* Enhanced red undertones */
+                radial-gradient(circle at 25% 75%, rgba(127, 29, 29, 0.9) 0%, transparent 65%),
+                /* Base hover color */
+                linear-gradient(135deg, #7f1d1d, #b91c1c);
+            /* Enhanced hover shadows - reduced bright glow */
+            box-shadow:
+                /* Inner shadow */
+                inset 0 0 20px rgba(0, 0, 0, 0.4),
+                inset 0 0 30px rgba(185, 28, 28, 0.3),
+                /* Main drop shadow */
+                0 8px 0 #450a0a,
+                0 14px 28px rgba(0, 0, 0, 0.6),
+                0 20px 35px rgba(127, 29, 29, 0.4),
+                /* Reduced red glow - no bright white */
+                0 0 25px rgba(185, 28, 28, 0.5),
+                0 0 45px rgba(220, 38, 38, 0.3),
+                0 0 65px rgba(239, 68, 68, 0.2);
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        .boss-btn:active {
+            transform: translateY(4px) scale(0.98);
+            background:
+                /* Pressed state gradient - darker reds */
+                linear-gradient(135deg, #450a0a 0%, #7f1d1d 20%, #991b1b 40%, #b91c1c 70%, #dc2626 100%),
+                /* Dimmed undertones */
+                radial-gradient(circle at 35% 65%, rgba(69, 10, 10, 0.8) 0%, transparent 55%),
+                /* Base pressed color */
+                linear-gradient(135deg, #450a0a, #7f1d1d);
+            /* Pressed shadows */
+            box-shadow:
+                /* Heavy inset for pressed effect */
+                inset 0 0 20px rgba(0, 0, 0, 0.7),
+                inset 0 0 40px rgba(127, 29, 29, 0.3),
+                /* Reduced external shadows */
+                0 3px 0 #450a0a,
+                0 6px 12px rgba(0, 0, 0, 0.6),
+                0 9px 15px rgba(69, 10, 10, 0.4),
+                /* Dimmed red glow */
+                0 0 15px rgba(153, 27, 27, 0.4),
+                0 0 30px rgba(127, 29, 29, 0.3);
+            filter: brightness(0.85) contrast(0.9);
+        }
+
+        .attack-scale-btn:active {
             transform: translateY(4px) scale(0.98);
             background:
                 /* Pressed state gradient - darker reds */
@@ -1360,8 +1520,8 @@
                             <div class="crystal-btn">Gather</div>
                         </div>
                     </div>
-                    <div class="content boss-content scale-btn">BOSS</div>
-                    <div class="content attack-content scale-btn">ATTACK</div>
+                    <div class="content boss-content boss-btn">BOSS</div>
+                    <div class="content attack-content attack-scale-btn">ATTACK</div>
                     <div class="content store-content coin-pile-btn">
                         <div class="coin right-coin"></div>
                         <div class="coin left-coin"></div>
@@ -2508,7 +2668,7 @@
         }
 
         function handleBossClick() {
-            let damage = Math.floor(getEssencePerClick() / 50) + 1;
+            let damage = getAttackDamage();
             bossState.hp -= damage;
             showClickFeedback(`+${damage} Damage`, 'text-red-400');
             DOMElements.actionButton.classList.remove('shake');
@@ -2517,7 +2677,7 @@
 
             // CEO Bonus for boss
             if (gameState.ceoActive) {
-                let bonusDamage = Math.floor(getEssencePerClick() / 50) + 1;
+                let bonusDamage = getAttackDamage();
                 bossState.hp -= bonusDamage;
                 showClickFeedback(`+${bonusDamage} (CEO Bonus)`, 'text-yellow-400');
                 const bossFlavorTexts = [
@@ -3011,10 +3171,40 @@
             }
             DOMElements.autoClickButton.textContent = gameState.isAutoClickerActive ? "Auto-Clicker: On" : "Auto-Clicker: Off";
             DOMElements.autoClickRate.textContent = getAutoClickRate();
+
+            // Safety check for expired timers
+            if (gameState.passiveBoostActive && Date.now() > gameState.passiveBoostEndTime) {
+                gameState.passiveBoostActive = false;
+            }
+            if (gameState.ceoActive && Date.now() > gameState.ceoEndTime) {
+                gameState.ceoActive = false;
+            }
+
+            // Update bank upgrade tooltips with cooldown indicators
+            if (gameState.passiveBoostActive) {
+                const timeLeft = Math.ceil((gameState.passiveBoostEndTime - Date.now()) / 1000);
+                DOMElements.bankBoostButton.setAttribute('data-tooltip', `Active: Doubles passive income (${timeLeft}s remaining)`);
+            } else {
+                DOMElements.bankBoostButton.setAttribute('data-tooltip', 'Spend 50 banked clicks to double passive income for 60 seconds');
+            }
+
+            if (gameState.ceoActive) {
+                const timeLeft = Math.ceil((gameState.ceoEndTime - Date.now()) / 1000);
+                DOMElements.hireCEOButton.setAttribute('data-tooltip', `Active: Bonus clicks on every manual click (${timeLeft}s remaining)`);
+            } else {
+                DOMElements.hireCEOButton.setAttribute('data-tooltip', 'Spend 100 banked clicks to hire CEO for 2.5 minutes, providing bonus clicks on every manual click');
+            }
+
+            if (gameState.investmentStatEndTime > Date.now()) {
+                const timeLeft = Math.ceil((gameState.investmentStatEndTime - Date.now()) / 1000);
+                DOMElements.bankInvestmentButton.setAttribute('data-tooltip', `Active: Random stat boost (${timeLeft}s remaining)`);
+            } else {
+                DOMElements.bankInvestmentButton.setAttribute('data-tooltip', 'Spend 100 banked clicks on a risky investment: randomly quadruple one stat for 60 seconds or get no effect');
+            }
             // Removed title to prevent duplicate tooltips with custom data-tooltip
             DOMElements.bankBoostButton.disabled = gameState.passiveBoostActive || gameState.bankedClicks < 50;
             DOMElements.hireCEOButton.disabled = gameState.ceoActive || gameState.bankedClicks < 100;
-            DOMElements.bankInvestmentButton.disabled = gameState.bankedClicks < 100;
+            DOMElements.bankInvestmentButton.disabled = gameState.bankedClicks < 100 || (gameState.investmentStatEndTime > Date.now());
             DOMElements.convertClicksButton.disabled = gameState.bankedClicks < 1;
 
             // Determine current button mode
