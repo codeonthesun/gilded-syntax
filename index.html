@@ -1735,6 +1735,12 @@
         }
 
         setCursor();
+        // === COMBAT SCALING SYSTEM ===
+        // All boss HP values and attack damage are multiplied by 10 behind the scenes
+        // to work with clean integers instead of decimals/fractions.
+        // This maintains balance while avoiding floating-point precision issues.
+        // When adding new bosses: multiply desired HP by 10 (e.g., if you want 500 HP, set hp: 5000)
+        // When modifying attack: the getAttackDamage() function handles the scaling automatically
         const ZONES = [
             {
                 name: "Whispering Glade",
@@ -1745,7 +1751,7 @@
                 ],
                 boss: {
                     name: "Ancient Treant",
-                    hp: 50,
+                    hp: 500,
                     timer: 15,
                     flavorText: "The guardian of the glade awakens, its woody form groaning in protest of your presence. Strike it down before it drains your will!"
                 }
@@ -1760,7 +1766,7 @@
                 ],
                 boss: {
                     name: "Abyssal Lurker",
-                    hp: 250,
+                    hp: 2500,
                     timer: 20,
                     flavorText: "A creature of shimmering scales and too many eyes emerges from the depths! Its gaze is paralyzing. Act quickly!"
                 }
@@ -1775,7 +1781,7 @@
                 ],
                 boss: {
                     name: "Magma Elemental",
-                    hp: 1000,
+                    hp: 10000,
                     timer: 25,
                     flavorText: "The very heart of the volcano takes form, a roaring inferno of molten rock and fury! Extinguish its rage before you are consumed!"
                 }
@@ -1790,7 +1796,7 @@
                 ],
                 boss: {
                     name: "Aetheric Wyrm",
-                    hp: 5000,
+                    hp: 50000,
                     timer: 30,
                     flavorText: "A serpent of pure starlight descends from the heavens, its form both beautiful and terrifying. Unmake this celestial guardian!"
                 }
@@ -1806,7 +1812,7 @@
                 ],
                 boss: {
                     name: "Void Devourer",
-                    hp: 25000,
+                    hp: 250000,
                     timer: 35,
                     flavorText: "A swirling vortex of absolute darkness manifests, hungry for existence itself. Defy the inevitable!"
                 }
@@ -1821,7 +1827,7 @@
                 ],
                 boss: {
                     name: "Primordial Smith",
-                    hp: 100000,
+                    hp: 1000000,
                     timer: 40,
                     flavorText: "The first craftsman of the universe wields hammers forged from the bones of dead gods. Prove your worth!"
                 }
@@ -1836,7 +1842,7 @@
                 ],
                 boss: {
                     name: "Nightmare Weaver",
-                    hp: 500000,
+                    hp: 5000000,
                     timer: 45,
                     flavorText: "A being of pure nightmare spins webs of terror and delight. Wake from this dream before it consumes you!"
                 }
@@ -1851,7 +1857,7 @@
                 ],
                 boss: {
                     name: "Reality Shatterer",
-                    hp: 2000000,
+                    hp: 20000000,
                     timer: 50,
                     flavorText: "The final guardian, a being that exists in all times and places simultaneously. Break the cycle!"
                 }
@@ -1867,7 +1873,7 @@
                 ],
                 boss: {
                     name: "Void Weaver",
-                    hp: 10000000,
+                    hp: 100000000,
                     timer: 55,
                     flavorText: "A master of nothingness, weaving threads of ether into deadly patterns. Unravel its design!"
                 }
@@ -1882,7 +1888,7 @@
                 ],
                 boss: {
                     name: "Crystal Guardian",
-                    hp: 50000000,
+                    hp: 500000000,
                     timer: 60,
                     flavorText: "A colossal being of living crystal, its facets refracting deadly beams of light. Shatter its form!"
                 }
@@ -1898,7 +1904,7 @@
                 ],
                 boss: {
                     name: "Thunder Lord",
-                    hp: 250000000,
+                    hp: 2500000000,
                     timer: 65,
                     flavorText: "The embodiment of electrical fury, crackling with power that could level mountains. Ground its wrath!"
                 }
@@ -1913,7 +1919,7 @@
                 ],
                 boss: {
                     name: "Ice Titan",
-                    hp: 1000000000,
+                    hp: 10000000000,
                     timer: 70,
                     flavorText: "A giant of frozen fury, its breath can freeze souls. Melt its icy heart!"
                 }
@@ -1929,7 +1935,7 @@
                 ],
                 boss: {
                     name: "Shadow Monarch",
-                    hp: 5000000000,
+                    hp: 50000000000,
                     timer: 75,
                     flavorText: "A ruler of darkness, commanding legions of shadow creatures. Illuminate the void!"
                 }
@@ -1944,7 +1950,7 @@
                 ],
                 boss: {
                     name: "Light Seraph",
-                    hp: 25000000000,
+                    hp: 250000000000,
                     timer: 80,
                     flavorText: "A being of pure light, its radiance can blind and burn. Dim its eternal glow!"
                 }
@@ -1960,7 +1966,7 @@
                 ],
                 boss: {
                     name: "Chaos Bringer",
-                    hp: 100000000000,
+                    hp: 1000000000000,
                     timer: 85,
                     flavorText: "The source of all disorder, a swirling mass of conflicting energies. Impose order upon chaos!"
                 }
@@ -1975,7 +1981,7 @@
                 ],
                 boss: {
                     name: "Chronos Prime",
-                    hp: 500000000000,
+                    hp: 5000000000000,
                     timer: 90,
                     flavorText: "The ultimate timekeeper, bending ages to its whim. Stop the clock forever!"
                 }
@@ -1991,7 +1997,7 @@
                 ],
                 boss: {
                     name: "Infinity Devourer",
-                    hp: 2500000000000,
+                    hp: 25000000000000,
                     timer: 95,
                     flavorText: "A being that consumes infinities, growing stronger with each devoured universe. End its endless hunger!"
                 }
@@ -2006,7 +2012,7 @@
                 ],
                 boss: {
                     name: "God Emperor",
-                    hp: 10000000000000,
+                    hp: 100000000000000,
                     timer: 100,
                     flavorText: "The supreme ruler of all existence, wielding power beyond comprehension. Dethrone the emperor!"
                 }
@@ -2542,7 +2548,6 @@
         };
 
         let showFullEssence = false;
-        let showFullAttack = false;
         let showFullBankedClicks = false;
         let previousButtonMode = '';
         let particles = [];
@@ -2980,7 +2985,9 @@
 
             logMessage(`The ${boss.name} has been vanquished! The path forward is clear.`, "victory");
 
-            const xpGained = boss.hp * 2;
+            // XP calculation: (boss.hp / 10) * 2 maintains original balance
+            // Since boss HP is scaled 10x, we divide by 10 to get original value, then *2 for XP
+            const xpGained = (boss.hp / 10) * 2;
             gainXP(xpGained);
             logMessage(`You gained ${formatNumber(xpGained)} XP for your victory!`, 'system-ok');
 
@@ -3136,7 +3143,8 @@
             DOMElements.playerEssence.textContent = showFullEssence ? gameState.essence.toLocaleString() : formatNumber(gameState.essence);
             DOMElements.headerEssence.textContent = gameState.essence.toLocaleString();
             DOMElements.essencePerClick.textContent = formatNumber(getEssencePerClick());
-            DOMElements.playerAttack.textContent = showFullAttack ? getAttackDamage().toFixed(2) : Math.floor(getAttackDamage());
+            // Display attack as integer (no decimals due to 10x scaling system)
+            DOMElements.playerAttack.textContent = Math.floor(getAttackDamage());
             // Calculate effective passive income rate including boosts
             let effectivePassiveRate = gameState.passiveIncomeRate;
             if (gameState.passiveBoostActive && Date.now() < gameState.passiveBoostEndTime) {
@@ -3530,7 +3538,10 @@
                 ],
                 boss: {
                     name: `${bossNames[baseIndex % bossNames.length]} ${baseIndex}`,
-                    hp: 1000000000 * Math.pow(1.2, baseIndex),
+                    // Boss HP formula: 10000000000 * Math.pow(1.2, baseIndex)
+                    // The 10000000000 is 1e9 * 10 (base HP * 10x scaling factor)
+                    // Math.pow(1.2, baseIndex) provides exponential scaling for difficulty
+                    hp: 10000000000 * Math.pow(1.2, baseIndex),
                     timer: 100 + baseIndex * 5,
                     flavorText: flavors[baseIndex % flavors.length]
                 }
@@ -3732,8 +3743,12 @@
             return Math.floor((1 + Math.floor(gameState.level / 2)) * gameState.clickMultiplier * gameState.prestigeMultiplier);
         }
 
+        // === ATTACK DAMAGE CALCULATION ===
+        // Returns attack damage per boss hit, scaled by 10x for integer precision
+        // Base formula: floor((essencePerClick/50 + 1) * attackMultiplier * 10)
+        // The *10 ensures clean integers while maintaining balance with 10x scaled boss HP
         function getAttackDamage() {
-            return Math.floor((getEssencePerClick() / 50) + 1) * gameState.attackMultiplier;
+            return Math.floor(((getEssencePerClick() / 50) + 1) * gameState.attackMultiplier * 10);
         }
 
         function getBankSize() {
@@ -5331,7 +5346,6 @@
             document.getElementById('resetProfile').addEventListener('click', resetProfile);
             document.getElementById('debugButton').addEventListener('click', debugToggle);
             DOMElements.playerEssence.addEventListener('click', () => { showFullEssence = !showFullEssence; updateUI(); });
-            DOMElements.playerAttack.addEventListener('click', () => { showFullAttack = !showFullAttack; updateUI(); });
             DOMElements.bankedClicks.addEventListener('click', () => { showFullBankedClicks = !showFullBankedClicks; updateUI(); });
 
             // Music icon button
