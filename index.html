@@ -1487,7 +1487,10 @@
 
             <!-- Player Stats -->
             <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700">
-                <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip right" data-tooltip="Your current stats and progress">Adventurer</h2>
+                <div class="relative">
+                    <h2 class="font-cinzel text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-2 tooltip right" data-tooltip="Your current stats and progress">Adventurer</h2>
+                    <span id="titleCrown" class="absolute top-0 right-0 text-yellow-400 text-xl cursor-pointer btn tooltip" data-tooltip="Change Title" style="display: none;">♔</span>
+                </div>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Your current adventurer title">Title:</span> <span id="playerTitle" class="font-bold text-amber-400"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Your adventurer level">Level:</span> <span id="playerLevel" class="font-bold text-white"></span></div>
@@ -1720,6 +1723,17 @@
                     <!-- Relics will be injected here -->
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Title Selection Modal -->
+    <div id="titleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700 max-w-md w-full mx-4">
+            <h3 class="font-cinzel text-xl font-bold text-gray-300 mb-4">Choose Your Title</h3>
+            <div id="titleList" class="space-y-2 max-h-64 overflow-y-auto">
+                <!-- Titles will be injected here -->
+            </div>
+            <button id="closeTitleModal" class="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded btn">Close</button>
         </div>
     </div>
 
@@ -3385,6 +3399,15 @@ let isTransitioning = false;
                 DOMElements.musicIconButton.classList.add('text-gray-500');
             }
 
+            // Update crown visibility
+            const availableTitles = TITLES.filter(title => gameState.level >= title.level).length;
+            const crownElement = document.getElementById('titleCrown');
+            if (availableTitles > 1) {
+                crownElement.style.display = '';
+            } else {
+                crownElement.style.display = 'none';
+            }
+
             if (!isReset && (gameState.essence > 0 || gameState.level > 1 || gameState.prestigePoints > 0)) {
                 saveGame();
             }
@@ -4122,6 +4145,7 @@ let isTransitioning = false;
                 if (typeof gameState.lastPassiveLogTime === 'undefined') gameState.lastPassiveLogTime = Date.now();
                 if (typeof gameState.clickUpgradeLevel === 'undefined') gameState.clickUpgradeLevel = 0;
                 if (typeof gameState.passiveUpgradeLevel === 'undefined') gameState.passiveUpgradeLevel = 0;
+                if (typeof gameState.customTitle === 'undefined') gameState.customTitle = null;
                 if (typeof gameState.bankUpgradeLevel === 'undefined') gameState.bankUpgradeLevel = 0;
                 if (typeof gameState.autoClickUpgradeLevel === 'undefined') gameState.autoClickUpgradeLevel = 0;
                 if (typeof gameState.critChanceUpgradeLevel === 'undefined') gameState.critChanceUpgradeLevel = 0;
@@ -4549,7 +4573,9 @@ let isTransitioning = false;
                 achievements: [],
                 fractionalBankInterest: 0,
                 musicEnabled: false,
-                eventCooldownEndTime: 0
+                eventCooldownEndTime: 0,
+                customTitle: null,
+                crownRevealed: false
             };
         }
 
@@ -4717,6 +4743,9 @@ let isTransitioning = false;
         }
         
         function getPlayerTitle() {
+            if (gameState.customTitle) {
+                return gameState.customTitle;
+            }
             let currentTitle = "Neophyte";
             for (const title of TITLES) {
                 if (gameState.level >= title.level) {
@@ -4724,6 +4753,46 @@ let isTransitioning = false;
                 }
             }
             return currentTitle;
+        }
+
+        function showTitleModal() {
+            const titleList = document.getElementById('titleList');
+            titleList.innerHTML = '';
+
+            // Add current level-based title option
+            const currentLevelTitle = getPlayerTitle();
+            const levelTitleEl = document.createElement('button');
+            levelTitleEl.className = 'w-full text-left bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded btn';
+            levelTitleEl.textContent = `${currentLevelTitle} (Current Level Title)`;
+            levelTitleEl.addEventListener('click', () => {
+                gameState.customTitle = null;
+                updateUI();
+                hideTitleModal();
+                logMessage("Title reset to level-based title.", "system-ok");
+            });
+            titleList.appendChild(levelTitleEl);
+
+            // Add all available titles, sorted by level descending (highest first)
+            TITLES.filter(title => gameState.level >= title.level)
+                  .sort((a, b) => b.level - a.level)
+                  .forEach(title => {
+                const titleEl = document.createElement('button');
+                titleEl.className = 'w-full text-left bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded btn';
+                titleEl.textContent = `${title.name} (Level ${title.level})`;
+                titleEl.addEventListener('click', () => {
+                    gameState.customTitle = title.name;
+                    updateUI();
+                    hideTitleModal();
+                    logMessage(`Title changed to "${title.name}".`, "system-ok");
+                });
+                titleList.appendChild(titleEl);
+            });
+
+            document.getElementById('titleModal').classList.remove('hidden');
+        }
+
+        function hideTitleModal() {
+            document.getElementById('titleModal').classList.add('hidden');
         }
         
         function formatNumber(num) {
@@ -4805,6 +4874,7 @@ let isTransitioning = false;
                 if (typeof gameState.clickUpgradeLevel === 'undefined') gameState.clickUpgradeLevel = 0;
                 if (typeof gameState.passiveUpgradeLevel === 'undefined') gameState.passiveUpgradeLevel = 0;
                 if (typeof gameState.bankUpgradeLevel === 'undefined') gameState.bankUpgradeLevel = 0;
+                if (typeof gameState.customTitle === 'undefined') gameState.customTitle = null;
                 if (typeof gameState.autoClickUpgradeLevel === 'undefined') gameState.autoClickUpgradeLevel = 0;
                 if (typeof gameState.critChanceUpgradeLevel === 'undefined') gameState.critChanceUpgradeLevel = 0;
                 if (typeof gameState.critMultUpgradeLevel === 'undefined') gameState.critMultUpgradeLevel = 0;
@@ -4858,6 +4928,7 @@ let isTransitioning = false;
                 if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = true;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
                 if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
+                if (typeof gameState.crownRevealed === 'undefined') gameState.crownRevealed = false;
                 // Clear any active events on load to prevent them from continuing
                 gameState.activeEvents = [];
                 gameState.pendingEvent = null;
@@ -5258,6 +5329,10 @@ let isTransitioning = false;
             DOMElements.actionButton.addEventListener('mousedown', () => DOMElements.actionButton.classList.add('pressed'));
             DOMElements.actionButton.addEventListener('mouseup', () => DOMElements.actionButton.classList.remove('pressed'));
             DOMElements.actionButton.addEventListener('mouseleave', () => DOMElements.actionButton.classList.remove('pressed'));
+
+            // Title modal
+            document.getElementById('titleCrown').addEventListener('click', showTitleModal);
+            document.getElementById('closeTitleModal').addEventListener('click', hideTitleModal);
 
             DOMElements.bankModeToggle.addEventListener('change', toggleBankMode);
             DOMElements.autoClickButton.addEventListener('click', toggleAutoClicker);
