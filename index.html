@@ -98,6 +98,41 @@
             animation: faintGlow 1.5s infinite ease-in-out;
             position: relative;
         }
+        @keyframes breathe-bg {
+            0%, 100% { background-color: rgba(255, 255, 255, 0.08); }
+            50% { background-color: rgba(255, 255, 255, 0.12); }
+        }
+        .upgrade-item {
+            position: relative;
+        }
+        .upgrade-item:has(button:hover) {
+            background-color: rgba(255, 255, 255, 0.08);
+            transition: background-color 0s;
+            animation: breathe-bg 1.5s infinite ease-in-out;
+        }
+        .upgrade-item:has(button:hover)::before {
+            content: "";
+            position: absolute;
+            left: -0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.5rem;
+            height: 1rem;
+            border-radius: 0.125rem;
+        }
+        .upgrade-item:nth-child(1):has(button:hover)::before { background-color: #1d4ed8; } /* Click Power - blue-700 */
+        .upgrade-item:nth-child(2):has(button:hover)::before { background-color: #7c3aed; } /* Passive Income - purple-700 */
+        .upgrade-item:nth-child(3):has(button:hover)::before { background-color: #15803d; } /* Bank Capacity - green-700 */
+        .upgrade-item:nth-child(4):has(button:hover)::before { background-color: #b91c1c; } /* Auto-Clicker - red-700 */
+        .upgrade-item:nth-child(5):has(button:hover)::before { background-color: #c2410c; } /* Critical Chance - orange-700 */
+        .upgrade-item:nth-child(6):has(button:hover)::before { background-color: #be185d; } /* Critical Multiplier - pink-700 */
+        .upgrade-item:nth-child(7):has(button:hover)::before { background-color: #4338ca; } /* Luck - indigo-700 */
+        .upgrade-item:nth-child(8):has(button:hover)::before { background-color: #0f766e; } /* Efficiency - teal-700 */
+        .upgrade-item:nth-child(9):has(button:hover)::before { background-color: #047857; } /* Regeneration - emerald-700 */
+        .upgrade-item:nth-child(10):has(button:hover)::before { background-color: #0e7490; } /* Time Crystal - cyan-700 */
+        .upgrade-item:has(button.pressed)::before {
+            transform: translateY(-50%) scale(0.95);
+        }
         .glow::after {
             content: '';
             position: absolute;
@@ -1667,44 +1702,44 @@
                     <span class="text-xs text-gray-500">Essence: <span id="headerEssence"></span></span>
                 </h2>
                 <div class="space-y-2 text-sm">
-                    <div class="flex justify-between items-center">
-                        <span id="clickLabel">Click Power (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="clickLabel" class="tooltip">Click Power (Lv.0)</span>
                         <button id="upgradeClick" data-tooltip="Increases essence gained per click by 10% per level" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (100)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="passiveLabel">Passive Income (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="passiveLabel" class="tooltip">Passive Income (Lv.0)</span>
                         <button id="upgradePassive" data-tooltip="Increases passive essence income by 10% per level" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (200)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="bankLabel">Bank Capacity (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="bankLabel" class="tooltip">Bank Capacity (Lv.0)</span>
                         <button id="upgradeBank" data-tooltip="Increases bank capacity by 10% per level" class="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (150)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="autoLabel">Auto-Clicker (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="autoLabel" class="tooltip">Auto-Clicker (Lv.0)</span>
                         <button id="upgradeAutoClick" data-tooltip="Increases auto-click rate by 10% per level" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (250)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="critChanceLabel">Critical Chance (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="critChanceLabel" class="tooltip">Critical Chance (Lv.0)</span>
                         <button id="upgradeCritChance" data-tooltip="Increases critical hit chance by 5% per level" class="bg-orange-700 hover:bg-orange-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (300)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="critMultLabel">Critical Multiplier (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="critMultLabel" class="tooltip">Critical Multiplier (Lv.0)</span>
                         <button id="upgradeCritMult" data-tooltip="Increases critical hit damage multiplier by 0.5x per level" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (400)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="luckLabel">Luck (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="luckLabel" class="tooltip">Luck (Lv.0)</span>
                         <button id="upgradeLuck" data-tooltip="Increases critical hit chance by 5% per level" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (500)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                                <span id="efficiencyLabel">Efficiency (Lv.0)</span>
-                                <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (600)</button>
-                            </div>
-                    <div class="flex justify-between items-center">
-                        <span id="regenerationLabel">Regeneration (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="efficiencyLabel" class="tooltip">Efficiency (Lv.0)</span>
+                        <button id="upgradeEfficiency" data-tooltip="Reduces upgrade costs by 5% per level" class="bg-teal-700 hover:bg-teal-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (600)</button>
+                    </div>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="regenerationLabel" class="tooltip">Regeneration (Lv.0)</span>
                         <button id="upgradeRegeneration" data-tooltip="Increases passive essence rate by 10% per level" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (700)</button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span id="timeCrystalLabel">Time Crystal (Lv.0)</span>
+                    <div class="upgrade-item flex justify-between items-center">
+                        <span id="timeCrystalLabel" class="tooltip">Time Crystal (Lv.0)</span>
                         <button id="upgradeTimeCrystal" data-tooltip="Increases offline progress cap by 30 minutes per level" class="bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-1 px-2 rounded text-xs tooltip left">Upgrade (1000)</button>
                     </div>
                 </div>
@@ -2628,9 +2663,9 @@ let isTransitioning = false;
 
         function shakeElements(...elements) {
             elements.forEach(el => {
-                if (!el.classList.contains('shake')) {
-                    el.classList.add('shake');
-                    setTimeout(() => DOMElements.actionButton.classList.remove('shake-light', 'shake-medium', 'shake-heavy', 'shake-ultra'), 1100); // Match max duration
+                if (!el.classList.contains('shake-light')) {
+                    el.classList.add('shake-light');
+                    setTimeout(() => el.classList.remove('shake-light'), 500); // Match animation duration
                 }
             });
         }
@@ -3370,37 +3405,115 @@ let isTransitioning = false;
                 gameStateManager.multiplyMultiplier('attackMultiplier', 4, 'temporary_attack_boost');
             }
 
-            // Update upgrade labels with rarity colors
-            DOMElements.clickLabel.textContent = `Click Power (Lv.${gameState.clickUpgradeLevel})`;
-            DOMElements.clickLabel.style.color = getUpgradeColor(gameState.clickUpgradeLevel);
+            // Update upgrade labels with rarity prefixes and colors based on level
+            const getUpgradeRarity = (level) => {
+                if (level < 10) return 'COMMON';
+                if (level < 20) return 'UNCOMMON';
+                if (level < 30) return 'RARE';
+                if (level < 40) return 'EPIC';
+                return 'LEGENDARY';
+            };
+            const updateUpgradeLabel = (labelEl, name, level) => {
+                const rarity = getUpgradeRarity(level);
+                const prefix = `<span class="rarity-prefix ${rarity.toLowerCase()}"><span>(${rarity})</span></span>`;
+                const colorClass = level > 0 ? 'text-white' : 'text-gray-500';
+                labelEl.innerHTML = `${prefix}${name} (Lv.${level})`;
+                labelEl.className = `upgrade-label ${colorClass} tooltip`;
+            };
+            updateUpgradeLabel(DOMElements.clickLabel, 'Click Power', gameState.clickUpgradeLevel);
             DOMElements.upgradeClick.textContent = `Upgrade (${formatNumber(getClickUpgradeCost())})`;
-            DOMElements.passiveLabel.textContent = `Passive Income (Lv.${gameState.passiveUpgradeLevel})`;
-            DOMElements.passiveLabel.style.color = getUpgradeColor(gameState.passiveUpgradeLevel);
+            updateUpgradeLabel(DOMElements.passiveLabel, 'Passive Income', gameState.passiveUpgradeLevel);
             DOMElements.upgradePassive.textContent = `Upgrade (${formatNumber(getPassiveUpgradeCost())})`;
-            DOMElements.bankLabel.textContent = `Bank Capacity (Lv.${gameState.bankUpgradeLevel})`;
-            DOMElements.bankLabel.style.color = getUpgradeColor(gameState.bankUpgradeLevel);
+            updateUpgradeLabel(DOMElements.bankLabel, 'Bank Capacity', gameState.bankUpgradeLevel);
             DOMElements.upgradeBank.textContent = `Upgrade (${formatNumber(getBankUpgradeCost())})`;
-            DOMElements.autoLabel.textContent = `Auto-Clicker (Lv.${gameState.autoClickUpgradeLevel})`;
-            DOMElements.autoLabel.style.color = getUpgradeColor(gameState.autoClickUpgradeLevel);
+            updateUpgradeLabel(DOMElements.autoLabel, 'Auto-Clicker', gameState.autoClickUpgradeLevel);
             DOMElements.upgradeAutoClick.textContent = `Upgrade (${formatNumber(getAutoClickUpgradeCost())})`;
-            DOMElements.critChanceLabel.textContent = `Critical Chance (Lv.${gameState.critChanceUpgradeLevel})`;
-            DOMElements.critChanceLabel.style.color = getUpgradeColor(gameState.critChanceUpgradeLevel);
+            updateUpgradeLabel(DOMElements.critChanceLabel, 'Critical Chance', gameState.critChanceUpgradeLevel);
             DOMElements.upgradeCritChance.textContent = `Upgrade (${formatNumber(getCritChanceUpgradeCost())})`;
-            DOMElements.critMultLabel.textContent = `Critical Multiplier (Lv.${gameState.critMultUpgradeLevel})`;
-            DOMElements.critMultLabel.style.color = getUpgradeColor(gameState.critMultUpgradeLevel);
+            updateUpgradeLabel(DOMElements.critMultLabel, 'Critical Multiplier', gameState.critMultUpgradeLevel);
             DOMElements.upgradeCritMult.textContent = `Upgrade (${formatNumber(getCritMultUpgradeCost())})`;
-            DOMElements.luckLabel.textContent = `Luck (Lv.${gameState.luckUpgradeLevel})`;
-            DOMElements.luckLabel.style.color = getUpgradeColor(gameState.luckUpgradeLevel);
+            updateUpgradeLabel(DOMElements.luckLabel, 'Luck', gameState.luckUpgradeLevel);
             DOMElements.upgradeLuck.textContent = `Upgrade (${formatNumber(getLuckUpgradeCost())})`;
-            DOMElements.efficiencyLabel.textContent = `Efficiency (Lv.${gameState.efficiencyUpgradeLevel})`;
-            DOMElements.efficiencyLabel.style.color = getUpgradeColor(gameState.efficiencyUpgradeLevel);
+            updateUpgradeLabel(DOMElements.efficiencyLabel, 'Efficiency', gameState.efficiencyUpgradeLevel);
             DOMElements.upgradeEfficiency.textContent = `Upgrade (${formatNumber(getEfficiencyUpgradeCost())})`;
-            DOMElements.regenerationLabel.textContent = `Regeneration (Lv.${gameState.regenerationUpgradeLevel})`;
-            DOMElements.regenerationLabel.style.color = getUpgradeColor(gameState.regenerationUpgradeLevel);
+            updateUpgradeLabel(DOMElements.regenerationLabel, 'Regeneration', gameState.regenerationUpgradeLevel);
             DOMElements.upgradeRegeneration.textContent = `Upgrade (${formatNumber(getRegenerationUpgradeCost())})`;
-            DOMElements.timeCrystalLabel.textContent = `Time Crystal (Lv.${gameState.timeCrystalUpgradeLevel})`;
-            DOMElements.timeCrystalLabel.style.color = getUpgradeColor(gameState.timeCrystalUpgradeLevel);
+            updateUpgradeLabel(DOMElements.timeCrystalLabel, 'Time Crystal', gameState.timeCrystalUpgradeLevel);
             DOMElements.upgradeTimeCrystal.textContent = `Upgrade (${formatNumber(getTimeCrystalUpgradeCost())})`;
+
+            // Update tooltips for upgrade labels
+            const softCap = 50;
+            // Click Power
+            let clickMult = 1;
+            if (gameState.clickUpgradeLevel <= softCap) {
+                clickMult = Math.pow(1.1, gameState.clickUpgradeLevel);
+            } else {
+                clickMult = Math.pow(1.1, softCap) * Math.pow(1.05, gameState.clickUpgradeLevel - softCap);
+            }
+            DOMElements.clickLabel.setAttribute('data-tooltip', `Multiplies click power by ${clickMult.toFixed(1)}x`);
+            // Passive Income
+            let passiveMult = 1;
+            const pLevel = gameState.passiveUpgradeLevel;
+            if (pLevel <= 20) {
+                passiveMult = Math.pow(1.15, pLevel);
+            } else if (pLevel <= 50) {
+                passiveMult = Math.pow(1.15, 20) * Math.pow(1.1, pLevel - 20);
+            } else if (pLevel <= 100) {
+                passiveMult = Math.pow(1.15, 20) * Math.pow(1.1, 30) * Math.pow(1.05, pLevel - 50);
+            } else {
+                passiveMult = Math.pow(1.15, 20) * Math.pow(1.1, 30) * Math.pow(1.05, 50) * Math.pow(1.02, pLevel - 100);
+            }
+            DOMElements.passiveLabel.setAttribute('data-tooltip', `Multiplies passive income by ${passiveMult.toFixed(1)}x`);
+            // Bank Capacity
+            let bankMult = 1;
+            if (gameState.bankUpgradeLevel <= softCap) {
+                bankMult = Math.pow(1.1, gameState.bankUpgradeLevel);
+            } else {
+                bankMult = Math.pow(1.1, softCap) * Math.pow(1.05, gameState.bankUpgradeLevel - softCap);
+            }
+            DOMElements.bankLabel.setAttribute('data-tooltip', `Multiplies bank capacity by ${bankMult.toFixed(1)}x`);
+            // Auto-Clicker
+            let autoMult = 1;
+            if (gameState.autoClickUpgradeLevel <= softCap) {
+                autoMult = Math.pow(1.1, gameState.autoClickUpgradeLevel);
+            } else {
+                autoMult = Math.pow(1.1, softCap) * Math.pow(1.05, gameState.autoClickUpgradeLevel - softCap);
+            }
+            DOMElements.autoLabel.setAttribute('data-tooltip', `Multiplies auto-click rate by ${autoMult.toFixed(1)}x`);
+            // Critical Chance
+            const critChance = Math.min(0.5, 0.05 * gameState.critChanceUpgradeLevel) * 100;
+            DOMElements.critChanceLabel.setAttribute('data-tooltip', `Critical hit chance: ${critChance.toFixed(1)}%`);
+            // Critical Multiplier
+            const critMult = 2 + 0.5 * gameState.critMultUpgradeLevel;
+            DOMElements.critMultLabel.setAttribute('data-tooltip', `Critical hit multiplier: ${critMult.toFixed(1)}x`);
+            // Luck
+            let luckMult = 1;
+            if (gameState.luckUpgradeLevel <= softCap) {
+                luckMult = Math.pow(1.05, gameState.luckUpgradeLevel);
+            } else {
+                luckMult = Math.pow(1.05, softCap) * Math.pow(1.02, gameState.luckUpgradeLevel - softCap);
+            }
+            DOMElements.luckLabel.setAttribute('data-tooltip', `Multiplies luck by ${luckMult.toFixed(1)}x`);
+            // Efficiency
+            let effMult = 1;
+            if (gameState.efficiencyUpgradeLevel <= softCap) {
+                effMult = Math.pow(0.95, gameState.efficiencyUpgradeLevel);
+            } else {
+                effMult = Math.pow(0.95, softCap) * Math.pow(0.98, gameState.efficiencyUpgradeLevel - softCap);
+            }
+            const costReduction = (1 - effMult) * 100;
+            DOMElements.efficiencyLabel.setAttribute('data-tooltip', `Multiplies upgrade costs by ${effMult.toFixed(2)}x (${costReduction.toFixed(1)}% reduction)`);
+            // Regeneration
+            let regenMult = 1;
+            if (gameState.regenerationUpgradeLevel <= softCap) {
+                regenMult = Math.pow(1.1, gameState.regenerationUpgradeLevel);
+            } else {
+                regenMult = Math.pow(1.1, softCap) * Math.pow(1.05, gameState.regenerationUpgradeLevel - softCap);
+            }
+            DOMElements.regenerationLabel.setAttribute('data-tooltip', `Multiplies passive income by ${regenMult.toFixed(1)}x`);
+            // Time Crystal
+            const offlineIncrease = gameState.timeCrystalUpgradeLevel * 30;
+            DOMElements.timeCrystalLabel.setAttribute('data-tooltip', `Adds ${offlineIncrease} minutes to offline progress cap`);
 
             // Prestige
             DOMElements.prestigePoints.textContent = formatNumber(gameState.prestigePoints);
@@ -5384,7 +5497,7 @@ let isTransitioning = false;
             DOMElements.autoClickButton.addEventListener('mouseup', () => DOMElements.autoClickButton.classList.remove('pressed'));
             DOMElements.autoClickButton.addEventListener('mouseleave', () => DOMElements.autoClickButton.classList.remove('pressed'));
 
-            // Upgrade buttons
+            // Upgrade buttons with pressed effect linking to tab
             const upgradeButtons = [
                 DOMElements.upgradeClick, DOMElements.upgradePassive, DOMElements.upgradeBank, DOMElements.upgradeAutoClick,
                 DOMElements.upgradeCritChance, DOMElements.upgradeCritMult, DOMElements.upgradeLuck,
@@ -5406,27 +5519,6 @@ let isTransitioning = false;
             DOMElements.upgradeEfficiency.addEventListener('click', buyEfficiencyUpgrade);
             DOMElements.upgradeRegeneration.addEventListener('click', buyRegenerationUpgrade);
             DOMElements.upgradeTimeCrystal.addEventListener('click', buyTimeCrystalUpgrade);
-            // Add glow effects for upgrade labels on button hover
-            DOMElements.upgradeClick.addEventListener('mouseenter', () => DOMElements.clickLabel.classList.add('glow'));
-            DOMElements.upgradeClick.addEventListener('mouseleave', () => DOMElements.clickLabel.classList.remove('glow'));
-            DOMElements.upgradePassive.addEventListener('mouseenter', () => DOMElements.passiveLabel.classList.add('glow'));
-            DOMElements.upgradePassive.addEventListener('mouseleave', () => DOMElements.passiveLabel.classList.remove('glow'));
-            DOMElements.upgradeBank.addEventListener('mouseenter', () => DOMElements.bankLabel.classList.add('glow'));
-            DOMElements.upgradeBank.addEventListener('mouseleave', () => DOMElements.bankLabel.classList.remove('glow'));
-            DOMElements.upgradeAutoClick.addEventListener('mouseenter', () => DOMElements.autoLabel.classList.add('glow'));
-            DOMElements.upgradeAutoClick.addEventListener('mouseleave', () => DOMElements.autoLabel.classList.remove('glow'));
-            DOMElements.upgradeCritChance.addEventListener('mouseenter', () => DOMElements.critChanceLabel.classList.add('glow'));
-            DOMElements.upgradeCritChance.addEventListener('mouseleave', () => DOMElements.critChanceLabel.classList.remove('glow'));
-            DOMElements.upgradeCritMult.addEventListener('mouseenter', () => DOMElements.critMultLabel.classList.add('glow'));
-            DOMElements.upgradeCritMult.addEventListener('mouseleave', () => DOMElements.critMultLabel.classList.remove('glow'));
-            DOMElements.upgradeLuck.addEventListener('mouseenter', () => DOMElements.luckLabel.classList.add('glow'));
-            DOMElements.upgradeLuck.addEventListener('mouseleave', () => DOMElements.luckLabel.classList.remove('glow'));
-            DOMElements.upgradeEfficiency.addEventListener('mouseenter', () => DOMElements.efficiencyLabel.classList.add('glow'));
-            DOMElements.upgradeEfficiency.addEventListener('mouseleave', () => DOMElements.efficiencyLabel.classList.remove('glow'));
-            DOMElements.upgradeRegeneration.addEventListener('mouseenter', () => DOMElements.regenerationLabel.classList.add('glow'));
-            DOMElements.upgradeRegeneration.addEventListener('mouseleave', () => DOMElements.regenerationLabel.classList.remove('glow'));
-            DOMElements.upgradeTimeCrystal.addEventListener('mouseenter', () => DOMElements.timeCrystalLabel.classList.add('glow'));
-            DOMElements.upgradeTimeCrystal.addEventListener('mouseleave', () => DOMElements.timeCrystalLabel.classList.remove('glow'));
             // Companion buttons
             const companionButtons = [
                 DOMElements.summonFireSprite, DOMElements.summonWaterNymph, DOMElements.summonEarthGolem,
