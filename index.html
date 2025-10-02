@@ -1104,15 +1104,45 @@
         .custom-cursor.clicking svg {
             transform: scale(0.85);
         }
-        .shake {
-            animation: shake 0.7s ease-in-out;
+        .shake-light {
+            animation: shake-light 0.5s ease-in-out;
             transform: translate3d(0, 0, 0);
         }
-        @keyframes shake {
+        .shake-medium {
+            animation: shake-medium 0.7s ease-in-out;
+            transform: translate3d(0, 0, 0);
+        }
+        .shake-heavy {
+            animation: shake-heavy 0.9s ease-in-out;
+            transform: translate3d(0, 0, 0);
+        }
+        .shake-ultra {
+            animation: shake-ultra 1.1s ease-in-out;
+            transform: translate3d(0, 0, 0);
+        }
+        @keyframes shake-light {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
+            20%, 80% { transform: translate3d(1px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-2px, 0, 0); }
+            40%, 60% { transform: translate3d(2px, 0, 0); }
+        }
+        @keyframes shake-medium {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(3px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        @keyframes shake-heavy {
+            10%, 90% { transform: translate3d(-3px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+        @keyframes shake-ultra {
+            10%, 90% { transform: translate3d(-4px, 0, 0); }
+            20%, 80% { transform: translate3d(7px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
         }
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
@@ -2582,6 +2612,12 @@ let isTransitioning = false;
             if (!ctx) return; // Wait for ctx to be set
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             frameCount++;
+
+            // Performance optimization: limit total particles
+            if (particles.length > 150) {
+                particles = particles.slice(-150); // Keep the most recent 150 particles
+            }
+
             particles.forEach(p => {
                 p.update();
                 p.draw(ctx);
@@ -2594,7 +2630,7 @@ let isTransitioning = false;
             elements.forEach(el => {
                 if (!el.classList.contains('shake')) {
                     el.classList.add('shake');
-                    setTimeout(() => el.classList.remove('shake'), 600);
+                    setTimeout(() => DOMElements.actionButton.classList.remove('shake-light', 'shake-medium', 'shake-heavy', 'shake-ultra'), 1100); // Match max duration
                 }
             });
         }
@@ -2725,9 +2761,17 @@ let isTransitioning = false;
             let damage = getAttackDamage();
             bossState.hp -= damage;
             showClickFeedback(`+${damage} Damage`, 'text-red-400');
-            DOMElements.actionButton.classList.remove('shake');
+            // Remove all shake classes
+            DOMElements.actionButton.classList.remove('shake-light', 'shake-medium', 'shake-heavy', 'shake-ultra');
             void DOMElements.actionButton.offsetWidth; // Trigger reflow
-            DOMElements.actionButton.classList.add('shake');
+
+            // Determine shake intensity based on consecutive clicks
+            let shakeClass = 'shake-light';
+            if (consecutiveClicks >= 50) shakeClass = 'shake-ultra';
+            else if (consecutiveClicks >= 25) shakeClass = 'shake-heavy';
+            else if (consecutiveClicks >= 10) shakeClass = 'shake-medium';
+
+            DOMElements.actionButton.classList.add(shakeClass);
 
             // CEO Bonus for boss
             if (gameState.ceoActive) {
@@ -5557,25 +5601,31 @@ let isTransitioning = false;
 
         // Mana Wisps (Gather Effect)
         function manaWisps(e, consecutiveClicks = 1) {
-            const baseFloatingWisps = 20; // Original floating wisps
-            const attractedWisps = Math.min(consecutiveClicks * 2, 20); // Up to 20 attracted wisps (reduced)
+            const baseWisps = 15;
+            const attractedWisps = Math.min(consecutiveClicks * 1.5, 60);
+            const tier = Math.floor(consecutiveClicks / 10);
+            const sizeMultiplier = 1 + (tier * 0.3);
 
-            // Create original floating wisps (old behavior)
-            for (let i = 0; i < baseFloatingWisps; i++) {
+            // Base floating wisps (cyan)
+            for (let i = 0; i < baseWisps; i++) {
                 createParticle(e.clientX, e.clientY + window.scrollY, {
                     type: 'wisp',
-                    mouseAttraction: false // Original floating behavior
+                    mouseAttraction: false,
+                    color: '#00ffff'
                 });
             }
 
-            // Create attracted wisps (new clumping behavior) - always create some when consecutive
+            // Attracted wisps (cyan) with ramping attraction
+            const attractionStrength = Math.min(consecutiveClicks / 30, 1) * 0.08; // Ramps up over 30 clicks
             for (let i = 0; i < attractedWisps; i++) {
                 createParticle(e.clientX, e.clientY + window.scrollY, {
                     type: 'wisp',
-                    consecutiveClicks: consecutiveClicks,
-                    mouseAttraction: true, // New mouse clumping behavior
-                    duration: 1500, // Faster fade away (1.5 seconds vs 2.5 seconds for floating wisps)
-                    sizeMultiplier: 1.3 // Make enhanced wisps 30% bigger
+                    consecutiveClicks,
+                    mouseAttraction: true,
+                    duration: 1200,
+                    sizeMultiplier,
+                    color: '#00ffff',
+                    attractionStrength
                 });
             }
         }
@@ -5815,20 +5865,21 @@ let isTransitioning = false;
 
         // Core logic for simple particles
         function createParticle(x, y, options = {}) {
-            const { type, duration = 2500, speedMultiplier = 0.3, gravity = false, consecutiveClicks = 1, mouseAttraction = false, sizeMultiplier = 1.0 } = options;
+            const { type, duration = 2500, speedMultiplier = 0.3, gravity = false, consecutiveClicks = 1, mouseAttraction = false, sizeMultiplier = 1.0, attractionStrength = 0.02, color: customColor } = options;
 
             const particle = {
                 x, y,
                 vx: 0, vy: 0,
                 life: Math.ceil(duration / 16.67), // assuming ~60fps
                 maxLife: Math.ceil(duration / 16.67),
-                size: type === 'spark' ? Math.random() * 4 + 1 : type === 'wisp' ? (Math.random() * 8 + 3) * sizeMultiplier : Math.random() * 10 + 5,
-                color: type === 'wisp' ? '#00ffff' : type === 'spark' ? `hsl(${Math.random() * 20 + 35}, 100%, 60%)` : '#fff',
+                size: type === 'spark' ? Math.random() * 4 + 1 : type === 'wisp' ? (Math.random() * 8 + 3) * sizeMultiplier : type === 'burstWisp' ? (Math.random() * 10 + 3) * sizeMultiplier : Math.random() * 10 + 5,
+                color: customColor || (type === 'spark' ? `hsl(${Math.random() * 20 + 35}, 100%, 60%)` : type === 'burstWisp' ? '#ff4500' : '#fff'),
                 gravity,
                 mouseAttraction,
                 consecutiveClicks,
                 originalX: x,
                 originalY: y,
+                attractionStrength,
                 update() {
                     this.life--;
 
@@ -5839,12 +5890,12 @@ let isTransitioning = false;
                         const distance = Math.sqrt(dx * dx + dy * dy);
 
                         if (distance > 0) {
-                            // Stronger attraction with more consecutive clicks
-                            const attractionStrength = (this.consecutiveClicks * 0.5 + 1) * 0.02;
+                            // Use passed attractionStrength or default
+                            const strength = this.attractionStrength || ((this.consecutiveClicks * 0.5 + 1) * 0.02);
                             const maxDistance = 200; // Maximum attraction distance
 
                             if (distance < maxDistance) {
-                                const attraction = Math.min(attractionStrength * (1 - distance / maxDistance), 0.1);
+                                const attraction = Math.min(strength * (1 - distance / maxDistance), 0.1);
                                 this.vx += (dx / distance) * attraction;
                                 this.vy += (dy / distance) * attraction;
                             }
@@ -5856,6 +5907,10 @@ let isTransitioning = false;
 
                     if (this.gravity) {
                         this.vy += 0.2; // Gravity effect
+                    } else if (type === 'burstWisp') {
+                        // Burst wisps: no special behavior, just float outward
+                        this.vx *= 0.99;
+                        this.vy *= 0.99;
                     } else if (!this.mouseAttraction) { // Original wisp behavior for non-attracted wisps
                         this.vx += (Math.random() - 0.5) * 0.1; // Gentle sway
                         this.vy *= 0.98;
