@@ -35,6 +35,50 @@
         .boss-timer-bar {
             transition: width 0.1s linear;
         }
+
+        /* Bank Progress Bar Styling */
+        #bankProgressContainer {
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        #bankProgressBar {
+            box-shadow:
+                0 0 12px rgba(255, 255, 255, 0.6),
+                inset 0 0 4px rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #bankCapacityText {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            font-size: 0.7rem;
+            color: #9ca3af;
+            text-align: center;
+            width: 100%;
+            min-height: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #bankCurrentText {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+            font-size: 0.75rem;
+            color: #f3f4f6;
+            text-align: center;
+            width: 100%;
+            min-height: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .tooltip {
             position: relative;
         }
@@ -1610,22 +1654,33 @@
 
                 <h2 id="zoneName" data-tooltip="The zone you are currently exploring" class="font-cinzel text-2xl md:text-3xl font-bold text-white mb-4 tooltip below"></h2>
                 <p id="actionPrompt" title="Instructions for gathering essence in this zone" class="text-gray-400 mb-6 text-center"></p>
-                <button id="actionButton" class="btn action-btn gather-mode">
-                    <div class="content gather-content">
-                        <div class="crystal-btn-wrapper">
-                            <div class="crystal-btn">Gather</div>
+                <div class="flex items-center gap-4">
+                    <button id="actionButton" class="btn action-btn gather-mode">
+                        <div class="content gather-content">
+                            <div class="crystal-btn-wrapper">
+                                <div class="crystal-btn">Gather</div>
+                            </div>
                         </div>
+                        <div class="content boss-content boss-btn">BOSS</div>
+                        <div class="content attack-content attack-scale-btn">ATTACK</div>
+                        <div class="content store-content coin-pile-btn">
+                            <div class="coin right-coin"></div>
+                            <div class="coin left-coin"></div>
+                            <div class="coin bottom-coin"></div>
+                            <div class="coin mid-coin"></div>
+                            <div class="coin top-coin">Vault</div>
+                        </div>
+                    </button>
+
+                    <!-- Bank Progress Bar (Vertical) -->
+                    <div id="bankProgressContainer" class="hidden flex flex-col items-center justify-center h-56 absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <div class="text-xs text-gray-300 mb-1 font-semibold w-full text-center" id="bankCapacityText">0</div>
+                        <div class="w-3 h-32 bg-gray-700 rounded-full relative shadow-lg mb-1 flex justify-center">
+                            <div id="bankProgressBar" class="bg-white w-full rounded-full transition-all duration-300 absolute bottom-0 shadow-md" style="height: 0%"></div>
+                        </div>
+                        <div class="text-xs text-gray-400 leading-tight w-full text-center" id="bankCurrentText">0</div>
                     </div>
-                    <div class="content boss-content boss-btn">BOSS</div>
-                    <div class="content attack-content attack-scale-btn">ATTACK</div>
-                    <div class="content store-content coin-pile-btn">
-                        <div class="coin right-coin"></div>
-                        <div class="coin left-coin"></div>
-                        <div class="coin bottom-coin"></div>
-                        <div class="coin mid-coin"></div>
-                        <div class="coin top-coin">Vault</div>
-                    </div>
-                </button>
+                </div>
                 <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                 <div id="specialMechanicDisplay" class="mt-4 text-center"></div>
 
@@ -3272,6 +3327,23 @@ let isTransitioning = false;
             const interestRate = 0.001 * (1 + gameState.bankUpgradeLevel * 0.1);
             document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
             document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.totalBankInterestEarned);
+
+            // Update bank progress bar
+            const bankProgressContainer = document.getElementById('bankProgressContainer');
+            const bankProgressBar = document.getElementById('bankProgressBar');
+            const bankCapacityText = document.getElementById('bankCapacityText');
+            const bankCurrentText = document.getElementById('bankCurrentText');
+
+            if (gameState.isBankMode) {
+                bankProgressContainer.classList.remove('hidden');
+                const bankSize = getBankSize();
+                const progressPercent = bankSize > 0 ? (gameState.bankedClicks / bankSize) * 100 : 0;
+                bankProgressBar.style.height = `${Math.min(progressPercent, 100)}%`;
+                bankCapacityText.textContent = formatNumber(bankSize);
+                bankCurrentText.textContent = formatNumber(gameState.bankedClicks);
+            } else {
+                bankProgressContainer.classList.add('hidden');
+            }
             // Update bank mode UI
             if (bossState.active) {
                 DOMElements.actionButton.className = 'btn action-btn attack-mode';
