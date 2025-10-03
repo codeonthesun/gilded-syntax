@@ -20,9 +20,6 @@
         .font-cinzel {
             font-family: 'Cinzel', serif;
         }
-        .font-medieval {
-            font-family: 'MedievalSharp', cursive;
-        }
         .chat-log::-webkit-scrollbar {
             display: none;
         }
@@ -911,31 +908,6 @@
             animation: float 6s ease-in-out infinite;
         }
 
-        .crystal-btn-wrapper img {
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .crystal-btn-wrapper .absolute {
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .crystal-btn-wrapper:hover img,
-        .crystal-btn-wrapper:hover .absolute {
-            transform: translateY(-8px) scale(1.02);
-        }
-
-        .crystal-btn-wrapper:active img,
-        .crystal-btn-wrapper:active .absolute {
-            transform: translateY(4px) scale(0.92);
-        }
-
-        .crystal-btn-wrapper:hover::after {
-            width: 120px;
-            height: 30px;
-            opacity: 0.8;
-            bottom: -55px;
-        }
-
         .crystal-btn-wrapper::after {
             content: '';
             position: absolute;
@@ -1641,8 +1613,7 @@
                 <button id="actionButton" class="btn action-btn gather-mode">
                     <div class="content gather-content">
                         <div class="crystal-btn-wrapper">
-                            <img src="gem1.png" alt="Gather" class="w-24 h-24 object-contain relative z-10">
-                            <div class="absolute inset-0 flex items-center justify-center text-white font-bold text-xl font-medieval text-shadow-lg pointer-events-none z-20">Gather</div>
+                            <div class="crystal-btn">Gather</div>
                         </div>
                     </div>
                     <div class="content boss-content boss-btn">BOSS</div>
