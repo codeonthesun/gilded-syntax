@@ -36,12 +36,20 @@
             transition: width 0.1s linear;
         }
 
-        /* Bank Progress Bar Styling */
-        #bankProgressContainer {
+        /* Progress Bar Styling */
+        #essenceProgressContainer, #bankProgressContainer {
             transition: opacity 0.3s ease-in-out;
             pointer-events: none;
             align-items: center;
             min-width: 60px;
+        }
+
+        #essenceProgressBar {
+            box-shadow:
+                0 0 12px rgba(34, 211, 238, 0.6),
+                inset 0 0 4px rgba(34, 211, 238, 0.3);
+            border-radius: 3px;
+            border: 1px solid rgba(34, 211, 238, 0.3);
         }
 
         #bankProgressBar {
@@ -50,6 +58,34 @@
                 inset 0 0 4px rgba(255, 255, 255, 0.3);
             border-radius: 3px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #essenceCurrentText {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            font-size: 0.7rem;
+            color: #67e8f9;
+            text-align: center;
+            width: 100%;
+            min-height: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #essencePerSecText {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+            font-size: 0.75rem;
+            color: #22d3ee;
+            text-align: center;
+            width: 100%;
+            min-height: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #bankCapacityText {
@@ -1515,6 +1551,40 @@
             40% { transform: scale(1.0); opacity: 1; }
         }
 
+        /* Heartbeat Progress Bar Animations */
+        #essenceProgressBar {
+            transition: height 0.05s ease-out;
+        }
+
+        .heartbeat-thump {
+            animation: heartbeatThump 0.2s ease-out;
+        }
+
+        .heartbeat-shake {
+            animation: heartbeatShake 0.1s ease-in-out;
+        }
+
+        @keyframes heartbeatThump {
+            0% {
+                transform: scaleY(1.0);
+                filter: brightness(1.0);
+            }
+            50% {
+                transform: scaleY(1.2);
+                filter: brightness(1.5) drop-shadow(0 0 8px rgba(34, 211, 238, 0.8));
+            }
+            100% {
+                transform: scaleY(1.0);
+                filter: brightness(1.0);
+            }
+        }
+
+        @keyframes heartbeatShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-1px); }
+            75% { transform: translateX(1px); }
+        }
+
     </style>
 </head>
 <body class="ui-bg text-gray-200 overflow-auto min-h-screen">
@@ -1671,6 +1741,15 @@
                             <div class="coin top-coin">Vault</div>
                         </div>
                     </button>
+
+                    <!-- Essence Progress Bar (Vertical) -->
+                    <div id="essenceProgressContainer" class="flex flex-col items-center justify-center h-56 absolute left-4 top-1/2 transform -translate-y-1/2">
+                        <div class="text-xs text-cyan-300 mb-1 font-semibold w-full text-center tooltip right" id="essenceCurrentText" data-tooltip="Total Essence" style="pointer-events: auto;">0</div>
+                        <div class="w-3 h-32 bg-gray-700 rounded-full relative shadow-lg mb-1 flex justify-center">
+                            <div id="essenceProgressBar" class="bg-cyan-400 w-full rounded-full transition-all duration-300 absolute bottom-0 shadow-md" style="height: 0%"></div>
+                        </div>
+                        <div class="text-xs text-cyan-400 leading-tight w-full text-center tooltip right" id="essencePerSecText" data-tooltip="Clicks Per Second" style="pointer-events: auto;">0</div>
+                    </div>
 
                     <!-- Bank Progress Bar (Vertical) -->
                     <div id="bankProgressContainer" class="hidden flex flex-col items-center justify-center h-56 absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -2551,6 +2630,11 @@
             achievements: [],
             accumulatedPassive: 0,
             lastPassiveLogTime: Date.now(),
+            // Heartbeat/CPS tracking
+            cps: 0,
+            clickCountThisSecond: 0,
+            autoClickCountThisSecond: 0,
+            lastCPSUpdate: Date.now(),
             clickUpgradeLevel: 0,
             passiveUpgradeLevel: 0,
             bankUpgradeLevel: 0,
@@ -2713,6 +2797,7 @@ let isTransitioning = false;
                 p.draw(ctx);
             });
             particles = particles.filter(p => p.life > 0 && p.x >= 0 && p.x <= canvas.width && p.y - window.scrollY >= 0 && p.y - window.scrollY <= canvas.height);
+
             requestAnimationFrame(animateParticles);
         }
 
@@ -2755,6 +2840,7 @@ let isTransitioning = false;
             DOMElements.actionButton.classList.add('shake');
 
             gameStateManager.addClicks(1, 'action_click');
+            gameState.clickCountThisSecond++; // Track for CPS calculation
 
             if (gameState.isBankMode) {
                 if (gameState.bankedClicks < getBankSize()) {
@@ -3328,11 +3414,32 @@ let isTransitioning = false;
             document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
             document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.totalBankInterestEarned);
 
-            // Update bank progress bar
+            // Update progress bars
+            const essenceProgressContainer = document.getElementById('essenceProgressContainer');
+            const essenceProgressBar = document.getElementById('essenceProgressBar');
+            const essenceCurrentText = document.getElementById('essenceCurrentText');
+            const essencePerSecText = document.getElementById('essencePerSecText');
+
             const bankProgressContainer = document.getElementById('bankProgressContainer');
             const bankProgressBar = document.getElementById('bankProgressBar');
             const bankCapacityText = document.getElementById('bankCapacityText');
             const bankCurrentText = document.getElementById('bankCurrentText');
+
+            // Update essence progress bar (always visible)
+            essenceProgressContainer.classList.remove('hidden');
+            essenceCurrentText.textContent = formatNumber(gameState.essence);
+            essencePerSecText.textContent = gameState.cps.toFixed(1) + '/sec';
+
+            // Set progress bar height based on CPS
+            const heightPercent = Math.min(gameState.cps * 10, 100);
+            essenceProgressBar.style.height = `${heightPercent}%`;
+
+            // Add a subtle pulsing effect to the progress bar based on essence gain rate
+            const pulseIntensity = Math.min(getPassiveIncomeRate() / 100, 1); // Cap at 1.0
+            essenceProgressBar.style.boxShadow = `
+                0 0 12px rgba(34, 211, 238, ${0.3 + pulseIntensity * 0.4}),
+                inset 0 0 4px rgba(34, 211, 238, ${0.1 + pulseIntensity * 0.3})
+            `;
 
             if (gameState.isBankMode) {
                 bankProgressContainer.classList.remove('hidden');
@@ -4084,6 +4191,7 @@ let isTransitioning = false;
                     const essenceGained = getAutoClickRate();
                     gameStateManager.addEssence(essenceGained, 'auto_click');
                     gainXP(1);
+                    gameState.autoClickCountThisSecond++; // Track for CPS calculation
                 } else {
                     gameState.isAutoClickerActive = false;
                     logMessage("Auto-clicker deactivated: insufficient banked clicks.", "system-warn");
@@ -4092,6 +4200,9 @@ let isTransitioning = false;
 
             gameState.lastUpdateTime = now;
             gameState.passiveIncomeRate = getPassiveIncomeRate();
+
+            // Update CPS every second
+            updateCPS();
 
             // Log accumulated passive every 10 seconds
             if (now - gameState.lastPassiveLogTime > 10000 && gameState.accumulatedPassive > 0) {
@@ -4129,6 +4240,29 @@ let isTransitioning = false;
             // Update active events
             updateActiveEvents();
         }
+
+        function updateCPS() {
+            const now = Date.now();
+            const timeSinceLastUpdate = (now - gameState.lastCPSUpdate) / 1000;
+
+            // Only update if at least 1 second has passed
+            if (timeSinceLastUpdate >= 1.0) {
+                const totalClicksThisSecond = gameState.clickCountThisSecond + gameState.autoClickCountThisSecond;
+                gameState.cps = totalClicksThisSecond / timeSinceLastUpdate;
+
+                // Reset counters
+                gameState.clickCountThisSecond = 0;
+                gameState.autoClickCountThisSecond = 0;
+                gameState.lastCPSUpdate = now;
+
+                // Update cycle time based on CPS using the formula: clamp(1 / log2(CPS + 2), 0.4, 1.2)
+                if (gameState.cps > 0) {
+                    const newCycleTime = Math.max(0.4, Math.min(1.2, 1 / Math.log2(gameState.cps + 2)));
+                    gameState.heartbeatCycleTime = newCycleTime;
+                }
+            }
+        }
+
 
         function buyClickUpgrade() {
             const cost = getClickUpgradeCost();
