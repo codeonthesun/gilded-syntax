@@ -52,6 +52,18 @@
             border: 1px solid rgba(34, 211, 238, 0.3);
         }
 
+        #peakCPSLine {
+            box-shadow:
+                0 0 8px rgba(34, 211, 238, 0.8),
+                0 0 16px rgba(34, 211, 238, 0.4);
+            border: 1px solid rgba(34, 211, 238, 0.6);
+            z-index: 1;
+        }
+
+        #peakCPSLine:hover #peakCPSLabel {
+            opacity: 1;
+        }
+
         #bankProgressBar {
             box-shadow:
                 0 0 12px rgba(255, 255, 255, 0.6),
@@ -1449,34 +1461,12 @@
             color: #f7d674;
             animation: legendary-fire 1000s infinite linear;
         }
-        .legendary::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 120%;
-            height: 140%;
-            transform: translate(-50%, -50%);
-            border: 3px solid transparent;
-            border-radius: 10px;
-            animation: legendary-border-glow 2.5s infinite ease-in-out;
-        }
         @keyframes legendary-fire {
             0%, 100% {
                 text-shadow: 0 0 10px #f39c12, 0 0 20px #e67e22, 0 0 30px #d35400;
             }
             50% {
                 text-shadow: 0 0 12px #f1c40f, 0 0 24px #e67e22, 0 0 36px #d35400;
-            }
-        }
-        @keyframes legendary-border-glow {
-            0%, 100% {
-                border-color: #f39c12;
-                box-shadow: 0 0 15px #f39c12;
-            }
-            50% {
-                border-color: #f1c40f;
-                box-shadow: 0 0 25px #f1c40f, 0 0 5px #fff inset;
             }
         }
 
@@ -1680,9 +1670,9 @@
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Total essence collected">Essence:</span> <span id="playerEssence" class="font-bold text-cyan-400"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained per click">Essence/Click:</span> <span id="essencePerClick" class="font-bold text-cyan-300"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Essence gained passively per second">Passive Essence/sec:</span> <span id="passiveIncome" class="font-bold text-green-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Damage dealt per attack during boss fights">Attack:</span> <span id="playerAttack" class="font-bold text-red-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit chance">Crit Chance:</span> <span id="playerCritChance" class="font-bold text-red-400"></span></div>
-                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit damage multiplier">Crit Multiplier:</span> <span id="playerCritMult" class="font-bold text-red-300"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Damage dealt per attack during boss fights">Attack Power:</span> <span id="playerAttack" class="font-bold text-red-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit chance">Critical Chance:</span> <span id="playerCritChance" class="font-bold text-red-400"></span></div>
+                    <div class="flex justify-between"><span class="tooltip right" data-tooltip="Critical hit damage multiplier">Critical Multiplier:</span> <span id="playerCritMult" class="font-bold text-red-300"></span></div>
                     <div class="flex justify-between"><span class="tooltip right" data-tooltip="Daily login streak">Streak:</span> <span id="playerStreak" class="font-bold text-orange-400"></span></div>
                 </div>
             </div>
@@ -1747,6 +1737,9 @@
                         <div class="text-xs text-cyan-300 mb-1 font-semibold w-full text-center tooltip right" id="essenceCurrentText" data-tooltip="Total Essence" style="pointer-events: auto;">0</div>
                         <div class="w-3 h-32 bg-gray-700 rounded-full relative shadow-lg mb-1 flex justify-center">
                             <div id="essenceProgressBar" class="bg-cyan-400 w-full rounded-full transition-all duration-300 absolute bottom-0 shadow-md" style="height: 0%"></div>
+                            <div id="peakCPSLine" class="absolute w-full bg-cyan-300 rounded-full transition-all duration-300 shadow-md opacity-80" style="height: 2px; display: none;">
+                                <div id="peakCPSLabel" class="absolute text-xs text-gray-500 opacity-0 transition-opacity duration-300 pointer-events-none" style="right: 6px; top: -2px; font-family: 'Inter', sans-serif; font-weight: 500;">Peak</div>
+                            </div>
                         </div>
                         <div class="text-xs text-cyan-400 leading-tight w-full text-center tooltip right" id="essencePerSecText" data-tooltip="Clicks Per Second" style="pointer-events: auto;">0</div>
                     </div>
@@ -2635,6 +2628,7 @@
             clickCountThisSecond: 0,
             autoClickCountThisSecond: 0,
             lastCPSUpdate: Date.now(),
+            peakCPS: 0,
             clickUpgradeLevel: 0,
             passiveUpgradeLevel: 0,
             bankUpgradeLevel: 0,
@@ -3427,12 +3421,22 @@ let isTransitioning = false;
 
             // Update essence progress bar (always visible)
             essenceProgressContainer.classList.remove('hidden');
-            essenceCurrentText.textContent = formatNumber(gameState.essence);
-            essencePerSecText.textContent = gameState.cps.toFixed(1) + '/sec';
+            essenceCurrentText.textContent = gameState.essence.toLocaleString();
+            essencePerSecText.textContent = gameState.cps.toFixed(1) + '/CPS';
 
             // Set progress bar height based on CPS
             const heightPercent = Math.min(gameState.cps * 10, 100);
             essenceProgressBar.style.height = `${heightPercent}%`;
+
+            // Set peak line position based on peak CPS
+            const peakLine = document.getElementById('peakCPSLine');
+            if (gameState.peakCPS > 0) {
+                const peakHeightPercent = Math.min(gameState.peakCPS * 10, 100);
+                peakLine.style.bottom = `${peakHeightPercent}%`;
+                peakLine.style.display = 'block';
+            } else {
+                peakLine.style.display = 'none';
+            }
 
             // Add a subtle pulsing effect to the progress bar based on essence gain rate
             const pulseIntensity = Math.min(getPassiveIncomeRate() / 100, 1); // Cap at 1.0
@@ -4250,6 +4254,11 @@ let isTransitioning = false;
                 const totalClicksThisSecond = gameState.clickCountThisSecond + gameState.autoClickCountThisSecond;
                 gameState.cps = totalClicksThisSecond / timeSinceLastUpdate;
 
+                // Update peak CPS if current CPS is higher
+                if (gameState.cps > gameState.peakCPS) {
+                    gameState.peakCPS = gameState.cps;
+                }
+
                 // Reset counters
                 gameState.clickCountThisSecond = 0;
                 gameState.autoClickCountThisSecond = 0;
@@ -4567,6 +4576,7 @@ let isTransitioning = false;
                 if (typeof gameState.musicEnabled === 'undefined') gameState.musicEnabled = false;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
                 if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
+                if (typeof gameState.peakCPS === 'undefined') gameState.peakCPS = 0;
                 // Clear any active events on load to prevent them from continuing
                 gameState.activeEvents = [];
                 gameState.pendingEvent = null;
