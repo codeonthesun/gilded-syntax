@@ -107,7 +107,7 @@
             font-weight: 600;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
             font-size: 0.75rem;
-            color: #f3f4f6;
+            color: #4ade80;
             text-align: center;
             width: 100%;
             min-height: 1rem;
@@ -1753,11 +1753,11 @@
 
                     <!-- Bank Progress Bar (Vertical) -->
                     <div id="bankProgressContainer" class="hidden flex flex-col items-center justify-center h-56 absolute right-4 top-1/2 transform -translate-y-1/2">
-                        <div class="text-xs text-gray-300 mb-1 font-semibold w-full text-center" id="bankCapacityText">0</div>
+                        <div class="text-xs text-gray-300 mb-1 font-semibold w-full text-center tooltip left" id="bankCapacityText" data-tooltip="Bank Capacity" style="pointer-events: auto;">0</div>
                         <div class="w-3 h-32 bg-gray-700 rounded-full relative shadow-lg mb-1 flex justify-center">
                             <div id="bankProgressBar" class="bg-white w-full rounded-full transition-all duration-300 absolute bottom-0 shadow-md" style="height: 0%"></div>
                         </div>
-                        <div class="text-xs text-gray-400 leading-tight w-full text-center" id="bankCurrentText">0</div>
+                        <div class="text-xs text-gray-400 leading-tight w-full text-center tooltip left" id="bankCurrentText" data-tooltip="Stored Clicks (Can Overflow.)" style="pointer-events: auto;">0</div>
                     </div>
                 </div>
                 <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
