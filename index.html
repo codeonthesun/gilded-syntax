@@ -5458,18 +5458,21 @@ let isTransitioning = false;
                   // Recheck quest completion
                   checkQuestCompletion(false);
                   // Calculate offline passive income
-                const now = Date.now();
-                const timeDiff = (now - gameState.lastUpdateTime) / 1000;
-                const maxOfflineTime = 3600000 + gameState.timeCrystalUpgradeLevel * 1800000; // 1h + 30min per level
-                const cappedTimeDiff = Math.min(timeDiff, maxOfflineTime);
-                const passiveGained = Math.floor(cappedTimeDiff * gameState.passiveIncomeRate);
-                if (passiveGained > 0) {
-                    gameStateManager.addEssence(passiveGained, 'offline_passive');
-                    gainXP(Math.floor(passiveGained / 100));
-                    const timeStr = timeDiff > maxOfflineTime ? ` (capped at ${Math.floor(maxOfflineTime / 3600)}h)` : '';
-                    logMessage(`While you were away from Gilded Syntax, you gained ${formatNumber(passiveGained)} Essence from passive essence${timeStr}.`, "system-ok");
-                }
-                gameState.lastUpdateTime = now;
+                  const now = Date.now();
+                  const timeDiff = (now - gameState.lastUpdateTime) / 1000;
+                  const maxOfflineTime = 3600000 + gameState.timeCrystalUpgradeLevel * 1800000; // 1h + 30min per level
+                  const cappedTimeDiff = Math.min(timeDiff, maxOfflineTime);
+                  const passiveGained = Math.floor(cappedTimeDiff * gameState.passiveIncomeRate);
+                  if (passiveGained > 0) {
+                      gameStateManager.addEssence(passiveGained, 'offline_passive');
+                      gainXP(Math.floor(passiveGained / 100));
+                      const timeStr = timeDiff > maxOfflineTime ? ` (capped at ${Math.floor(maxOfflineTime / 3600)}h)` : '';
+                      logMessage(`While you were away from Gilded Syntax, you gained ${formatNumber(passiveGained)} Essence from passive essence${timeStr}.`, "system-ok");
+                  }
+                  gameState.lastUpdateTime = now;
+  
+                  // Reset CPS meter values on page load for fresh session
+                  gameState.peakCPS = 0;
                 // Check daily login
                 const today = new Date().toDateString();
                 if (gameState.lastLoginDate !== today) {
