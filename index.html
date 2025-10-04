@@ -1946,7 +1946,6 @@
                         <span>Upgrades</span>
                         <span class="text-xs text-gray-500 text-left" id="upgradeFlavor"></span>
                     </div>
-                    <span class="text-xs text-gray-500">Essence: <span id="headerEssence"></span></span>
                 </h2>
                 <div class="space-y-2 text-sm">
                     <div class="upgrade-item flex justify-between items-center">
@@ -3506,7 +3505,6 @@ let isTransitioning = false;
             document.getElementById('xpBar').style.width = `${xpProgress}%`;
             document.getElementById('xpText').textContent = `${formatNumber(gameState.xp)} / ${formatNumber(gameState.xpToNextLevel)}`;
             DOMElements.playerEssence.textContent = showFullEssence ? gameState.essence.toLocaleString() : formatNumber(gameState.essence);
-            DOMElements.headerEssence.textContent = gameState.essence.toLocaleString();
             if (DOMElements.rulerTotalEssence) {
                 DOMElements.rulerTotalEssence.textContent = gameState.essence.toLocaleString();
             }
