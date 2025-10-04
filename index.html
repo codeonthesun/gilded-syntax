@@ -1845,7 +1845,7 @@
 
                     <!-- Essence Progress Bar (Vertical) -->
                     <div id="essenceProgressContainer" class="flex flex-col items-center justify-center h-56 absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <div class="text-xs text-cyan-300 mb-1 font-semibold w-full text-center tooltip right" id="essenceCurrentText" data-tooltip="Total Essence" style="pointer-events: auto;">0</div>
+                        <div class="text-xs text-cyan-300 mb-1 font-semibold w-full text-center tooltip right" id="essenceCurrentText" data-tooltip="Peak CPS" style="pointer-events: auto;">Peak: 0</div>
                         <div class="w-3 h-32 bg-gray-700 rounded-full relative shadow-lg mb-1 flex justify-center">
                             <div id="essenceProgressBar" class="bg-cyan-400 w-full rounded-full transition-all duration-300 absolute bottom-0 shadow-md" style="height: 0%"></div>
                             <div id="peakCPSLine" class="absolute w-full bg-cyan-300 rounded-full transition-all duration-300 shadow-md opacity-80" style="height: 2px; display: none;">
@@ -3539,7 +3539,7 @@ let isTransitioning = false;
 
             // Update essence progress bar (always visible)
             essenceProgressContainer.classList.remove('hidden');
-            essenceCurrentText.textContent = gameState.essence.toLocaleString();
+            essenceCurrentText.textContent = `Peak: ${gameState.peakCPS.toFixed(1)}`;
             essencePerSecText.textContent = gameState.cps.toFixed(1) + '/CPS';
 
             // Set progress bar height based on CPS
