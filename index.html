@@ -2919,7 +2919,7 @@ let isTransitioning = false;
         
             gameStateManager.addClicks(1, 'action_click');
             gameState.clickCountThisSecond++; // Track for CPS calculation
-
+        
             if (gameState.isBankMode) {
                 if (gameState.bankedClicks < getBankSize()) {
                     gameStateManager.addBankedClicks(1, 'bank_store');
@@ -3059,6 +3059,13 @@ let isTransitioning = false;
                 updateUI(); // Ensure button state is correct
                 return;
             }
+        
+            // RESET CLICK COUNTER WHEN TOGGLING BANK MODE
+            gameState.clickCountThisSecond = 0;
+            gameState.lastCPSUpdate = Date.now();
+            gameState.cps = 0;
+            gameState.smoothedCPS = 0;
+        
             gameStateManager.setState('isBankMode', DOMElements.bankModeToggle.checked, 'toggle_bank_mode');
             if (gameState.isBankMode) {
                 gameState.originalZoneName = DOMElements.zoneName.textContent;
@@ -3463,24 +3470,7 @@ let isTransitioning = false;
             DOMElements.essencePerClick.textContent = formatNumber(getEssencePerClick());
             // Display attack as integer (no decimals due to 10x scaling system)
             DOMElements.playerAttack.textContent = Math.floor(getAttackDamage());
-            // Calculate effective passive income rate including boosts
-            let effectivePassiveRate = gameState.passiveIncomeRate;
-            if (gameState.passiveBoostActive && Date.now() < gameState.passiveBoostEndTime) {
-                effectivePassiveRate *= 2;
-            }
-            if (gameState.investmentActive && Date.now() < gameState.investmentEndTime) {
-                effectivePassiveRate *= 2;
-            }
-            // Apply debuff
-            if (gameState.currentDebuff && Date.now() < gameState.debuffEndTime) {
-                effectivePassiveRate = Math.floor(effectivePassiveRate / 2);
-            }
-            // Apply mana boost
-            const zone = gameState.zones[gameState.currentZoneIndex];
-            if (zone && zone.specialMechanic && zone.specialMechanic.type === 'mana' && gameState.manaBoostActive && Date.now() < gameState.manaBoostEndTime) {
-                effectivePassiveRate = Math.floor(effectivePassiveRate * zone.specialMechanic.boostMultiplier);
-            }
-            DOMElements.passiveIncome.textContent = formatNumber(effectivePassiveRate);
+            DOMElements.passiveIncome.textContent = formatNumber(getEffectivePassiveIncomeRate());
             DOMElements.playerCritChance.textContent = (gameState.critChance * 100).toFixed(1) + '%';
             DOMElements.playerCritMult.textContent = gameState.critMultiplier.toFixed(1) + 'x';
 
@@ -4215,6 +4205,29 @@ let isTransitioning = false;
 
         function getPassiveIncomeRate() {
             return Math.floor((Math.max(1, Math.floor(gameState.level / 5)) * Math.pow(1.2, gameState.currentZoneIndex)) * gameState.passiveMultiplier * gameState.prestigeMultiplier);
+        }
+
+        function getEffectivePassiveIncomeRate() {
+            let passiveRate = getPassiveIncomeRate();
+            const now = Date.now();
+
+            // Passive Surge boost
+            if (gameState.passiveBoostActive && now < gameState.passiveBoostEndTime) {
+                passiveRate *= 2;
+            }
+
+            // Apply debuff
+            if (gameState.currentDebuff && now < gameState.debuffEndTime) {
+                passiveRate = Math.floor(passiveRate / 2);
+            }
+
+            // Apply mana boost
+            const zone = gameState.zones[gameState.currentZoneIndex];
+            if (zone && zone.specialMechanic && zone.specialMechanic.type === 'mana' && gameState.manaBoostActive && now < gameState.manaBoostEndTime) {
+                passiveRate = Math.floor(passiveRate * zone.specialMechanic.boostMultiplier);
+            }
+
+            return Math.floor(passiveRate);
         }
 
         function updatePassiveIncome() {
@@ -5800,8 +5813,8 @@ let isTransitioning = false;
         function calculateTotalEssencePerSecond() {
             let totalEPS = 0;
 
-            // Base passive income
-            totalEPS += getPassiveIncomeRate();
+            // Effective passive income (includes all boosts)
+            totalEPS += getEffectivePassiveIncomeRate();
 
             // Auto-clicker contribution
             if (gameState.isAutoClickerActive && gameState.bankedClicks >= gameState.autoClickCostPerSecond) {
