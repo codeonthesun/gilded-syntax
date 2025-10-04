@@ -4330,7 +4330,7 @@ let isTransitioning = false;
 
             // Only update if at least 1 second has passed
             if (timeSinceLastUpdate >= 1.0) {
-                const totalClicksThisSecond = gameState.clickCountThisSecond + gameState.autoClickCountThisSecond;
+                const totalClicksThisSecond = gameState.clickCountThisSecond; // Only manual clicks for EPS calculation
                 gameState.cps = totalClicksThisSecond / timeSinceLastUpdate;
 
                 // Update peak CPS if current CPS is higher
