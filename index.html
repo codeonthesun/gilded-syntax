@@ -1317,6 +1317,12 @@
             animation: fadeIn 0.5s ease-in-out;
         }
 
+        /* Boss Container Styling */
+        #bossContainer {
+            max-width: 80%;
+            margin: 0 auto;
+        }
+
         .ready-confirmation-square {
             width: 48px;
             height: 48px;
@@ -3009,6 +3015,7 @@ let isTransitioning = false;
             let damage = getAttackDamage();
             bossState.hp -= damage;
             showClickFeedback(`+${damage} Damage`, 'text-red-400');
+            gameState.clickCountThisSecond++; // Track for CPS calculation during boss mode
             // Remove all shake classes
             DOMElements.actionButton.classList.remove('shake-light', 'shake-medium', 'shake-heavy', 'shake-ultra');
             void DOMElements.actionButton.offsetWidth; // Trigger reflow
@@ -5037,13 +5044,8 @@ let isTransitioning = false;
 
         function resetProfile() {
             if (confirm("Are you sure you want to reset your progress? This will delete all saved data and cannot be undone.")) {
-                isReset = true;
                 gameState = getInitialGameState();
                 localStorage.removeItem('gildedSyntaxSave');
-                loadZone();
-                updateUI();
-                logMessage("Profile reset complete. All progress has been cleared.", "system");
-                isReset = false;
                 window.location.reload();
             }
         }
@@ -5806,8 +5808,8 @@ let isTransitioning = false;
                 totalEPS += getAutoClickRate();
             }
 
-            // Manual clicking contribution (only when not in bank mode)
-            if (!gameState.isBankMode) {
+            // Manual clicking contribution (only when not in bank mode and not in boss mode)
+            if (!gameState.isBankMode && !bossState.active) {
                 totalEPS += gameState.smoothedCPS * getEssencePerClick();
             }
 
