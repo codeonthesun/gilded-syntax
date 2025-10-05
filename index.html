@@ -2796,6 +2796,8 @@
             fractionalBankInterest: 0,
             musicEnabled: false,
             chronicleCollapsed: false,
+            // Ruler position state
+            rulerPosition: 'default', // 'default' or 'fixed'
         };
         
         // DOM Elements
@@ -4721,6 +4723,7 @@ let isTransitioning = false;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
                 if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
                 if (typeof gameState.peakCPS === 'undefined') gameState.peakCPS = 0;
+                if (typeof gameState.rulerPosition === 'undefined') gameState.rulerPosition = 'default';
                 // Clear any active events on load to prevent them from continuing
                 gameState.activeEvents = [];
                 gameState.pendingEvent = null;
@@ -5092,7 +5095,9 @@ let isTransitioning = false;
                 musicEnabled: false,
                 eventCooldownEndTime: 0,
                 customTitle: null,
-                crownRevealed: false
+                crownRevealed: false,
+                // Ruler position state
+                rulerPosition: 'default', // 'default' or 'fixed'
             };
         }
 
@@ -5434,6 +5439,7 @@ let isTransitioning = false;
                 if (typeof gameState.chronicleCollapsed === 'undefined') gameState.chronicleCollapsed = false;
                 if (typeof gameState.eventCooldownEndTime === 'undefined') gameState.eventCooldownEndTime = 0;
                 if (typeof gameState.crownRevealed === 'undefined') gameState.crownRevealed = false;
+                if (typeof gameState.rulerPosition === 'undefined') gameState.rulerPosition = 'default';
                 // Clear any active events on load to prevent them from continuing
                 gameState.activeEvents = [];
                 gameState.pendingEvent = null;
@@ -5833,6 +5839,7 @@ let isTransitioning = false;
         // Ruler Functions and Scroll Behavior
         let rulerOriginalPosition = null;
         let isRulerFixed = false;
+        let isInitializing = true; // Flag to prevent scroll handler during initialization
 
         function initializeRuler() {
             const ruler = DOMElements.essenceRuler;
@@ -5859,12 +5866,20 @@ let isTransitioning = false;
                 ruler.appendChild(tick);
             }
 
+            // Always reset to default position on page load
+            ruler.classList.remove('fixed', 'hidden');
+            isRulerFixed = false;
+            gameState.rulerPosition = 'default';
+
             // Initialize scroll behavior
             window.addEventListener('scroll', handleRulerScroll);
-            handleRulerScroll(); // Initial check
+            // Don't call handleRulerScroll() during initialization to prevent override
         }
 
         function handleRulerScroll() {
+            // Don't run during initialization to prevent overriding the reset
+            if (isInitializing) return;
+
             const ruler = DOMElements.essenceRuler;
             if (!ruler || rulerOriginalPosition === null) return;
 
@@ -5891,17 +5906,21 @@ let isTransitioning = false;
                     ruler.classList.add('fixed');
                     ruler.classList.remove('hidden');
                     isRulerFixed = true;
+                    gameState.rulerPosition = 'fixed';
                 }
             } else if (isRulerVisible && isRulerFixed) {
                 // Ruler is visible in its original position - restore to absolute
                 ruler.classList.remove('fixed');
                 isRulerFixed = false;
+                gameState.rulerPosition = 'default';
             } else if (scrollTop + windowHeight < rulerCurrentTop && isRulerFixed) {
                 // We've scrolled back up above where the ruler should be - hide it
                 ruler.classList.add('hidden');
+                gameState.rulerPosition = 'hidden';
             } else if (isRulerFixed && scrollTop + windowHeight >= rulerCurrentTop) {
                 // We're in the fixed zone - make sure it's visible
                 ruler.classList.remove('hidden');
+                gameState.rulerPosition = 'fixed';
             }
         }
 
@@ -6101,8 +6120,8 @@ let isTransitioning = false;
             window.addEventListener('resize', () => {
                 setCanvasSize();
                 initBackgroundParticles();
-                // Update ruler position after resize
-                if (rulerOriginalPosition !== null) {
+                // Update ruler position after resize (only after initialization is complete)
+                if (rulerOriginalPosition !== null && !isInitializing) {
                     handleRulerScroll();
                 }
             });
@@ -6148,6 +6167,8 @@ let isTransitioning = false;
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('main-game-container').style.display = 'flex';
+                // Mark initialization as complete after loading screen is hidden
+                isInitializing = false;
             }, 1000);
 
             // Play background music on first interaction
