@@ -183,6 +183,16 @@
             bottom: auto;
             transform: translateX(40px) translateY(10px);
         }
+        .dashboard-canvas {
+            width: 100% !important;
+            height: 140px !important;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative !important;
+            display: block !important;
+            top: auto !important;
+            left: auto !important;
+        }
         #zoneObjectivesContainer, #bankContainer {
             transition: order 0.5s ease-in-out;
         }
@@ -1278,6 +1288,7 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .objectives-overlay {
             position: absolute;
             top: -0.5rem;
@@ -1398,6 +1409,14 @@
             height: 100vh;
             pointer-events: none;
             z-index: 99;
+        }
+
+        /* Performance canvas should not use global canvas styles */
+        #performanceCanvas {
+            position: relative !important;
+            width: 100% !important;
+            height: 140px !important;
+            pointer-events: auto !important;
         }
 
         /* Background Particle Canvas */
@@ -1686,6 +1705,90 @@
             border-top: 4px solid rgba(34, 211, 238, 0.8);
         }
 
+        /* Mini Chart Styles */
+        .mini-chart-container {
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .mini-chart-canvas {
+            border-radius: 4px;
+            background: transparent;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            width: auto !important;
+            height: auto !important;
+            pointer-events: auto !important;
+            z-index: 1 !important;
+        }
+
+        .mini-chart-canvas:hover {
+            border-color: rgba(34, 211, 238, 0.6);
+            transform: scale(1.02);
+            box-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+        }
+
+        .mini-chart-container.stats-open .mini-chart-canvas {
+            border-color: rgba(34, 211, 238, 0.8);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
+        }
+
+        .chart-legend-item.opacity-50 {
+            opacity: 0.5;
+        }
+
+        .mini-chart-canvas:active {
+            transform: scale(0.95);
+        }
+
+
+        /* Chart tooltip */
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #22d3ee;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: #e2e8f0;
+            pointer-events: none;
+            z-index: 1030;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .chart-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* Motivational animations */
+        .motivation-boost {
+            animation: motivationBoost 1s ease-in-out;
+        }
+
+        @keyframes motivationBoost {
+            0% { transform: scale(1); color: #22d3ee; }
+            50% { transform: scale(1.1); color: #10b981; text-shadow: 0 0 10px currentColor; }
+            100% { transform: scale(1); color: #22d3ee; }
+        }
+
+        .performance-decline {
+            animation: performanceDecline 1s ease-in-out;
+        }
+
+        @keyframes performanceDecline {
+            0% { transform: scale(1); color: #22d3ee; }
+            50% { transform: scale(0.95); color: #f59e0b; text-shadow: 0 0 8px currentColor; }
+            100% { transform: scale(1); color: #22d3ee; }
+        }
+
     </style>
 </head>
 <body class="ui-bg text-gray-200 overflow-auto min-h-screen">
@@ -1818,7 +1921,7 @@
         <div class="flex flex-col w-full md:w-2/3 md:h-full gap-4">
 
             <!-- Action Area -->
-            <div id="actionArea" class="ui-bg rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-hidden min-h-[500px]">
+            <div id="actionArea" class="ui-bg rounded-lg p-4 shadow-lg flex-grow flex flex-col justify-center items-center border border-gray-700 relative overflow-visible min-h-[500px]">
                 <div id="fps-counter" class="absolute top-2 right-2 text-white text-sm font-bold bg-black/50 px-2 py-1 rounded">FPS: 0</div>
                 <!-- Boss UI will be injected here -->
                 <div id="bossContainer" class="absolute inset-0 label-container effect-embers z-10 hidden flex-col justify-center items-center p-4 text-center"></div>
@@ -1867,12 +1970,107 @@
                 <div id="click-feedback-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                 <div id="specialMechanicDisplay" class="mt-4 text-center"></div>
 
+                <!-- Performance Analytics Container -->
+                <div id="performanceContainer" class="ui-bg rounded-lg p-1 shadow-lg border border-gray-700 left-1/2 transform -translate-x-1/2 w-5/6 max-w-2xl" style="display: none;">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-cinzel text-lg font-bold text-cyan-300">Performance Analytics</h3>
+                        <button id="closePerformanceButton" class="text-gray-400 hover:text-white text-lg" data-tooltip="Close Performance Analytics">&times;</button>
+                    </div>
+
+                    <!-- Chart Section -->
+                    <div class="mb-2">
+                        <div class="flex items-center gap-3 mb-1">
+                            <h4 class="font-cinzel text-base text-cyan-300">Performance Over Time</h4>
+                            <div class="flex gap-3 text-xs">
+                                <div class="flex items-center gap-1 cursor-pointer chart-legend-item" data-type="cps" onclick="toggleChartLine('cps')">
+                                    <div style="width: 6px; height: 6px; background: #22d3ee; border-radius: 50%;"></div>
+                                    <span class="text-cyan-300">CPS</span>
+                                </div>
+                                <div class="flex items-center gap-1 cursor-pointer chart-legend-item" data-type="eps" onclick="toggleChartLine('eps')">
+                                    <div style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></div>
+                                    <span class="text-green-300">EPS</span>
+                                </div>
+                                <div class="flex items-center gap-1 cursor-pointer chart-legend-item" data-type="bps" onclick="toggleChartLine('bps')">
+                                    <div style="width: 6px; height: 6px; background: #ffffff; border-radius: 50%;"></div>
+                                    <span class="text-white">BPS</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 0px; position: relative; overflow: hidden; width: 100%;">
+                            <canvas id="performanceCanvas" class="dashboard-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <!-- Session Statistics -->
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 6px; border: 1px solid rgba(34, 211, 238, 0.2);">
+                            <h4 class="font-cinzel text-cyan-300 text-sm mb-1">📊 Session</h4>
+                            <div class="space-y-1">
+                                        <div class="flex justify-between">
+                                            <span class="text-cyan-400 text-xs">Best CPS:</span>
+                                            <span class="text-cyan-400 font-bold text-xs" id="sessionBestCPS">0.0</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-cyan-400 text-xs">Avg CPS:</span>
+                                            <span class="text-cyan-400 font-bold text-xs" id="sessionAvgCPS">0.0</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-white text-xs">Avg BPS:</span>
+                                            <span class="text-white font-bold text-xs" id="sessionAvgBPS">0.00</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-green-400 text-xs">Avg EPS:</span>
+                                            <span class="text-green-400 font-bold text-xs" id="sessionAvgEPS">0.0</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-300 text-xs">Duration:</span>
+                                            <span class="text-green-400 font-bold text-xs" id="sessionTime">0s</span>
+                                        </div>
+                                    </div>
+                        </div>
+
+                        <!-- Daily Performance -->
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 6px; border: 1px solid rgba(34, 211, 238, 0.2);">
+                            <h4 class="font-cinzel text-green-300 text-sm mb-1">📈 Daily</h4>
+                            <div class="space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300 text-xs">Peak:</span>
+                                    <span class="text-green-400 font-bold text-xs" id="dailyPeakCPS">0.0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300 text-xs">Sessions:</span>
+                                    <span class="text-blue-400 font-bold text-xs" id="dailySessions">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300 text-xs">Trend:</span>
+                                    <span class="text-yellow-400 font-bold text-xs" id="dailyTrend">Stable</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivational Section -->
+                    <div style="background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.05)); border-radius: 6px; padding: 6px; border: 1px solid rgba(34, 211, 238, 0.3); display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 12px;">💪</span>
+                        <div class="text-cyan-300 font-medium text-xs" id="motivationalText">
+                            Every expert was once a beginner. Keep practicing!
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Essence Per Second Ruler -->
-                <div class="essence-ruler">
+                <div id="essenceRuler" class="essence-ruler">
                     <div class="ruler-line"></div>
                     <!-- Ruler ticks will be generated by JavaScript -->
                     <div id="rulerValue" class="ruler-value" style="left: 20px;">0/s</div>
-                    <div class="ruler-title">Essence Per Second</div>
+                    <div class="ruler-title">
+                        Essence Per Second
+                        <!-- Mini Chart Preview -->
+                        <div id="miniChartContainer" class="mini-chart-container" style="display: inline-block; margin-left: 12px; cursor: pointer; position: relative;" data-tooltip="Click to view full Performance Analytics">
+                            <canvas id="miniChartCanvas" width="140" height="32" class="mini-chart-canvas" style="width: 140px; height: 32px;"></canvas>
+                        </div>
+                    </div>
                     <div class="ruler-total-essence"><span id="rulerTotalEssence">0</span></div>
                 </div>
 
@@ -2674,6 +2872,19 @@
             { id: 'relic_master', name: 'Relic Collector', description: 'Collect 5 relics', condition: () => gameState.relics.length >= 5 },
             { id: 'infinite_10', name: 'Infinite Explorer', description: 'Complete 10 infinite zones', condition: () => gameState.infiniteMode && gameState.currentZoneIndex >= ZONES.length + 9 },
             { id: 'streak_7', name: 'Dedicated Player', description: 'Maintain a 7-day login streak', condition: () => gameState.streak >= 7 },
+            { id: 'performance_analyst', name: 'Performance Analyst', description: 'Use Performance Analytics for the first time', condition: () => gameState.performanceContainerExtended },
+            { id: 'speed_demon', name: 'Speed Demon', description: 'Achieve 10+ CPS for the first time', condition: () => gameState.peakCPS >= 10 },
+            { id: 'clicking_master', name: 'Clicking Master', description: 'Achieve 50+ CPS', condition: () => gameState.peakCPS >= 50 },
+            { id: 'legendary_clicker', name: 'Legendary Clicker', description: 'Achieve 100+ CPS', condition: () => gameState.peakCPS >= 100 },
+            { id: 'improvement_guru', name: 'Improvement Guru', description: 'Improve your peak CPS by 50% over a session', condition: () => {
+                const history = gameState.performanceHistory;
+                if (history.length < 20) return false;
+                const firstHalf = history.slice(0, 10);
+                const secondHalf = history.slice(-10);
+                const firstAvg = firstHalf.reduce((sum, h) => sum + h.cps, 0) / firstHalf.length;
+                const secondAvg = secondHalf.reduce((sum, h) => sum + h.cps, 0) / secondHalf.length;
+                return secondAvg > firstAvg * 1.5;
+            }},
         ];
 
         const EVENTS = [
@@ -2749,6 +2960,11 @@
             lastCPSUpdate: Date.now(),
             peakCPS: 0,
             smoothedCPS: 0,
+            // Performance tracking for charts
+            performanceHistory: [],
+            maxHistoryLength: 100,
+            performanceContainerExtended: false,
+            lastPerformanceUpdate: Date.now(),
             clickUpgradeLevel: 0,
             passiveUpgradeLevel: 0,
             bankUpgradeLevel: 0,
@@ -2873,7 +3089,13 @@
             bossReadyButton: document.getElementById('bossReadyButton'),
             essenceRuler: document.querySelector('.essence-ruler'),
             rulerValue: document.getElementById('rulerValue'),
-            rulerTotalEssence: document.getElementById('rulerTotalEssence')
+            rulerTotalEssence: document.getElementById('rulerTotalEssence'),
+            performanceContainer: document.getElementById('performanceContainer'),
+            collapsePerformanceButton: document.getElementById('collapsePerformanceButton'),
+            performanceCanvas: document.getElementById('performanceCanvas'),
+            miniChartContainer: document.getElementById('miniChartContainer'),
+            miniChartCanvas: document.getElementById('miniChartCanvas'),
+            closePerformanceButton: document.getElementById('closePerformanceButton')
         };
         
         let bossState = {
@@ -3838,6 +4060,7 @@ let isTransitioning = false;
             updateRelicsList();
             updateSpecialMechanicDisplay();
             updateRuler(); // Update the essence ruler in UI updates
+            updateMiniChart(); // Update mini chart preview
 
             // Update event flavor text
             const flavorEl = document.getElementById('eventFlavorText');
@@ -5489,6 +5712,12 @@ let isTransitioning = false;
                 // Validate loaded game state
                 validateGameState('load_game');
                 logMessage("Welcome back to Gilded Syntax, your progress has been restored.", "system-ok");
+
+                // Ensure performance container starts hidden
+                const perfContainer = document.getElementById('performanceContainer');
+                if (perfContainer) {
+                    perfContainer.style.display = 'none';
+                }
             } else {
                 logMessage("Welcome to Gilded Syntax. Begin your ascent through the gilded realms.", "system");
             }
@@ -5907,20 +6136,56 @@ let isTransitioning = false;
                     ruler.classList.remove('hidden');
                     isRulerFixed = true;
                     gameState.rulerPosition = 'fixed';
+                    // Reposition performance container if it's extended
+                    if (gameState.performanceContainerExtended) {
+                        const container = document.getElementById('performanceContainer');
+                        if (container) {
+                            container.style.transition = 'all 0.3s ease-out';
+                            positionPerformanceContainer();
+                            setTimeout(() => container.style.transition = '', 300);
+                        }
+                    }
                 }
             } else if (isRulerVisible && isRulerFixed) {
                 // Ruler is visible in its original position - restore to absolute
                 ruler.classList.remove('fixed');
                 isRulerFixed = false;
                 gameState.rulerPosition = 'default';
+                // Reposition performance container if it's extended
+                if (gameState.performanceContainerExtended) {
+                    const container = document.getElementById('performanceContainer');
+                    if (container) {
+                        container.style.transition = 'all 0.3s ease-out';
+                        positionPerformanceContainer();
+                        setTimeout(() => container.style.transition = '', 300);
+                    }
+                }
             } else if (scrollTop + windowHeight < rulerCurrentTop && isRulerFixed) {
                 // We've scrolled back up above where the ruler should be - hide it
                 ruler.classList.add('hidden');
                 gameState.rulerPosition = 'hidden';
+                // Reposition performance container if it's extended
+                if (gameState.performanceContainerExtended) {
+                    const container = document.getElementById('performanceContainer');
+                    if (container) {
+                        container.style.transition = 'all 0.3s ease-out';
+                        positionPerformanceContainer();
+                        setTimeout(() => container.style.transition = '', 300);
+                    }
+                }
             } else if (isRulerFixed && scrollTop + windowHeight >= rulerCurrentTop) {
                 // We're in the fixed zone - make sure it's visible
                 ruler.classList.remove('hidden');
                 gameState.rulerPosition = 'fixed';
+                // Reposition performance container if it's extended
+                if (gameState.performanceContainerExtended) {
+                    const container = document.getElementById('performanceContainer');
+                    if (container) {
+                        container.style.transition = 'all 0.3s ease-out';
+                        positionPerformanceContainer();
+                        setTimeout(() => container.style.transition = '', 300);
+                    }
+                }
             }
         }
 
@@ -5980,6 +6245,994 @@ let isTransitioning = false;
             rulerValue.textContent = `${formattedNumber}/s`;
             rulerValue.style.left = `${Math.max(20, Math.min(rulerWidth, position))}px`;
         }
+
+        // Performance Analytics Functions
+        function collectPerformanceData() {
+            const now = Date.now();
+            const cps = gameState.cps;
+            const eps = calculateTotalEssencePerSecond();
+            const bps = gameState.bankedClicks;
+
+            // Add data point to history
+            gameState.performanceHistory.push({
+                timestamp: now,
+                cps: cps,
+                eps: eps,
+                bps: bps,
+                level: gameState.level,
+                totalEssence: gameState.essence
+            });
+
+            // Keep only recent data points (last 100)
+            if (gameState.performanceHistory.length > gameState.maxHistoryLength) {
+                gameState.performanceHistory = gameState.performanceHistory.slice(-gameState.maxHistoryLength);
+            }
+
+            gameState.lastPerformanceUpdate = now;
+        }
+
+        function extendPerformanceContainer() {
+            const container = document.getElementById('performanceContainer');
+            const ruler = document.getElementById('essenceRuler');
+
+            if (!container || !ruler) {
+                console.error('Performance container or ruler not found');
+                return;
+            }
+
+            if (gameState.performanceContainerExtended) {
+                // Hide container
+                container.style.transition = 'all 0.3s ease-out';
+                container.style.opacity = '0';
+                container.style.transform = 'translateX(-50%) translateY(10px) scale(0.9)';
+                setTimeout(() => {
+                    container.style.display = 'none';
+                    container.style.transition = '';
+                    gameState.performanceContainerExtended = false;
+                    DOMElements.miniChartContainer.classList.remove('stats-open');
+                    logMessage("Performance Analytics closed.", "system");
+                }, 300);
+            } else {
+                // Show container
+                container.style.display = 'block';
+                container.style.opacity = '0';
+                container.style.transform = 'translateX(-50%) translateY(10px) scale(0.9)';
+                positionPerformanceContainer(); // sets position
+                container.style.transition = 'all 0.3s ease-out';
+                void container.offsetWidth;
+                container.style.opacity = '1';
+                container.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+                gameState.performanceContainerExtended = true;
+                DOMElements.miniChartContainer.classList.add('stats-open');
+                setTimeout(() => {
+                    container.style.transition = '';
+                    // Set final transform
+                    container.style.transform = ruler.classList.contains('fixed') ? 'translateX(-50%)' : 'translateX(-50%) translateY(0)';
+                }, 300);
+
+                // Initialize chart
+                if (typeof initializePerformanceChart === 'function') {
+                    initializePerformanceChart();
+                }
+
+                // Add resize handler for dynamic sizing
+                window.addEventListener('resize', function() {
+                    if (gameState.performanceContainerExtended) {
+                        initializePerformanceChart();
+                    }
+                });
+
+                // Initialize HTML stats
+                if (typeof updatePerformanceStatsHTML === 'function') {
+                    updatePerformanceStatsHTML();
+                }
+
+                logMessage("Performance Analytics opened! Track your clicking efficiency and improvement over time.", "system-ok");
+            }
+        }
+
+        function closePerformanceContainer() {
+            const container = document.getElementById('performanceContainer');
+            if (container) {
+                container.style.display = 'none';
+                gameState.performanceContainerExtended = false;
+                DOMElements.miniChartContainer.classList.remove('stats-open');
+                logMessage("Performance Analytics closed.", "system");
+            }
+        }
+
+        function toggleChartLine(type) {
+            gameState.performanceChartVisibility[type] = !gameState.performanceChartVisibility[type];
+            const legend = document.querySelector(`[data-type="${type}"]`);
+            if (legend) {
+                const span = legend.querySelector('span');
+                if (gameState.performanceChartVisibility[type]) {
+                    legend.classList.remove('opacity-50');
+                    // Restore original color
+                    if (span) {
+                        span.classList.remove('text-gray-500');
+                        if (type === 'cps') span.classList.add('text-cyan-300');
+                        else if (type === 'eps') span.classList.add('text-green-300');
+                        else if (type === 'bps') span.classList.add('text-white');
+                    }
+                } else {
+                    legend.classList.add('opacity-50');
+                    // Change to grey
+                    if (span) {
+                        span.classList.remove('text-cyan-300', 'text-green-300', 'text-white');
+                        span.classList.add('text-gray-500');
+                    }
+                }
+            }
+            drawPerformanceDashboard();
+            updateMiniChart();
+        }
+
+        function positionPerformanceContainer() {
+            const container = document.getElementById('performanceContainer');
+            const ruler = document.getElementById('essenceRuler');
+            if (!container || !ruler) return;
+
+            const isRulerFixed = ruler.classList.contains('fixed');
+
+            container.style.position = isRulerFixed ? 'fixed' : 'absolute';
+            container.style.bottom = '40px';
+            container.style.left = '50%';
+            container.style.zIndex = isRulerFixed ? '1001' : '1010';
+        }
+
+        function initializePerformanceChart() {
+            const canvas = document.getElementById('performanceCanvas');
+            if (!canvas) {
+                console.error('Performance canvas not found');
+                return;
+            }
+
+            // Set dynamic canvas size based on container
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth;
+            const containerHeight = 140; // Match CSS height
+
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+
+            // Ensure canvas is properly positioned within its container
+            canvas.style.position = 'relative';
+            canvas.style.display = 'block';
+            canvas.style.top = 'auto';
+            canvas.style.left = 'auto';
+            canvas.style.width = '100%';
+            canvas.style.height = containerHeight + 'px';
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error('Could not get canvas context');
+                return;
+            }
+
+            canvas.chartContext = ctx;
+
+            // Set up event listeners for tooltips
+            canvas.addEventListener('mousemove', handleChartHover);
+            canvas.addEventListener('mouseleave', hideChartTooltip);
+
+            drawPerformanceDashboard();
+        }
+
+        function drawPerformanceDashboard() {
+            const canvas = document.getElementById('performanceCanvas');
+            if (!canvas || !canvas.chartContext) return;
+
+            const ctx = canvas.chartContext;
+            const history = gameState.performanceHistory;
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Clear entire canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw main dashboard background
+            drawDashboardBackground(ctx, width, height);
+
+            if (history.length < 2) {
+                drawEmptyState(ctx, width, height);
+                return;
+            }
+
+            // Draw chart area (full height for better visibility)
+            drawChartArea(ctx, history, width, height);
+        }
+
+        function drawDashboardBackground(ctx, width, height) {
+            // Main background with gradient
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, 'rgba(15, 23, 42, 0.9)');
+            gradient.addColorStop(0.5, 'rgba(30, 41, 59, 0.7)');
+            gradient.addColorStop(1, 'rgba(15, 23, 42, 0.9)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function drawEmptyState(ctx, width, height) {
+            // Centered empty state message
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.7)';
+            ctx.font = 'bold 20px Cinzel';
+            ctx.textAlign = 'center';
+            ctx.fillText('Performance Analytics Dashboard', width / 2, height / 2 - 30);
+
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.5)';
+            ctx.font = '16px Inter';
+            ctx.fillText('Start clicking to track your performance!', width / 2, height / 2);
+
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.4)';
+            ctx.font = '14px Inter';
+            ctx.fillText('📊 Click the button below to begin analytics', width / 2, height / 2 + 30);
+        }
+
+        function drawChartArea(ctx, history, width, height) {
+            const chartHeight = height - 20; // Small padding top/bottom
+            const chartWidth = width; // Fill full width
+            const chartX = 0; // No left margin
+            const chartY = 10; // Small top padding
+
+            // Chart background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(chartX, chartY, chartWidth, chartHeight);
+
+
+            // Draw grid
+            drawChartGrid(ctx, chartX, chartY, chartWidth, chartHeight, history);
+
+            // Draw performance lines
+            drawPerformanceLines(ctx, history, chartX, chartY, chartWidth, chartHeight);
+        }
+
+        function drawChartGrid(ctx, chartX, chartY, chartWidth, chartHeight, history) {
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.1)';
+            ctx.lineWidth = 1;
+
+            // Vertical grid lines (time divisions)
+            const timeDivisions = 5;
+            for (let i = 0; i <= timeDivisions; i++) {
+                const x = chartX + (i / timeDivisions) * chartWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, chartY);
+                ctx.lineTo(x, chartY + chartHeight);
+                ctx.stroke();
+            }
+
+            // Horizontal grid lines (value divisions)
+            const valueDivisions = 4;
+            for (let i = 0; i <= valueDivisions; i++) {
+                const y = chartY + (i / valueDivisions) * chartHeight;
+                ctx.beginPath();
+                ctx.moveTo(chartX, y);
+                ctx.lineTo(chartX + chartWidth, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawPerformanceLines(ctx, history, chartX, chartY, chartWidth, chartHeight) {
+            // Find max values for scaling
+            const maxCPS = Math.max(...history.map(h => h.cps));
+            const maxEPS = Math.max(...history.map(h => h.eps));
+            const maxBPS = Math.max(...history.map(h => h.bps || 0));
+            const overallMax = Math.max(maxCPS, maxEPS, maxBPS);
+
+            if (overallMax === 0) return;
+
+            // Draw CPS line (cyan)
+            if (gameState.performanceChartVisibility.cps) {
+                ctx.strokeStyle = '#22d3ee';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#22d3ee';
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+
+                history.forEach((point, index) => {
+                    const x = chartX + (index / (history.length - 1)) * chartWidth;
+                    const y = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw EPS line (green)
+            if (gameState.performanceChartVisibility.eps) {
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#10b981';
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+
+                history.forEach((point, index) => {
+                    const x = chartX + (index / (history.length - 1)) * chartWidth;
+                    const y = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw BPS line (white)
+            if (gameState.performanceChartVisibility.bps) {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+
+                history.forEach((point, index) => {
+                    const x = chartX + (index / (history.length - 1)) * chartWidth;
+                    const y = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw data points with enhanced hover feedback
+            history.forEach((point, index) => {
+                const x = chartX + (index / Math.max(history.length - 1, 1)) * chartWidth;
+                const cpsY = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
+                const epsY = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
+                const bpsY = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
+
+                // Check if this point is being hovered
+                const isHovered = (index === hoveredPointIndex);
+
+                // Draw hover indicator line first (behind points)
+                if (isHovered) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(x, chartY);
+                    ctx.lineTo(x, chartY + chartHeight);
+                    ctx.stroke();
+                    ctx.setLineDash([]); // Reset line dash
+
+                    // Draw vertical gradient background for better visibility
+                    const gradient = ctx.createLinearGradient(x - 30, chartY, x + 30, chartY);
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x - 30, chartY, 60, chartHeight);
+                }
+
+                // CPS point with enhanced hover effect
+                if (gameState.performanceChartVisibility.cps) {
+                    const pointSize = isHovered ? 8 : 4;
+                    const glowSize = isHovered ? 15 : 8;
+
+                    // Outer glow for hovered point
+                    if (isHovered) {
+                        ctx.shadowColor = '#22d3ee';
+                        ctx.shadowBlur = 12;
+                        ctx.fillStyle = 'rgba(34, 211, 238, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(x, cpsY, pointSize + 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Main point
+                    ctx.shadowColor = '#22d3ee';
+                    ctx.shadowBlur = glowSize;
+                    ctx.fillStyle = isHovered ? '#ffffff' : '#22d3ee';
+                    ctx.beginPath();
+                    ctx.arc(x, cpsY, pointSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Inner bright highlight for hovered point
+                    if (isHovered) {
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#22d3ee';
+                        ctx.beginPath();
+                        ctx.arc(x, cpsY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // EPS point with enhanced hover effect
+                if (gameState.performanceChartVisibility.eps) {
+                    const pointSize = isHovered ? 8 : 4;
+                    const glowSize = isHovered ? 15 : 8;
+
+                    // Outer glow for hovered point
+                    if (isHovered) {
+                        ctx.shadowColor = '#10b981';
+                        ctx.shadowBlur = 12;
+                        ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(x, epsY, pointSize + 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Main point
+                    ctx.shadowColor = '#10b981';
+                    ctx.shadowBlur = glowSize;
+                    ctx.fillStyle = isHovered ? '#ffffff' : '#10b981';
+                    ctx.beginPath();
+                    ctx.arc(x, epsY, pointSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Inner bright highlight for hovered point
+                    if (isHovered) {
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#10b981';
+                        ctx.beginPath();
+                        ctx.arc(x, epsY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // BPS point with enhanced hover effect
+                if (gameState.performanceChartVisibility.bps) {
+                    const pointSize = isHovered ? 8 : 4;
+                    const glowSize = isHovered ? 15 : 8;
+
+                    // Outer glow for hovered point
+                    if (isHovered) {
+                        ctx.shadowColor = '#ffffff';
+                        ctx.shadowBlur = 12;
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(x, bpsY, pointSize + 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Main point
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = glowSize;
+                    ctx.fillStyle = isHovered ? '#ffffff' : '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(x, bpsY, pointSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Inner bright highlight for hovered point
+                    if (isHovered) {
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#f59e0b';
+                        ctx.beginPath();
+                        ctx.arc(x, bpsY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        function drawChartLegend(ctx, width, legendY) {
+            // CPS legend
+            ctx.fillStyle = '#22d3ee';
+            ctx.beginPath();
+            ctx.arc(width - 200, legendY, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = 'bold 12px Inter';
+            ctx.textAlign = 'left';
+            ctx.fillText('Clicks/sec', width - 190, legendY + 4);
+
+            // EPS legend
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(width - 200, legendY + 25, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('Essence/sec', width - 190, legendY + 29);
+        }
+
+        function drawStatsPanels(ctx, history, width, height) {
+            // Stats are now handled by HTML elements, not canvas drawing
+            // This function is kept for compatibility but doesn't draw anything
+            return;
+        }
+
+        function drawStatsPanel(ctx, x, y, width, height, title, stats) {
+            // Panel background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(x, y, width, height);
+
+            // Panel border
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, width, height);
+
+            // Title
+            ctx.fillStyle = '#22d3ee';
+            ctx.font = 'bold 14px Cinzel';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, x + width / 2, y + 18);
+
+            // Stats
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '11px Inter';
+            ctx.textAlign = 'left';
+
+            stats.forEach((stat, index) => {
+                const statY = y + 35 + index * 15;
+                ctx.fillText(stat, x + 10, statY);
+            });
+        }
+
+        function drawMotivationalSection(ctx, width, height) {
+            // Motivational section is now handled by HTML elements, not canvas drawing
+            // This function is kept for compatibility but doesn't draw anything
+            return;
+        }
+
+
+        function getMotivationLevel() {
+            const history = gameState.performanceHistory;
+            if (history.length < 10) return 'Getting Started';
+
+            const recent = history.slice(-10);
+            const older = history.slice(-20, -10);
+
+            if (older.length === 0) return 'Building Momentum';
+
+            const recentAvgCPS = recent.reduce((sum, h) => sum + h.cps, 0) / recent.length;
+            const olderAvgCPS = older.reduce((sum, h) => sum + h.cps, 0) / older.length;
+            const improvement = (recentAvgCPS - olderAvgCPS) / olderAvgCPS;
+
+            if (improvement > 0.2) return 'Excellent Progress!';
+            if (improvement > 0.1) return 'Good Improvement';
+            if (improvement > -0.1) return 'Steady Performance';
+            return 'Room for Growth';
+        }
+
+        function getMotivationColor(level) {
+            switch (level) {
+                case 'Excellent Progress!': return '#10b981';
+                case 'Good Improvement': return '#3b82f6';
+                case 'Steady Performance': return '#22d3ee';
+                case 'Room for Growth': return '#f59e0b';
+                default: return '#22d3ee';
+            }
+        }
+
+        function getMotivationalMessage(level) {
+            const messages = {
+                'Excellent Progress!': '🚀 Outstanding improvement! Keep up the momentum!',
+                'Good Improvement': '📈 Great progress! You\'re getting faster!',
+                'Steady Performance': '⚖️ Consistent performance! Stay focused!',
+                'Room for Growth': '💪 Every expert was once a beginner. Keep practicing!',
+                'Getting Started': '🎯 First steps! Your journey to mastery begins now!',
+                'Building Momentum': '🔥 Building speed! You\'re on the right track!'
+            };
+            return messages[level] || level;
+        }
+
+        function getPerformanceTrend(history) {
+            if (history.length < 10) return '↗️ Starting';
+
+            const recent = history.slice(-5);
+            const older = history.slice(-10, -5);
+
+            const recentAvg = recent.reduce((sum, h) => sum + h.cps, 0) / recent.length;
+            const olderAvg = older.reduce((sum, h) => sum + h.cps, 0) / older.length;
+
+            if (recentAvg > olderAvg * 1.1) return '↗️ Improving';
+            if (recentAvg < olderAvg * 0.9) return '↘️ Declining';
+            return '➡️ Stable';
+        }
+
+        function getTodayHistory(history) {
+            const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+            return history.filter(h => h.timestamp > oneDayAgo);
+        }
+
+        // Track the currently hovered data point for visual feedback
+        let hoveredPointIndex = -1;
+
+        function handleChartHover(event) {
+            const canvas = document.getElementById('performanceCanvas');
+            if (!canvas || !gameState.performanceHistory.length) {
+                hoveredPointIndex = -1;
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const history = gameState.performanceHistory;
+            const chartX = 0; // No left padding in current implementation
+            const chartY = 10; // Small top padding
+            const chartWidth = canvas.width;
+            const chartHeight = canvas.height - 20; // Account for padding
+
+            // Find the closest data point based on actual chart position
+            let closestIndex = 0;
+            let closestDistance = Infinity;
+
+            history.forEach((point, index) => {
+                // Calculate where this point would be drawn on the chart
+                const pointX = chartX + (index / Math.max(history.length - 1, 1)) * chartWidth;
+
+                // Find distance from mouse to this point (only horizontal for now)
+                const distance = Math.abs(pointX - x);
+
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = index;
+                }
+            });
+
+            // Update hovered point index for visual feedback
+            const maxDistance = chartWidth / Math.max(history.length, 20); // Adaptive threshold
+            if (closestDistance <= maxDistance && closestIndex < history.length) {
+                hoveredPointIndex = closestIndex;
+                const point = history[closestIndex];
+                // Ensure the data point has valid values before showing tooltip
+                if (point && typeof point.cps === 'number' && typeof point.eps === 'number') {
+                    showChartTooltip(event.clientX, event.clientY, point);
+                }
+            } else {
+                hoveredPointIndex = -1;
+                hideChartTooltip();
+            }
+
+            // Redraw chart to show hover effect
+            drawPerformanceDashboard();
+        }
+
+        function showChartTooltip(mouseX, mouseY, dataPoint) {
+            let tooltip = document.querySelector('.chart-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip';
+                document.body.appendChild(tooltip);
+            }
+
+            // Enhanced tooltip with better formatting and colors
+            tooltip.innerHTML = `
+                <div style="font-weight: bold; color: #22d3ee; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px;">
+                    📊 Performance Data Point
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; font-size: 13px;">
+                    <div><strong>Time:</strong></div>
+                    <div style="color: #e2e8f0;">${new Date(dataPoint.timestamp).toLocaleTimeString()}</div>
+
+                    <div style="color: #22d3ee;"><strong>CPS:</strong></div>
+                    <div style="color: #22d3ee; font-weight: bold;">${dataPoint.cps.toFixed(1)}</div>
+
+                    <div style="color: #10b981;"><strong>EPS:</strong></div>
+                    <div style="color: #10b981; font-weight: bold;">${dataPoint.eps.toFixed(1)}</div>
+
+                    <div style="color: #f59e0b;"><strong>BPS:</strong></div>
+                    <div style="color: #f59e0b; font-weight: bold;">${(dataPoint.bps || 0).toFixed(0)}</div>
+
+                    <div style="color: #a855f7;"><strong>Level:</strong></div>
+                    <div style="color: #a855f7; font-weight: bold;">${dataPoint.level}</div>
+                </div>
+            `;
+
+            tooltip.style.left = `${mouseX + 15}px`;
+            tooltip.style.top = `${mouseY - 15}px`;
+            tooltip.classList.add('visible');
+        }
+
+        function hideChartTooltip() {
+            const tooltip = document.querySelector('.chart-tooltip');
+            if (tooltip) {
+                tooltip.classList.remove('visible');
+            }
+            // Reset hover state and redraw chart
+            hoveredPointIndex = -1;
+            drawPerformanceDashboard();
+        }
+
+        function updatePerformanceStats() {
+            if (!gameState.performanceContainerExtended) return;
+
+            // Update HTML stats elements
+            updatePerformanceStatsHTML();
+
+            // Redraw the chart canvas
+            drawPerformanceDashboard();
+        }
+
+        function formatDuration(seconds) {
+            if (seconds < 60) {
+                return `${seconds}s`;
+            } else if (seconds < 3600) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const remainingSeconds = seconds % 60;
+                if (minutes > 0 && remainingSeconds > 0) {
+                    return `${hours}h ${minutes}m ${remainingSeconds}s`;
+                } else if (minutes > 0) {
+                    return `${hours}h ${minutes}m`;
+                } else if (remainingSeconds > 0) {
+                    return `${hours}h ${remainingSeconds}s`;
+                } else {
+                    return `${hours}h`;
+                }
+            }
+        }
+
+        function updatePerformanceStatsHTML() {
+            const history = gameState.performanceHistory;
+
+            if (history.length === 0) {
+                document.getElementById('sessionBestCPS').textContent = '0.0';
+                document.getElementById('sessionAvgCPS').textContent = '0.0';
+                document.getElementById('sessionAvgBPS').textContent = '0.00';
+                document.getElementById('sessionAvgEPS').textContent = '0.0';
+                document.getElementById('sessionTime').textContent = '0s';
+                document.getElementById('dailyPeakCPS').textContent = '0.0';
+                document.getElementById('dailySessions').textContent = '0';
+                document.getElementById('dailyTrend').textContent = 'Starting';
+                document.getElementById('motivationalText').textContent = 'Every expert was once a beginner. Keep practicing!';
+                return;
+            }
+
+            // Session stats
+            const bestCPS = Math.max(...history.map(h => h.cps));
+            const avgCPS = history.reduce((sum, h) => sum + h.cps, 0) / history.length;
+            const avgBPS = history.reduce((sum, h) => sum + (h.bps || 0), 0) / history.length;
+            const avgEPS = history.reduce((sum, h) => sum + h.eps, 0) / history.length;
+            const sessionTime = Math.floor((Date.now() - history[0].timestamp) / 1000);
+
+            document.getElementById('sessionBestCPS').textContent = `${bestCPS.toFixed(1)}`;
+            document.getElementById('sessionAvgCPS').textContent = `${avgCPS.toFixed(1)}`;
+            document.getElementById('sessionAvgBPS').textContent = `${avgBPS.toFixed(2)}`;
+            document.getElementById('sessionAvgEPS').textContent = `${avgEPS.toFixed(1)}`;
+            document.getElementById('sessionTime').textContent = formatDuration(sessionTime);
+
+            // Daily stats
+            const todayHistory = getTodayHistory(history);
+            const todayPeak = todayHistory.length > 0 ? Math.max(...todayHistory.map(h => h.cps)) : 0;
+            const sessionsToday = Math.floor(history.length / 12);
+
+            document.getElementById('dailyPeakCPS').textContent = `${todayPeak.toFixed(1)}`;
+            document.getElementById('dailySessions').textContent = `${sessionsToday}`;
+            document.getElementById('dailyTrend').textContent = `${getPerformanceTrend(history)}`;
+
+            // Motivational text
+            const motivationLevel = getMotivationLevel();
+            document.getElementById('motivationalText').textContent = getMotivationalMessage(motivationLevel);
+        }
+
+        // Mini Chart Functions
+        function initializeMiniChart() {
+            const canvas = DOMElements.miniChartCanvas;
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            // Set canvas properties for better rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            canvas.chartContext = ctx;
+            canvas.chartData = [];
+
+            // Add click handler for mini chart
+            canvas.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                extendPerformanceContainer();
+            });
+
+            // Initial draw
+            drawMiniChart();
+        }
+
+        function drawMiniChart() {
+            const canvas = DOMElements.miniChartCanvas;
+            if (!canvas || !canvas.chartContext) return;
+
+            const ctx = canvas.chartContext;
+            const history = gameState.performanceHistory;
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Clear canvas with transparent background
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw subtle background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw border
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, width, height);
+
+            if (history.length < 2) {
+                // Draw empty state with dots
+                ctx.fillStyle = 'rgba(34, 211, 238, 0.6)';
+                ctx.font = '12px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('···', width / 2, height / 2 + 4);
+                return;
+            }
+
+            // Draw simplified chart (just points and lines, no grid or legends)
+            drawMiniChartData(ctx, history, width, height);
+        }
+
+        function drawMiniChartData(ctx, history, width, height) {
+            // Use recent data for mini chart (last 15 points for better fit)
+            const recentHistory = history.slice(-15);
+
+            if (recentHistory.length === 0) return;
+
+            // Find max values for scaling
+            const maxCPS = Math.max(...recentHistory.map(h => h.cps));
+            const maxEPS = Math.max(...recentHistory.map(h => h.eps));
+            const maxBPS = Math.max(...recentHistory.map(h => h.bps || 0));
+            const overallMax = Math.max(maxCPS, maxEPS, maxBPS);
+
+            if (overallMax === 0) {
+                // Draw flat line at bottom if no data
+                ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(2, height - 2);
+                ctx.lineTo(width - 2, height - 2);
+                ctx.stroke();
+                return;
+            }
+
+            const chartWidth = width - 4; // Leave small margin
+            const chartHeight = height - 4;
+            const chartX = 2;
+            const chartY = 2;
+
+            // Draw CPS line (cyan)
+            if (gameState.performanceChartVisibility.cps) {
+                ctx.strokeStyle = '#22d3ee';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                recentHistory.forEach((point, index) => {
+                    const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
+                    const y = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+            }
+
+            // Draw EPS line (green)
+            if (gameState.performanceChartVisibility.eps) {
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                recentHistory.forEach((point, index) => {
+                    const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
+                    const y = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+            }
+
+            // Draw BPS line (white)
+            if (gameState.performanceChartVisibility.bps) {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                recentHistory.forEach((point, index) => {
+                    const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
+                    const y = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+            }
+
+            // Draw data points as small dots (only show last few points for clarity)
+            const pointsToShow = Math.min(recentHistory.length, 8);
+            const startIndex = recentHistory.length - pointsToShow;
+
+            for (let i = startIndex; i < recentHistory.length; i++) {
+                const point = recentHistory[i];
+                const index = i - startIndex;
+                const x = chartX + (index / Math.max(pointsToShow - 1, 1)) * chartWidth;
+                const cpsY = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
+                const epsY = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
+                const bpsY = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
+
+                // CPS point (cyan)
+                if (gameState.performanceChartVisibility.cps) {
+                    ctx.fillStyle = '#22d3ee';
+                    ctx.beginPath();
+                    ctx.arc(x, cpsY, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // EPS point (green)
+                if (gameState.performanceChartVisibility.eps) {
+                    ctx.fillStyle = '#10b981';
+                    ctx.beginPath();
+                    ctx.arc(x, epsY, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // BPS point (white)
+                if (gameState.performanceChartVisibility.bps) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(x, bpsY, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function updateMiniChart() {
+            const canvas = DOMElements.miniChartCanvas;
+            if (canvas && canvas.chartContext) {
+                // Force canvas to be visible and properly sized
+                canvas.style.display = 'block';
+                drawMiniChart();
+            }
+        }
+
+        // Force refresh mini chart (for debugging)
+        function refreshMiniChart() {
+            const canvas = DOMElements.miniChartCanvas;
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    canvas.chartContext = ctx;
+                    drawMiniChart();
+                }
+            }
+        }
+
 
         // --- Initialization ---
         function init() {
@@ -6093,7 +7346,16 @@ let isTransitioning = false;
             DOMElements.bossReadyButton.addEventListener('mouseup', () => DOMElements.bossReadyButton.classList.remove('pressed'));
             DOMElements.bossReadyButton.addEventListener('mouseleave', () => DOMElements.bossReadyButton.classList.remove('pressed'));
 
+            // Close performance button
+            if (DOMElements.closePerformanceButton) {
+                DOMElements.closePerformanceButton.addEventListener('click', closePerformanceContainer);
+            }
+
+
             loadGame();
+            if (!gameState.performanceChartVisibility) {
+                gameState.performanceChartVisibility = { cps: true, eps: true, bps: true };
+            }
             // Initialize viewer counter - unique per user
             if (!localStorage.getItem('hasVisited')) {
                 localStorage.setItem('hasVisited', 'true');
@@ -6108,6 +7370,14 @@ let isTransitioning = false;
 
             // Initialize the essence ruler
             initializeRuler();
+
+            // Initialize mini chart
+            initializeMiniChart();
+
+            // Force initial update after a short delay to ensure everything is loaded
+            setTimeout(() => {
+                updateMiniChart();
+            }, 100);
 
             // Initialize background particles
             const styles = ['combined', 'overlay', 'style3'];
@@ -6152,6 +7422,17 @@ let isTransitioning = false;
 
             // Update the essence ruler more frequently
             setInterval(updateRuler, 150);
+
+            // Collect performance data every 5 seconds
+            setInterval(() => {
+                collectPerformanceData();
+                if (gameState.performanceContainerExtended) {
+                    updatePerformanceStatsHTML();
+                    drawPerformanceDashboard();
+                }
+                // Update mini chart with new data
+                updateMiniChart();
+            }, 5000);
 
             // Helper function to check if boss is ready
             function isBossReady() {
