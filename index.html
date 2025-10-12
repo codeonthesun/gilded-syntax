@@ -6620,7 +6620,7 @@ let isTransitioning = false;
 
                     // Manual clicking contribution (only when not in bank mode and not in boss mode)
                     if (!gameState.isBankMode && !bossState.active) {
-                        const smoothedCPS = gameState.smoothedCPS || 0;
+                        const smoothedCPS = CPSTracker.getSmoothedCPS();
                         const essencePerClick = getEssencePerClick();
                         if (typeof smoothedCPS === 'number' && typeof essencePerClick === 'number') {
                             totalEPS += smoothedCPS * essencePerClick;
@@ -6776,7 +6776,7 @@ let isTransitioning = false;
         // Performance Analytics Functions
         function collectPerformanceData() {
             const now = Date.now();
-            const cps = gameState.cps;
+            const cps = CPSTracker.getSmoothedCPS(); // Get current CPS from new tracker
             const eps = calculateTotalEssencePerSecond();
             const bps = gameState.bankedClicks;
 
@@ -7799,7 +7799,17 @@ let isTransitioning = false;
 
             // Get latest data point
             const latestPoint = gameState.performanceHistory[gameState.performanceHistory.length - 1];
-            if (!latestPoint) return;
+            if (!latestPoint) {
+                // If no history data, create a point with current values
+                const currentData = {
+                    cps: CPSTracker.getSmoothedCPS(),
+                    eps: calculateTotalEssencePerSecond(),
+                    bps: gameState.bankedClicks,
+                    timestamp: Date.now()
+                };
+                showMiniChartTooltip(event.clientX, event.clientY, currentData);
+                return;
+            }
 
             showMiniChartTooltip(event.clientX, event.clientY, latestPoint);
         }
