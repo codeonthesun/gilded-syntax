@@ -2876,17 +2876,18 @@
             { id: 'infinite_10', name: 'Infinite Explorer', description: 'Complete 10 infinite zones', condition: () => gameState.infiniteMode && gameState.currentZoneIndex >= ZONES.length + 9 },
             { id: 'streak_7', name: 'Dedicated Player', description: 'Maintain a 7-day login streak', condition: () => gameState.streak >= 7 },
             { id: 'performance_analyst', name: 'Performance Analyst', description: 'Use Performance Analytics for the first time', condition: () => gameState.performanceContainerExtended },
-            { id: 'speed_demon', name: 'Speed Demon', description: 'Achieve 10+ CPS for the first time', condition: () => gameState.peakCPS >= 10 },
-            { id: 'clicking_master', name: 'Clicking Master', description: 'Achieve 50+ CPS', condition: () => gameState.peakCPS >= 50 },
-            { id: 'legendary_clicker', name: 'Legendary Clicker', description: 'Achieve 100+ CPS', condition: () => gameState.peakCPS >= 100 },
+            { id: 'speed_demon', name: 'Speed Demon', description: 'Achieve 10+ CPS for the first time', condition: () => CPSTracker.getPeakCPS() >= 10 },
+            { id: 'clicking_master', name: 'Clicking Master', description: 'Achieve 50+ CPS', condition: () => CPSTracker.getPeakCPS() >= 50 },
+            { id: 'legendary_clicker', name: 'Legendary Clicker', description: 'Achieve 100+ CPS', condition: () => CPSTracker.getPeakCPS() >= 100 },
             { id: 'improvement_guru', name: 'Improvement Guru', description: 'Improve your peak CPS by 50% over a session', condition: () => {
                 const history = gameState.performanceHistory;
-                if (history.length < 20) return false;
+                const currentPeak = CPSTracker.getPeakCPS();
+                if (history.length < 20 || currentPeak === 0) return false;
                 const firstHalf = history.slice(0, 10);
                 const secondHalf = history.slice(-10);
                 const firstAvg = firstHalf.reduce((sum, h) => sum + h.cps, 0) / firstHalf.length;
                 const secondAvg = secondHalf.reduce((sum, h) => sum + h.cps, 0) / secondHalf.length;
-                return secondAvg > firstAvg * 1.5;
+                return secondAvg > firstAvg * 1.5 || currentPeak > firstAvg * 1.5;
             }},
         ];
 
@@ -2956,13 +2957,7 @@
             achievements: [],
             accumulatedPassive: 0,
             lastPassiveLogTime: Date.now(),
-            // Heartbeat/CPS tracking
-            cps: 0,
-            clickCountThisSecond: 0,
-            autoClickCountThisSecond: 0,
-            lastCPSUpdate: Date.now(),
-            peakCPS: 0,
-            smoothedCPS: 0,
+            // Legacy CPS tracking removed - now handled by CPSTracker module
             // Performance tracking for charts
             performanceHistory: [],
             maxHistoryLength: 100,
@@ -3126,6 +3121,155 @@ let isTransitioning = false;
         let consecutiveClicks = 0;
         let mousePosition = { x: 0, y: 0 };
 
+        // === CPS TRACKING MODULE ===
+        // Clean, dedicated system for tracking clicks per second
+        const CPSTracker = {
+            // Configuration
+            config: {
+                smoothingAlpha: 0.3, // Lower = more smoothing, higher = more responsive
+                minUpdateInterval: 100, // Minimum ms between updates for performance
+                maxUpdateInterval: 1000, // Maximum ms between updates to prevent stale data
+                peakResetThreshold: 5000 // Reset peak if no clicks for 5 seconds
+            },
+
+            // State
+            state: {
+                manualClicks: 0,
+                autoClicks: 0,
+                lastUpdateTime: 0,
+                lastResetTime: 0,
+                currentCPS: 0,
+                smoothedCPS: 0,
+                peakCPS: 0,
+                isTracking: false
+            },
+
+            /**
+             * Initialize the CPS tracker
+             */
+            init() {
+                this.state.lastUpdateTime = performance.now();
+                this.state.lastResetTime = performance.now();
+                this.reset();
+                console.log('[CPSTracker] Initialized');
+            },
+
+            /**
+             * Record a manual click
+             */
+            recordManualClick() {
+                this.state.manualClicks++;
+                this.state.lastResetTime = performance.now();
+                this.updateCPS();
+            },
+
+            /**
+             * Record an auto click (for tracking but not CPS calculation)
+             */
+            recordAutoClick() {
+                this.state.autoClicks++;
+            },
+
+            /**
+             * Update CPS calculations with precise timing
+             */
+            updateCPS() {
+                const now = performance.now();
+                const timeDelta = now - this.state.lastUpdateTime;
+
+                // Throttle updates for performance
+                if (timeDelta < this.config.minUpdateInterval) {
+                    return;
+                }
+
+                // Calculate current CPS if we have time delta
+                if (timeDelta > 0) {
+                    const instantCPS = (this.state.manualClicks * 1000) / timeDelta;
+
+                    // Update peak CPS
+                    if (instantCPS > this.state.peakCPS) {
+                        this.state.peakCPS = instantCPS;
+                    }
+
+                    // Apply exponential smoothing
+                    if (this.state.smoothedCPS === 0) {
+                        this.state.smoothedCPS = instantCPS;
+                    } else {
+                        this.state.smoothedCPS = (this.config.smoothingAlpha * instantCPS) +
+                                               ((1 - this.config.smoothingAlpha) * this.state.smoothedCPS);
+                    }
+
+                    this.state.currentCPS = instantCPS;
+                }
+
+                // Reset counters for next interval
+                this.state.manualClicks = 0;
+                this.state.autoClicks = 0;
+                this.state.lastUpdateTime = now;
+            },
+
+            /**
+             * Get current CPS value (smoothed for display)
+             */
+            getCPS() {
+                this.updateCPS(); // Ensure we're up to date
+                return {
+                    current: this.state.currentCPS,
+                    smoothed: this.state.smoothedCPS,
+                    peak: this.state.peakCPS
+                };
+            },
+
+            /**
+             * Get only the smoothed CPS for UI display
+             */
+            getSmoothedCPS() {
+                this.updateCPS(); // Ensure we're up to date
+                return this.state.smoothedCPS;
+            },
+
+            /**
+             * Get peak CPS for UI display
+             */
+            getPeakCPS() {
+                return this.state.peakCPS;
+            },
+
+            /**
+             * Reset CPS tracking (call on game reset or zone change)
+             */
+            reset() {
+                const now = performance.now();
+
+                // Reset peak if it's been too long since last click
+                if (now - this.state.lastResetTime > this.config.peakResetThreshold) {
+                    this.state.peakCPS = 0;
+                }
+
+                this.state.manualClicks = 0;
+                this.state.autoClicks = 0;
+                this.state.currentCPS = 0;
+                this.state.lastUpdateTime = now;
+                this.state.lastResetTime = now;
+            },
+
+            /**
+             * Force update and get debug info
+             */
+            getDebugInfo() {
+                this.updateCPS();
+                return {
+                    manualClicks: this.state.manualClicks,
+                    autoClicks: this.state.autoClicks,
+                    currentCPS: this.state.currentCPS,
+                    smoothedCPS: this.state.smoothedCPS,
+                    peakCPS: this.state.peakCPS,
+                    timeSinceLastUpdate: performance.now() - this.state.lastUpdateTime,
+                    config: this.config
+                };
+            }
+        };
+
         function animateParticles() {
             if (!ctx) return; // Wait for ctx to be set
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -3184,7 +3328,7 @@ let isTransitioning = false;
             DOMElements.actionButton.classList.add('shake');
         
             gameStateManager.addClicks(1, 'action_click');
-            gameState.clickCountThisSecond++; // Track for CPS calculation
+            CPSTracker.recordManualClick(); // Track for CPS calculation
         
             if (gameState.isBankMode) {
                 if (gameState.bankedClicks < getBankSize()) {
@@ -3281,7 +3425,7 @@ let isTransitioning = false;
             let damage = getAttackDamage();
             bossState.hp -= damage;
             showClickFeedback(`+${damage} Damage`, 'text-red-400');
-            gameState.clickCountThisSecond++; // Track for CPS calculation during boss mode
+            CPSTracker.recordManualClick(); // Track for CPS calculation during boss mode
             // Remove all shake classes
             DOMElements.actionButton.classList.remove('shake-light', 'shake-medium', 'shake-heavy', 'shake-ultra');
             void DOMElements.actionButton.offsetWidth; // Trigger reflow
@@ -3326,11 +3470,8 @@ let isTransitioning = false;
                 return;
             }
         
-            // RESET CLICK COUNTER WHEN TOGGLING BANK MODE
-            gameState.clickCountThisSecond = 0;
-            gameState.lastCPSUpdate = Date.now();
-            gameState.cps = 0;
-            gameState.smoothedCPS = 0;
+            // Reset CPS tracker when toggling bank mode
+            CPSTracker.reset();
         
             gameStateManager.setState('isBankMode', DOMElements.bankModeToggle.checked, 'toggle_bank_mode');
             if (gameState.isBankMode) {
@@ -3764,17 +3905,19 @@ let isTransitioning = false;
 
             // Update essence progress bar (always visible)
             essenceProgressContainer.classList.remove('hidden');
-            essenceCurrentText.textContent = `Peak: ${gameState.peakCPS.toFixed(1)}`;
-            essencePerSecText.textContent = gameState.cps.toFixed(1) + '/CPS';
+            essenceCurrentText.textContent = `Peak: ${CPSTracker.getPeakCPS().toFixed(1)}`;
+            essencePerSecText.textContent = CPSTracker.getSmoothedCPS().toFixed(1) + '/CPS';
 
             // Set progress bar height based on CPS
-            const heightPercent = Math.min(gameState.cps * 10, 100);
+            const currentCPS = CPSTracker.getSmoothedCPS();
+            const heightPercent = Math.min(currentCPS * 10, 100);
             essenceProgressBar.style.height = `${heightPercent}%`;
 
             // Set peak line position based on peak CPS
             const peakLine = document.getElementById('peakCPSLine');
-            if (gameState.peakCPS > 0) {
-                const peakHeightPercent = Math.min(gameState.peakCPS * 10, 100);
+            const peakCPS = CPSTracker.getPeakCPS();
+            if (peakCPS > 0) {
+                const peakHeightPercent = Math.min(peakCPS * 10, 100);
                 peakLine.style.bottom = `${peakHeightPercent}%`;
                 peakLine.style.display = 'block';
             } else {
@@ -4563,7 +4706,7 @@ let isTransitioning = false;
                     const essenceGained = getAutoClickRate();
                     gameStateManager.addEssence(essenceGained, 'auto_click');
                     gainXP(1);
-                    gameState.autoClickCountThisSecond++; // Track for CPS calculation
+                    CPSTracker.recordAutoClick(); // Track auto clicks separately (not for CPS)
                 } else {
                     gameState.isAutoClickerActive = false;
                     logMessage("Auto-clicker deactivated: insufficient banked clicks.", "system-warn");
@@ -4573,8 +4716,6 @@ let isTransitioning = false;
             gameState.lastUpdateTime = now;
             gameState.passiveIncomeRate = getPassiveIncomeRate();
 
-            // Update CPS every second
-            updateCPS();
 
             // Log accumulated passive every 10 seconds
             if (now - gameState.lastPassiveLogTime > 10000 && gameState.accumulatedPassive > 0) {
@@ -4613,36 +4754,7 @@ let isTransitioning = false;
             updateActiveEvents();
         }
 
-        function updateCPS() {
-            const now = Date.now();
-            const timeSinceLastUpdate = (now - gameState.lastCPSUpdate) / 1000;
-
-            // Only update if at least 1 second has passed
-            if (timeSinceLastUpdate >= 1.0) {
-                const totalClicksThisSecond = gameState.clickCountThisSecond; // Only manual clicks for EPS calculation
-                gameState.cps = totalClicksThisSecond / timeSinceLastUpdate;
-
-                // Update peak CPS if current CPS is higher
-                if (gameState.cps > gameState.peakCPS) {
-                    gameState.peakCPS = gameState.cps;
-                }
-        
-                // Apply exponential moving average for smoothing
-                const alpha = 0.5; // Smoothing factor (0.5 = 50% new data, 50% previous) - increased for faster response
-                gameState.smoothedCPS = gameState.smoothedCPS ? (alpha * gameState.cps) + ((1 - alpha) * gameState.smoothedCPS) : gameState.cps;
-        
-                // Reset counters
-                gameState.clickCountThisSecond = 0;
-                gameState.autoClickCountThisSecond = 0;
-                gameState.lastCPSUpdate = now;
-
-                // Update cycle time based on CPS using the formula: clamp(1 / log2(CPS + 2), 0.4, 1.2)
-                if (gameState.cps > 0) {
-                    const newCycleTime = Math.max(0.4, Math.min(1.2, 1 / Math.log2(gameState.cps + 2)));
-                    gameState.heartbeatCycleTime = newCycleTime;
-                }
-            }
-        }
+        // Legacy updateCPS function removed - now handled by CPSTracker module
 
 
         function buyClickUpgrade() {
@@ -5701,8 +5813,8 @@ let isTransitioning = false;
                   }
                   gameState.lastUpdateTime = now;
   
-                  // Reset CPS meter values on page load for fresh session
-                  gameState.peakCPS = 0;
+                  // Reset CPS tracker on page load for fresh session
+                  CPSTracker.reset();
                 // Check daily login
                 const today = new Date().toDateString();
                 if (gameState.lastLoginDate !== today) {
@@ -7217,7 +7329,11 @@ let isTransitioning = false;
 
             const recentAvgCPS = recent.reduce((sum, h) => sum + h.cps, 0) / recent.length;
             const olderAvgCPS = older.reduce((sum, h) => sum + h.cps, 0) / older.length;
-            const improvement = (recentAvgCPS - olderAvgCPS) / olderAvgCPS;
+            const currentCPS = CPSTracker.getSmoothedCPS();
+            const improvement = olderAvgCPS > 0 ? (recentAvgCPS - olderAvgCPS) / olderAvgCPS : 0;
+
+            // Factor in current performance for more responsive motivation
+            const currentImprovement = currentCPS > recentAvgCPS ? (currentCPS - recentAvgCPS) / Math.max(recentAvgCPS, 1) : 0;
 
             if (improvement > 0.2) return 'Excellent Progress!';
             if (improvement > 0.1) return 'Good Improvement';
@@ -7255,9 +7371,14 @@ let isTransitioning = false;
 
             const recentAvg = recent.reduce((sum, h) => sum + h.cps, 0) / recent.length;
             const olderAvg = older.reduce((sum, h) => sum + h.cps, 0) / older.length;
+            const currentCPS = CPSTracker.getSmoothedCPS();
 
-            if (recentAvg > olderAvg * 1.1) return '↗️ Improving';
-            if (recentAvg < olderAvg * 0.9) return '↘️ Declining';
+            // Include current CPS in trend calculation for more responsive feedback
+            const recentWithCurrent = [...recent, { cps: currentCPS }];
+            const recentAvgWithCurrent = recentWithCurrent.reduce((sum, h) => sum + h.cps, 0) / recentWithCurrent.length;
+
+            if (recentAvgWithCurrent > olderAvg * 1.1) return '↗️ Improving';
+            if (recentAvgWithCurrent < olderAvg * 0.9) return '↘️ Declining';
             return '➡️ Stable';
         }
 
@@ -7417,8 +7538,8 @@ let isTransitioning = false;
             }
 
             // Session stats
-            const bestCPS = Math.max(...history.map(h => h.cps));
-            const avgCPS = history.reduce((sum, h) => sum + h.cps, 0) / history.length;
+            const bestCPS = Math.max(...history.map(h => h.cps), CPSTracker.getPeakCPS());
+            const avgCPS = history.length > 0 ? history.reduce((sum, h) => sum + h.cps, 0) / history.length : CPSTracker.getSmoothedCPS();
             const avgBPS = history.reduce((sum, h) => sum + (h.bps || 0), 0) / history.length;
             const avgEPS = history.reduce((sum, h) => sum + h.eps, 0) / history.length;
             const sessionTime = Math.floor((Date.now() - history[0].timestamp) / 1000);
@@ -7865,8 +7986,13 @@ let isTransitioning = false;
             updateUI();
             setCursor();
 
-            // Initialize the essence ruler
-            EssenceRuler.init();
+            // Initialize the essence ruler (delay to ensure DOM is ready)
+            setTimeout(() => {
+                EssenceRuler.init();
+            }, 100);
+
+            // Initialize CPS tracker
+            CPSTracker.init();
 
             // Initialize mini chart
             initializeMiniChart();
