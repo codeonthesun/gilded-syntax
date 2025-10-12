@@ -1606,14 +1606,14 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 40px;
+            height: 60px;
             background: linear-gradient(90deg, #1f2937 0%, #2d3748 50%, #1f2937 100%);
-            border-top: 1px solid #374151;
+            border-top: 2px solid #374151;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
             transition: position 0.3s ease-in-out;
             z-index: 100; /* Lower z-index to allow modals to appear above */
         }
@@ -1633,24 +1633,37 @@
 
         .ruler-title {
             font-family: 'Cinzel', serif;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 1.2px;
             position: relative;
             flex: 1;
             text-align: left;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .ruler-total-essence {
             font-family: 'Inter', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #22d3ee;
+            text-shadow:
+                1px 1px 2px rgba(0, 0, 0, 0.8),
+                0 0 8px rgba(34, 211, 238, 0.5);
             position: relative;
-            min-width: 120px;
+            min-width: 140px;
             text-align: right;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(26, 32, 44, 0.3) 100%);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            box-shadow:
+                inset 0 1px 2px rgba(255, 255, 255, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .ruler-line {
@@ -1658,9 +1671,11 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 1px;
+            height: 2px;
             background: linear-gradient(90deg, #4b5563 0%, #6b7280 20%, #9ca3af 50%, #6b7280 80%, #4b5563 100%);
-            box-shadow: 0 0 2px rgba(107, 114, 128, 0.3);
+            box-shadow:
+                0 0 4px rgba(107, 114, 128, 0.5),
+                inset 0 1px 2px rgba(255, 255, 255, 0.1);
         }
 
         .ruler-tick {
@@ -1679,19 +1694,23 @@
 
         .ruler-value {
             position: absolute;
-            top: -22px;
+            top: -28px;
             transform: translateX(-50%);
-            background: rgba(34, 211, 238, 0.9);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.95) 0%, rgba(56, 189, 248, 0.9) 100%);
             color: #0f172a;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            border: 1px solid rgba(34, 211, 238, 0.8);
-            box-shadow: 0 0 6px rgba(34, 211, 238, 0.6), 0 0 12px rgba(34, 211, 238, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 2px solid rgba(34, 211, 238, 0.9);
+            box-shadow:
+                0 0 10px rgba(34, 211, 238, 0.8),
+                0 0 20px rgba(34, 211, 238, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
             white-space: nowrap;
             z-index: 10;
-            transition: left 0.3s ease-out, opacity 0.2s ease;
+            transition: all 0.3s ease-out;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .ruler-value::after {
@@ -1710,31 +1729,54 @@
         /* Mini Chart Styles */
         .mini-chart-container {
             position: relative;
-            display: inline-block;
-            vertical-align: middle;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            max-width: 320px;
+            margin: 0 16px;
+        }
+
+        @media (max-width: 768px) {
+            .mini-chart-container {
+                max-width: 240px;
+                margin: 0 8px;
+            }
+
+            .mini-chart-canvas {
+                width: 240px !important;
+                height: 36px !important;
+            }
         }
 
         .mini-chart-canvas {
-            border-radius: 4px;
-            background: transparent;
-            border: 1px solid rgba(34, 211, 238, 0.3);
+            border-radius: 6px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(26, 32, 44, 0.6) 100%);
+            border: 2px solid rgba(34, 211, 238, 0.4);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             display: block;
             position: relative !important;
             top: auto !important;
             left: auto !important;
-            width: auto !important;
-            height: auto !important;
+            width: 300px !important;
+            height: 45px !important;
             pointer-events: auto !important;
             z-index: 1 !important;
+            box-shadow:
+                inset 0 1px 2px rgba(255, 255, 255, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                0 0 12px rgba(34, 211, 238, 0.2);
         }
 
         .mini-chart-canvas:hover {
-            border-color: rgba(34, 211, 238, 0.8);
-            transform: scale(1.02);
-            box-shadow: 0 0 12px rgba(34, 211, 238, 0.5), 0 0 24px rgba(34, 211, 238, 0.2);
-            filter: brightness(1.1);
+            border-color: rgba(34, 211, 238, 0.9);
+            box-shadow:
+                inset 0 1px 3px rgba(255, 255, 255, 0.2),
+                0 4px 16px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(34, 211, 238, 0.6),
+                0 0 40px rgba(34, 211, 238, 0.3);
+            filter: brightness(1.15) saturate(1.2);
         }
 
         .mini-chart-container.stats-open .mini-chart-canvas {
@@ -2070,8 +2112,8 @@
                     <div class="ruler-title">
                         Essence Per Second
                         <!-- Mini Chart Preview -->
-                        <div id="miniChartContainer" class="mini-chart-container" style="display: inline-block; margin-left: 12px; cursor: pointer; position: relative;" data-tooltip="Click to view full Performance Analytics">
-                            <canvas id="miniChartCanvas" width="140" height="32" class="mini-chart-canvas" style="width: 140px; height: 32px;"></canvas>
+                        <div id="miniChartContainer" class="mini-chart-container" style="display: inline-block; margin: 0 auto; cursor: pointer; position: relative; flex: 1; display: flex; justify-content: center; align-items: center;" data-tooltip="Click to view full Performance Analytics">
+                            <canvas id="miniChartCanvas" width="300" height="45" class="mini-chart-canvas" style="width: 300px; height: 45px;"></canvas>
                         </div>
                     </div>
                     <div class="ruler-total-essence"><span id="rulerTotalEssence">0</span></div>
@@ -7594,6 +7636,119 @@ let isTransitioning = false;
             drawMiniChart();
         }
 
+        // Validate and clean chart data to prevent visual inconsistencies
+        function validateChartData(history) {
+            return history.filter(point => {
+                // Remove invalid data points
+                return point &&
+                       typeof point.cps === 'number' && isFinite(point.cps) && point.cps >= 0 &&
+                       typeof point.eps === 'number' && isFinite(point.eps) && point.eps >= 0 &&
+                       (point.bps === undefined || (typeof point.bps === 'number' && isFinite(point.bps) && point.bps >= 0)) &&
+                       point.timestamp && typeof point.timestamp === 'number';
+            });
+        }
+
+        // Draw mini chart grid (scaled down version of full chart grid)
+        function drawMiniChartGrid(ctx, width, height) {
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.1)';
+            ctx.lineWidth = 1;
+
+            // Vertical grid lines (time divisions) - fewer lines for mini chart
+            const timeDivisions = 3; // Reduced from 5 for mini chart
+            for (let i = 0; i <= timeDivisions; i++) {
+                const x = (i / timeDivisions) * width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+
+            // Horizontal grid lines (value divisions) - fewer lines for mini chart
+            const valueDivisions = 2; // Reduced from 4 for mini chart
+            for (let i = 0; i <= valueDivisions; i++) {
+                const y = (i / valueDivisions) * height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Detect overlapping lines for better visual handling
+        function detectLineOverlaps(cpsPoints, epsPoints, bpsPoints) {
+            const overlapInfo = { cps: [], eps: [], bps: [] };
+            const tolerance = 3; // pixels tolerance for overlap detection
+
+            // Check each point for overlaps with other lines
+            cpsPoints.forEach((cpsPoint, i) => {
+                const epsPoint = epsPoints[i];
+                const bpsPoint = bpsPoints[i];
+
+                if (epsPoint && Math.abs(cpsPoint.y - epsPoint.y) <= tolerance) {
+                    overlapInfo.cps.push({ index: i, type: 'cps-eps', severity: 'major' });
+                    overlapInfo.eps.push({ index: i, type: 'cps-eps', severity: 'major' });
+                }
+
+                if (bpsPoint && Math.abs(cpsPoint.y - bpsPoint.y) <= tolerance) {
+                    overlapInfo.cps.push({ index: i, type: 'cps-bps', severity: 'major' });
+                    overlapInfo.bps.push({ index: i, type: 'cps-bps', severity: 'major' });
+                }
+
+                if (epsPoint && bpsPoint && Math.abs(epsPoint.y - bpsPoint.y) <= tolerance) {
+                    overlapInfo.eps.push({ index: i, type: 'eps-bps', severity: 'minor' });
+                    overlapInfo.bps.push({ index: i, type: 'eps-bps', severity: 'minor' });
+                }
+            });
+
+            return overlapInfo;
+        }
+
+        // Enhanced line drawing with overlap handling
+        function drawSmoothLineWithOverlap(ctx, points, baseColor, glowColor, overlapInfo) {
+            if (points.length < 2) return;
+
+            // Draw glow effect first (for better overlap handling)
+            ctx.strokeStyle = glowColor;
+            ctx.lineWidth = 4;
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = 3;
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+
+            // Draw main line with overlap-aware styling
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = 1;
+
+            // Check for overlaps and adjust styling
+            const hasOverlaps = overlapInfo.length > 0;
+
+            if (hasOverlaps) {
+                // Use dashed line style for overlapping sections
+                ctx.setLineDash([5, 3]);
+                ctx.lineWidth = 2.5; // Slightly thicker for visibility
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+
+            // Reset line dash
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+        }
+
         function drawMiniChart() {
             const canvas = DOMElements.miniChartCanvas;
             if (!canvas || !canvas.chartContext) return;
@@ -7607,9 +7762,16 @@ let isTransitioning = false;
             // Clear canvas with transparent background
             ctx.clearRect(0, 0, width, height);
 
-            // Draw subtle background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            // Draw background that matches the ruler color scheme
+            const gradient = ctx.createLinearGradient(0, 0, width, 0);
+            gradient.addColorStop(0, '#1f2937');
+            gradient.addColorStop(0.5, '#2d3748');
+            gradient.addColorStop(1, '#1f2937');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
+
+            // Draw background grid (matching full chart style)
+            drawMiniChartGrid(ctx, width, height);
 
             // Draw border
             ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
@@ -7630,15 +7792,17 @@ let isTransitioning = false;
         }
 
         function drawMiniChartData(ctx, history, width, height) {
-            // Use recent data for mini chart (last 15 points for better fit)
-            const recentHistory = history.slice(-15);
+            if (history.length === 0) return;
 
-            if (recentHistory.length === 0) return;
+            // Validate and clean history data to prevent inconsistencies
+            const cleanHistory = validateChartData(history);
+            if (cleanHistory.length === 0) return;
 
-            // Find max values for scaling
-            const maxCPS = Math.max(...recentHistory.map(h => h.cps));
-            const maxEPS = Math.max(...recentHistory.map(h => h.eps));
-            const maxBPS = Math.max(...recentHistory.map(h => h.bps || 0));
+            // Use same data approach as full chart for consistency
+            // Find max values for scaling (same as full chart)
+            const maxCPS = Math.max(...cleanHistory.map(h => h.cps));
+            const maxEPS = Math.max(...cleanHistory.map(h => h.eps));
+            const maxBPS = Math.max(...cleanHistory.map(h => h.bps || 0));
             const overallMax = Math.max(maxCPS, maxEPS, maxBPS);
 
             if (overallMax === 0) {
@@ -7660,16 +7824,14 @@ let isTransitioning = false;
             const chartX = 2;
             const chartY = 2;
 
-            // Helper function to draw smooth gradient line
-            function drawGradientLine(points, color1, color2, glowColor) {
+            // Ensure points are within chart bounds
+            const clampY = (y) => Math.max(chartY, Math.min(chartY + chartHeight, y));
+
+            // Helper function to draw smooth line (consistent with full chart approach)
+            function drawSmoothLine(points, baseColor, glowColor) {
                 if (points.length < 2) return;
 
-                // Create gradient
-                const gradient = ctx.createLinearGradient(0, 0, width, 0);
-                gradient.addColorStop(0, color1);
-                gradient.addColorStop(1, color2);
-
-                // Draw glow first
+                // Draw glow effect first (for better overlap handling)
                 ctx.strokeStyle = glowColor;
                 ctx.lineWidth = 4;
                 ctx.shadowColor = glowColor;
@@ -7684,8 +7846,8 @@ let isTransitioning = false;
                 ctx.shadowBlur = 0;
                 ctx.globalAlpha = 1;
 
-                // Draw main line
-                ctx.strokeStyle = gradient;
+                // Draw main line with consistent styling
+                ctx.strokeStyle = baseColor;
                 ctx.lineWidth = 2;
                 ctx.shadowColor = glowColor;
                 ctx.shadowBlur = 1;
@@ -7698,81 +7860,88 @@ let isTransitioning = false;
                 ctx.shadowBlur = 0;
             }
 
-            // Prepare data points
+            // Prepare data points with overlap detection
             const cpsPoints = [];
             const epsPoints = [];
             const bpsPoints = [];
 
-            recentHistory.forEach((point, index) => {
-                const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
+            cleanHistory.forEach((point, index) => {
+                const x = chartX + (index / Math.max(cleanHistory.length - 1, 1)) * chartWidth;
                 const cpsY = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
                 const epsY = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
                 const bpsY = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
 
-                cpsPoints.push({ x, y: cpsY });
-                epsPoints.push({ x, y: epsY });
-                bpsPoints.push({ x, y: bpsY });
+                cpsPoints.push({ x, y: clampY(cpsY), dataIndex: index });
+                epsPoints.push({ x, y: clampY(epsY), dataIndex: index });
+                bpsPoints.push({ x, y: clampY(bpsY), dataIndex: index });
             });
 
-            // Draw CPS line (cyan gradient)
+            // Detect and handle overlapping lines
+            const overlapInfo = detectLineOverlaps(cpsPoints, epsPoints, bpsPoints);
+
+            // Draw lines with overlap handling
+            // Draw CPS line (cyan - consistent with full chart)
             if (gameState.performanceChartVisibility.cps && cpsPoints.length > 1) {
-                drawGradientLine(cpsPoints, '#22d3ee', '#67e8f9', 'rgba(34, 211, 238, 0.6)');
+                drawSmoothLineWithOverlap(ctx, cpsPoints, '#22d3ee', 'rgba(34, 211, 238, 0.6)', overlapInfo.cps);
             }
 
-            // Draw EPS line (green gradient)
+            // Draw EPS line (green - consistent with full chart)
             if (gameState.performanceChartVisibility.eps && epsPoints.length > 1) {
-                drawGradientLine(epsPoints, '#10b981', '#34d399', 'rgba(16, 185, 129, 0.6)');
+                drawSmoothLineWithOverlap(ctx, epsPoints, '#10b981', 'rgba(16, 185, 129, 0.6)', overlapInfo.eps);
             }
 
-            // Draw BPS line (white gradient)
+            // Draw BPS line (white - consistent with full chart)
             if (gameState.performanceChartVisibility.bps && bpsPoints.length > 1) {
-                drawGradientLine(bpsPoints, '#ffffff', '#f3f4f6', 'rgba(255, 255, 255, 0.6)');
+                drawSmoothLineWithOverlap(ctx, bpsPoints, '#ffffff', 'rgba(255, 255, 255, 0.6)', overlapInfo.bps);
             }
 
-            // Draw enhanced data points (only show last few points for clarity)
-            const pointsToShow = Math.min(recentHistory.length, 8);
-            const startIndex = recentHistory.length - pointsToShow;
+            // Draw enhanced data points (consistent with full chart approach)
+            // Show points for better visual feedback, but limit for performance
+            const pointsToShow = Math.min(cleanHistory.length, 12);
+            const startIndex = Math.max(0, cleanHistory.length - pointsToShow);
 
-            for (let i = startIndex; i < recentHistory.length; i++) {
-                const point = recentHistory[i];
+            for (let i = startIndex; i < cleanHistory.length; i++) {
                 const index = i - startIndex;
                 const x = chartX + (index / Math.max(pointsToShow - 1, 1)) * chartWidth;
-                const cpsY = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
-                const epsY = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
-                const bpsY = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
 
-                // Enhanced points with glow
+                // Use the pre-calculated clamped points from the arrays
+                const cpsPoint = cpsPoints[i];
+                const epsPoint = epsPoints[i];
+                const bpsPoint = bpsPoints[i];
+
+                // Draw points with consistent styling (matching full chart)
                 // CPS point (cyan)
-                if (gameState.performanceChartVisibility.cps) {
+                if (gameState.performanceChartVisibility.cps && cpsPoint) {
                     ctx.shadowColor = '#22d3ee';
                     ctx.shadowBlur = 2;
                     ctx.fillStyle = '#22d3ee';
                     ctx.beginPath();
-                    ctx.arc(x, cpsY, 1.5, 0, Math.PI * 2);
+                    ctx.arc(cpsPoint.x, cpsPoint.y, 1.5, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
 
                 // EPS point (green)
-                if (gameState.performanceChartVisibility.eps) {
+                if (gameState.performanceChartVisibility.eps && epsPoint) {
                     ctx.shadowColor = '#10b981';
                     ctx.shadowBlur = 2;
                     ctx.fillStyle = '#10b981';
                     ctx.beginPath();
-                    ctx.arc(x, epsY, 1.5, 0, Math.PI * 2);
+                    ctx.arc(epsPoint.x, epsPoint.y, 1.5, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
 
                 // BPS point (white)
-                if (gameState.performanceChartVisibility.bps) {
+                if (gameState.performanceChartVisibility.bps && bpsPoint) {
                     ctx.shadowColor = '#ffffff';
                     ctx.shadowBlur = 2;
                     ctx.fillStyle = '#ffffff';
                     ctx.beginPath();
-                    ctx.arc(x, bpsY, 1.5, 0, Math.PI * 2);
+                    ctx.arc(bpsPoint.x, bpsPoint.y, 1.5, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
-
-                ctx.shadowBlur = 0;
             }
         }
 
