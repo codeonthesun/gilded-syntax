@@ -7522,8 +7522,26 @@ let isTransitioning = false;
                 </div>
             `;
 
-            tooltip.style.left = `${mouseX + 15}px`;
-            tooltip.style.top = `${mouseY - 15}px`;
+            // Position tooltip with collision detection
+            const tooltipWidth = 250; // Approximate tooltip width
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+
+            let leftPos = mouseX + 15;
+            let topPos = mouseY - 15;
+
+            // If tooltip would go off the right edge, position it to the left of cursor
+            if (leftPos + tooltipWidth > screenWidth) {
+                leftPos = mouseX - tooltipWidth - 15;
+            }
+
+            // If tooltip would go off the bottom edge, position it above cursor
+            if (topPos + 150 > screenHeight) { // Approximate tooltip height
+                topPos = mouseY - 150 - 15;
+            }
+
+            tooltip.style.left = `${leftPos}px`;
+            tooltip.style.top = `${topPos}px`;
             tooltip.classList.add('visible');
         }
 
@@ -8013,8 +8031,8 @@ let isTransitioning = false;
                 </div>
             `;
 
-            tooltip.style.left = `${mouseX + 10}px`;
-            tooltip.style.top = `${mouseY - 10}px`;
+            tooltip.style.left = `${mouseX + 35}px`;
+            tooltip.style.top = `${mouseY + 5}px`;
             tooltip.classList.add('visible');
         }
 
