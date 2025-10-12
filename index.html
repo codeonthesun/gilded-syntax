@@ -1609,6 +1609,7 @@
             height: 60px;
             background: linear-gradient(90deg, #1f2937 0%, #2d3748 50%, #1f2937 100%);
             border-top: 2px solid #374151;
+            border-radius: 0 0 8px 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1668,7 +1669,7 @@
 
         .ruler-line {
             position: absolute;
-            top: 0;
+            top: -2px;
             left: 0;
             right: 0;
             height: 2px;
@@ -1694,7 +1695,7 @@
 
         .ruler-value {
             position: absolute;
-            top: -28px;
+            top: -40px;
             transform: translateX(-50%);
             background: linear-gradient(135deg, rgba(34, 211, 238, 0.95) 0%, rgba(56, 189, 248, 0.9) 100%);
             color: #0f172a;
@@ -3168,15 +3169,14 @@ let isTransitioning = false;
         const CPSTracker = {
             // Configuration
             config: {
-                smoothingAlpha: 0.3, // Lower = more smoothing, higher = more responsive
-                minUpdateInterval: 100, // Minimum ms between updates for performance
-                maxUpdateInterval: 1000, // Maximum ms between updates to prevent stale data
-                peakResetThreshold: 5000 // Reset peak if no clicks for 5 seconds
+                smoothingAlpha: 0.15, // Lower = more smoothing for stable UI display
+                minUpdateInterval: 250, // Less frequent updates for UI stability
+                maxUpdateInterval: 1000  // Maximum ms between updates to prevent stale data
             },
 
             // State
             state: {
-                manualClicks: 0,
+                clickTimestamps: [], // Track individual click timestamps for accurate CPS calculation
                 autoClicks: 0,
                 lastUpdateTime: 0,
                 lastResetTime: 0,
@@ -3190,8 +3190,9 @@ let isTransitioning = false;
              * Initialize the CPS tracker
              */
             init() {
-                this.state.lastUpdateTime = performance.now();
-                this.state.lastResetTime = performance.now();
+                const now = performance.now();
+                this.state.lastUpdateTime = now;
+                this.state.lastResetTime = now;
                 this.reset();
                 console.log('[CPSTracker] Initialized');
             },
@@ -3200,9 +3201,11 @@ let isTransitioning = false;
              * Record a manual click
              */
             recordManualClick() {
-                this.state.manualClicks++;
-                this.state.lastResetTime = performance.now();
-                this.updateCPS();
+                const now = performance.now();
+                this.state.clickTimestamps.push(now);
+                this.state.lastResetTime = now;
+                // Keep only clicks from the last 2 seconds to prevent memory buildup
+                this.state.clickTimestamps = this.state.clickTimestamps.filter(timestamp => now - timestamp <= 2000);
             },
 
             /**
@@ -3213,41 +3216,41 @@ let isTransitioning = false;
             },
 
             /**
-             * Update CPS calculations with precise timing
+             * Update CPS calculations using rolling window approach
              */
             updateCPS() {
                 const now = performance.now();
-                const timeDelta = now - this.state.lastUpdateTime;
-
-                // Throttle updates for performance
-                if (timeDelta < this.config.minUpdateInterval) {
-                    return;
-                }
-
-                // Calculate current CPS if we have time delta
-                if (timeDelta > 0) {
-                    const instantCPS = (this.state.manualClicks * 1000) / timeDelta;
-
-                    // Update peak CPS
+        
+                // Calculate CPS using rolling window of last 1 second
+                const oneSecondAgo = now - 1000;
+                const recentClicks = this.state.clickTimestamps.filter(timestamp => timestamp > oneSecondAgo);
+        
+                if (recentClicks.length > 0) {
+                    // Calculate instant CPS: clicks in last second
+                    const instantCPS = recentClicks.length;
+        
+                    // Update peak CPS (only if higher than current peak)
                     if (instantCPS > this.state.peakCPS) {
                         this.state.peakCPS = instantCPS;
                     }
-
-                    // Apply exponential smoothing
+        
+                    // Apply exponential smoothing for display stability
                     if (this.state.smoothedCPS === 0) {
                         this.state.smoothedCPS = instantCPS;
                     } else {
                         this.state.smoothedCPS = (this.config.smoothingAlpha * instantCPS) +
                                                ((1 - this.config.smoothingAlpha) * this.state.smoothedCPS);
                     }
-
+        
                     this.state.currentCPS = instantCPS;
+                } else {
+                    // No clicks in last second - naturally decay to 0
+                    this.state.currentCPS = 0;
+                    this.state.smoothedCPS = 0;
                 }
-
-                // Reset counters for next interval
-                this.state.manualClicks = 0;
-                this.state.autoClicks = 0;
-                this.state.lastUpdateTime = now;
+        
+                // Clean up old timestamps (keep last 2 seconds to be safe)
+                this.state.clickTimestamps = this.state.clickTimestamps.filter(timestamp => now - timestamp <= 2000);
             },
 
             /**
@@ -3266,7 +3269,8 @@ let isTransitioning = false;
              * Get only the smoothed CPS for UI display
              */
             getSmoothedCPS() {
-                this.updateCPS(); // Ensure we're up to date
+                // Update calculations with current timestamp data
+                this.updateCPS();
                 return this.state.smoothedCPS;
             },
 
@@ -3282,15 +3286,13 @@ let isTransitioning = false;
              */
             reset() {
                 const now = performance.now();
-
-                // Reset peak if it's been too long since last click
-                if (now - this.state.lastResetTime > this.config.peakResetThreshold) {
-                    this.state.peakCPS = 0;
-                }
-
-                this.state.manualClicks = 0;
-                this.state.autoClicks = 0;
+        
+                // Always reset peak CPS when explicitly resetting
+                this.state.peakCPS = 0;
+                this.state.smoothedCPS = 0;
                 this.state.currentCPS = 0;
+                this.state.clickTimestamps = [];
+                this.state.autoClicks = 0;
                 this.state.lastUpdateTime = now;
                 this.state.lastResetTime = now;
             },
@@ -3300,13 +3302,19 @@ let isTransitioning = false;
              */
             getDebugInfo() {
                 this.updateCPS();
+                const now = performance.now();
+                const oneSecondAgo = now - 1000;
+                const recentClicks = this.state.clickTimestamps.filter(timestamp => timestamp > oneSecondAgo);
+        
                 return {
-                    manualClicks: this.state.manualClicks,
+                    clickTimestamps: this.state.clickTimestamps.length,
+                    recentClicks: recentClicks.length,
                     autoClicks: this.state.autoClicks,
                     currentCPS: this.state.currentCPS,
                     smoothedCPS: this.state.smoothedCPS,
                     peakCPS: this.state.peakCPS,
-                    timeSinceLastUpdate: performance.now() - this.state.lastUpdateTime,
+                    timeSinceLastUpdate: now - this.state.lastUpdateTime,
+                    timeSinceLastClick: now - this.state.lastResetTime,
                     config: this.config
                 };
             }
