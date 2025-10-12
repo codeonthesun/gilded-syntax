@@ -1615,7 +1615,7 @@
             padding: 0 20px;
             box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.2);
             transition: position 0.3s ease-in-out;
-            z-index: 1000;
+            z-index: 100; /* Lower z-index to allow modals to appear above */
         }
 
         .essence-ruler.fixed {
@@ -1623,6 +1623,7 @@
             bottom: 0;
             left: 0;
             right: 0;
+            z-index: 100; /* Lower z-index for fixed position too */
         }
 
         .essence-ruler.hidden {
@@ -1680,16 +1681,17 @@
             position: absolute;
             top: -22px;
             transform: translateX(-50%);
-            background: rgba(34, 211, 238, 0.8);
+            background: rgba(34, 211, 238, 0.9);
             color: #0f172a;
             padding: 2px 6px;
             border-radius: 3px;
             font-size: 0.7rem;
             font-weight: 600;
-            border: 1px solid rgba(34, 211, 238, 0.6);
-            box-shadow: 0 0 4px rgba(34, 211, 238, 0.4);
+            border: 1px solid rgba(34, 211, 238, 0.8);
+            box-shadow: 0 0 6px rgba(34, 211, 238, 0.6), 0 0 12px rgba(34, 211, 238, 0.3);
             white-space: nowrap;
             z-index: 10;
+            transition: left 0.3s ease-out, opacity 0.2s ease;
         }
 
         .ruler-value::after {
@@ -1729,9 +1731,10 @@
         }
 
         .mini-chart-canvas:hover {
-            border-color: rgba(34, 211, 238, 0.6);
+            border-color: rgba(34, 211, 238, 0.8);
             transform: scale(1.02);
-            box-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.5), 0 0 24px rgba(34, 211, 238, 0.2);
+            filter: brightness(1.1);
         }
 
         .mini-chart-container.stats-open .mini-chart-canvas {
@@ -2236,7 +2239,7 @@
     </div>
 
     <!-- Title Selection Modal -->
-    <div id="titleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="titleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[2000] hidden">
         <div class="ui-bg rounded-lg p-4 shadow-lg border border-gray-700 max-w-md w-full mx-4">
             <h3 class="font-cinzel text-xl font-bold text-gray-300 mb-4">Choose Your Title</h3>
             <div id="titleList" class="space-y-2 max-h-64 overflow-y-auto">
@@ -6065,185 +6068,597 @@ let isTransitioning = false;
             updateUI(); // Update button state
         }
 
-        // Ruler Functions and Scroll Behavior
-        let rulerOriginalPosition = null;
-        let isRulerFixed = false;
-        let isInitializing = true; // Flag to prevent scroll handler during initialization
+        // === ESSENCE RULER SYSTEM ===
+        // Clean, organized implementation of the Essence Per Second ruler
 
-        function initializeRuler() {
-            const ruler = DOMElements.essenceRuler;
-            if (!ruler) return;
+        const EssenceRuler = {
+            // Configuration constants
+            CONFIG: {
+                TICK_SPACING: 30,
+                TICK_START_OFFSET: 20,
+                CONTAINER_PADDING: 40,
+                UPDATE_INTERVAL: 150,
+                SCROLL_DEBOUNCE: 16, // ~60fps
+                MAX_TICKS: 50
+            },
 
-            // Store the original position for restoration
-            rulerOriginalPosition = ruler.offsetTop;
+            // State management
+            state: {
+                initialized: false,
+                originalPosition: null,
+                currentPosition: 'default', // 'default', 'fixed', 'hidden'
+                isFixed: false,
+                lastScrollTop: 0,
+                scrollTicking: false,
+                ticksGenerated: false,
+                modalObserver: null
+            },
 
-            const rulerWidth = ruler.offsetWidth - 40; // Account for padding
-            const numTicks = Math.floor(rulerWidth / 30); // One tick every 30px
+            // DOM elements cache
+            elements: {
+                ruler: null,
+                rulerValue: null,
+                rulerTotal: null,
+                miniChart: null,
+                performanceContainer: null
+            },
 
-            // Clear existing ticks
-            const existingTicks = ruler.querySelectorAll('.ruler-tick');
-            existingTicks.forEach(tick => tick.remove());
-
-            // Create ticks
-            for (let i = 0; i <= numTicks; i++) {
-                const tick = document.createElement('div');
-                tick.className = 'ruler-tick';
-                if (i % 5 === 0) {
-                    tick.className += ' major';
+            /**
+             * Initialize the Essence Ruler system
+             */
+            init() {
+                try {
+                    this.validateEnvironment();
+                    this.cacheElements();
+                    this.setupEventListeners();
+                    this.generateTicks();
+                    this.adjustZIndexForModals(); // Ensure proper initial layering
+                    this.state.initialized = true;
+                    console.log('[EssenceRuler] Initialized successfully');
+                } catch (error) {
+                    console.error('[EssenceRuler] Initialization failed:', error);
+                    this.handleInitializationError(error);
                 }
-                tick.style.left = `${20 + (i * 30)}px`; // Start at 20px from left edge
-                ruler.appendChild(tick);
-            }
+            },
 
-            // Always reset to default position on page load
-            ruler.classList.remove('fixed', 'hidden');
-            isRulerFixed = false;
-            gameState.rulerPosition = 'default';
+            /**
+             * Validate environment before initialization
+             */
+            validateEnvironment() {
+                if (typeof DOMElements === 'undefined') {
+                    throw new Error('DOMElements not available');
+                }
+                if (typeof gameState === 'undefined') {
+                    throw new Error('Game state not available');
+                }
+                if (typeof getEffectivePassiveIncomeRate !== 'function') {
+                    throw new Error('Required game functions not available');
+                }
+            },
 
-            // Initialize scroll behavior
-            window.addEventListener('scroll', handleRulerScroll);
-            // Don't call handleRulerScroll() during initialization to prevent override
-        }
+            /**
+             * Handle initialization errors gracefully
+             */
+            handleInitializationError(error) {
+                console.error('[EssenceRuler] Initialization error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    timestamp: new Date().toISOString()
+                });
 
-        function handleRulerScroll() {
-            // Don't run during initialization to prevent overriding the reset
-            if (isInitializing) return;
+                // Attempt to initialize later if it's a timing issue
+                if (error.message.includes('not available')) {
+                    setTimeout(() => {
+                        console.log('[EssenceRuler] Retrying initialization...');
+                        this.init();
+                    }, 1000);
+                }
+            },
 
-            const ruler = DOMElements.essenceRuler;
-            if (!ruler || rulerOriginalPosition === null) return;
+            /**
+             * Cache DOM elements for better performance
+             */
+            cacheElements() {
+                try {
+                    this.elements.ruler = DOMElements.essenceRuler;
+                    this.elements.rulerValue = DOMElements.rulerValue;
+                    this.elements.rulerTotal = DOMElements.rulerTotalEssence;
+                    this.elements.miniChart = DOMElements.miniChartContainer;
+                    this.elements.performanceContainer = document.getElementById('performanceContainer');
 
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const windowHeight = window.innerHeight;
-            const documentHeight = document.documentElement.scrollHeight;
-            const rulerHeight = ruler.offsetHeight;
+                    // Validate required elements
+                    if (!this.elements.ruler) {
+                        throw new Error('Ruler element not found');
+                    }
+                    if (!this.elements.rulerValue) {
+                        throw new Error('Ruler value element not found');
+                    }
+                    if (!this.elements.rulerTotal) {
+                        throw new Error('Ruler total element not found');
+                    }
 
-            // Get the current position of the ruler (it might be moving with content)
-            const actionArea = document.getElementById('actionArea');
-            const actionAreaRect = actionArea.getBoundingClientRect();
-            const actionAreaBottom = actionAreaRect.bottom + scrollTop;
+                    console.log('[EssenceRuler] DOM elements cached successfully');
+                } catch (error) {
+                    console.error('[EssenceRuler] Failed to cache elements:', error);
+                    throw error;
+                }
+            },
 
-            // Calculate the ruler's current position relative to the document
-            const rulerCurrentTop = actionAreaBottom - rulerHeight;
-            const rulerCurrentBottom = actionAreaBottom;
+            /**
+             * Setup event listeners with proper cleanup
+             */
+            setupEventListeners() {
+                window.addEventListener('scroll', this.handleScroll.bind(this), { passive: true });
+                window.addEventListener('resize', this.handleResize.bind(this));
 
-            // Check if ruler is visible in viewport
-            const isRulerVisible = rulerCurrentBottom > scrollTop && rulerCurrentTop < (scrollTop + windowHeight);
+                // Listen for modal open/close events
+                this.setupModalListeners();
+            },
 
-            if (!isRulerVisible && scrollTop + windowHeight >= rulerCurrentTop) {
-                // Ruler is not visible but we've scrolled to where it should be - make it fixed
-                if (!isRulerFixed) {
-                    ruler.classList.add('fixed');
-                    ruler.classList.remove('hidden');
-                    isRulerFixed = true;
-                    gameState.rulerPosition = 'fixed';
-                    // Reposition performance container if it's extended
-                    if (gameState.performanceContainerExtended) {
-                        const container = document.getElementById('performanceContainer');
-                        if (container) {
-                            container.style.transition = 'all 0.3s ease-out';
-                            positionPerformanceContainer();
-                            setTimeout(() => container.style.transition = '', 300);
+            /**
+             * Setup listeners for modal visibility changes
+             */
+            setupModalListeners() {
+                // Listen for title modal show/hide
+                const titleModal = document.getElementById('titleModal');
+                if (titleModal) {
+                    // Use MutationObserver to watch for class changes
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                                this.adjustZIndexForModals();
+                            }
+                        });
+                    });
+
+                    observer.observe(titleModal, {
+                        attributes: true,
+                        attributeFilter: ['class']
+                    });
+
+                    // Store observer for cleanup
+                    this.modalObserver = observer;
+                }
+            },
+
+            /**
+             * Generate ruler tick marks
+             */
+            generateTicks() {
+                if (this.state.ticksGenerated || !this.elements.ruler) return;
+
+                const rulerWidth = this.elements.ruler.offsetWidth - this.CONFIG.CONTAINER_PADDING;
+                const numTicks = Math.min(
+                    Math.floor(rulerWidth / this.CONFIG.TICK_SPACING),
+                    this.CONFIG.MAX_TICKS
+                );
+
+                // Clear existing ticks
+                const existingTicks = this.elements.ruler.querySelectorAll('.ruler-tick');
+                existingTicks.forEach(tick => tick.remove());
+
+                // Generate new ticks
+                for (let i = 0; i <= numTicks; i++) {
+                    const tick = document.createElement('div');
+                    tick.className = 'ruler-tick';
+                    if (i % 5 === 0) {
+                        tick.className += ' major';
+                    }
+                    tick.style.left = `${this.CONFIG.TICK_START_OFFSET + (i * this.CONFIG.TICK_SPACING)}px`;
+                    this.elements.ruler.appendChild(tick);
+                }
+
+                this.state.ticksGenerated = true;
+            },
+
+            /**
+             * Handle scroll events with debouncing
+             */
+            handleScroll() {
+                if (!this.state.initialized) return;
+
+                this.state.lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (!this.state.scrollTicking) {
+                    requestAnimationFrame(() => {
+                        this.updatePosition();
+                        this.state.scrollTicking = false;
+                    });
+                    this.state.scrollTicking = true;
+                }
+            },
+
+            /**
+             * Handle window resize events
+             */
+            handleResize() {
+                if (!this.state.initialized) return;
+
+                // Regenerate ticks for new width
+                this.state.ticksGenerated = false;
+                this.generateTicks();
+
+                // Update position after resize
+                this.updatePosition();
+            },
+
+            /**
+             * Update ruler position based on scroll state
+             */
+            updatePosition() {
+                try {
+                    if (!this.elements.ruler) {
+                        console.warn('[EssenceRuler] Ruler element not available for position update');
+                        return;
+                    }
+
+                    // Initialize original position if needed
+                    if (this.state.originalPosition === null) {
+                        this.state.originalPosition = this.elements.ruler.offsetTop;
+                    }
+
+                    const scrollTop = this.state.lastScrollTop;
+                    const windowHeight = window.innerHeight;
+                    const rulerHeight = this.elements.ruler.offsetHeight;
+
+                    // Validate dimensions
+                    if (rulerHeight <= 0) {
+                        console.warn('[EssenceRuler] Invalid ruler height:', rulerHeight);
+                        return;
+                    }
+
+                    // Get action area position
+                    const actionArea = document.getElementById('actionArea');
+                    if (!actionArea) {
+                        console.warn('[EssenceRuler] Action area not found');
+                        return;
+                    }
+
+                    const actionAreaRect = actionArea.getBoundingClientRect();
+                    const actionAreaBottom = actionAreaRect.bottom + scrollTop;
+                    const rulerTop = actionAreaBottom - rulerHeight;
+                    const rulerBottom = actionAreaBottom;
+
+                    // Determine visibility and position
+                    const isVisible = rulerBottom > scrollTop && rulerTop < (scrollTop + windowHeight);
+                    const shouldBeFixed = !isVisible && scrollTop + windowHeight >= rulerTop;
+
+                    // Update position state with smooth transitions
+                    if (shouldBeFixed && !this.state.isFixed) {
+                        this.setPosition('fixed');
+                    } else if (isVisible && this.state.isFixed) {
+                        this.setPosition('default');
+                    } else if (scrollTop + windowHeight < rulerTop && this.state.isFixed) {
+                        this.setPosition('hidden');
+                    }
+                } catch (error) {
+                    console.error('[EssenceRuler] Position update failed:', error);
+                }
+            },
+
+            /**
+             * Set ruler position with smooth transitions
+             * @param {string} position - The position to set ('default', 'fixed', 'hidden')
+             */
+            setPosition(position) {
+                try {
+                    if (!this.elements.ruler) {
+                        console.warn('[EssenceRuler] Cannot set position: ruler element not available');
+                        return;
+                    }
+
+                    // Validate position parameter
+                    const validPositions = ['default', 'fixed', 'hidden'];
+                    if (!validPositions.includes(position)) {
+                        console.warn('[EssenceRuler] Invalid position:', position);
+                        return;
+                    }
+
+                    if (this.state.currentPosition === position) {
+                        return; // No change needed
+                    }
+
+                    const ruler = this.elements.ruler;
+                    const oldPosition = this.state.currentPosition;
+
+                    // Remove old position classes
+                    ruler.classList.remove('fixed', 'hidden');
+                    this.state.isFixed = false;
+
+                    // Apply new position
+                    switch (position) {
+                        case 'fixed':
+                            ruler.classList.add('fixed');
+                            this.state.isFixed = true;
+                            break;
+                        case 'hidden':
+                            ruler.classList.add('hidden');
+                            break;
+                        // 'default' - no special classes needed
+                    }
+
+                    this.state.currentPosition = position;
+                    gameState.rulerPosition = position;
+
+                    // Handle performance container repositioning
+                    this.updatePerformanceContainer(oldPosition, position);
+    
+                    // Ensure ruler doesn't interfere with modals when position changes
+                    this.adjustZIndexForModals();
+
+                    console.log(`[EssenceRuler] Position changed: ${oldPosition} -> ${position}`);
+                } catch (error) {
+                    console.error('[EssenceRuler] Failed to set position:', error);
+                }
+            },
+
+            /**
+             * Update performance container position when ruler position changes
+             */
+            updatePerformanceContainer(oldPosition, newPosition) {
+                if (!gameState.performanceContainerExtended || !this.elements.performanceContainer) return;
+
+                const container = this.elements.performanceContainer;
+                container.style.transition = 'all 0.3s ease-out';
+
+                // The positionPerformanceContainer function handles the actual positioning
+                if (typeof positionPerformanceContainer === 'function') {
+                    positionPerformanceContainer();
+                }
+
+                setTimeout(() => {
+                    container.style.transition = '';
+                }, 300);
+            },
+
+            /**
+             * Update ruler display values
+             */
+            update() {
+                if (!this.state.initialized) return;
+
+                try {
+                    this.updateDisplay();
+                    this.updateMiniChart();
+                } catch (error) {
+                    console.error('[EssenceRuler] Update failed:', error);
+                }
+            },
+
+            /**
+             * Update ruler display values
+             */
+            updateDisplay() {
+                try {
+                    if (!this.elements.rulerValue || !this.elements.rulerTotal) {
+                        console.warn('[EssenceRuler] Display elements not available');
+                        return;
+                    }
+
+                    const totalEPS = this.calculateTotalEPS();
+                    const rulerWidth = this.elements.ruler.offsetWidth - this.CONFIG.CONTAINER_PADDING;
+
+                    // Validate ruler dimensions
+                    if (rulerWidth <= 0) {
+                        console.warn('[EssenceRuler] Invalid ruler width:', rulerWidth);
+                        return;
+                    }
+
+                    // Calculate position using logarithmic scale for better distribution
+                    const positionPercent = this.getPositionPercent(totalEPS);
+                    const position = this.CONFIG.TICK_START_OFFSET + (positionPercent / 100) * (rulerWidth - this.CONFIG.TICK_START_OFFSET);
+
+                    // Update display value with validation
+                    const formattedNumber = this.formatEPSNumber(totalEPS);
+                    this.elements.rulerValue.textContent = `${formattedNumber}/s`;
+                    this.elements.rulerValue.style.left = `${Math.max(this.CONFIG.TICK_START_OFFSET, Math.min(rulerWidth, position))}px`;
+
+                    // Update total essence display with validation
+                    if (typeof gameState.essence === 'number' && gameState.essence >= 0) {
+                        if (showFullEssence) {
+                            this.elements.rulerTotal.textContent = gameState.essence.toLocaleString();
+                        } else {
+                            this.elements.rulerTotal.textContent = formatNumber(gameState.essence);
+                        }
+                    } else {
+                        console.warn('[EssenceRuler] Invalid essence value:', gameState.essence);
+                        this.elements.rulerTotal.textContent = '0';
+                    }
+                } catch (error) {
+                    console.error('[EssenceRuler] Display update failed:', error);
+                }
+            },
+
+            /**
+             * Calculate total Essence Per Second from all sources
+             */
+            calculateTotalEPS() {
+                try {
+                    let totalEPS = 0;
+
+                    // Validate required functions exist
+                    if (typeof getEffectivePassiveIncomeRate !== 'function') {
+                        console.warn('[EssenceRuler] getEffectivePassiveIncomeRate function not available');
+                        return 0;
+                    }
+                    if (typeof getAutoClickRate !== 'function') {
+                        console.warn('[EssenceRuler] getAutoClickRate function not available');
+                    }
+                    if (typeof getEssencePerClick !== 'function') {
+                        console.warn('[EssenceRuler] getEssencePerClick function not available');
+                    }
+
+                    // Effective passive income (includes all boosts)
+                    const passiveRate = getEffectivePassiveIncomeRate();
+                    if (typeof passiveRate === 'number' && passiveRate >= 0) {
+                        totalEPS += passiveRate;
+                    } else {
+                        console.warn('[EssenceRuler] Invalid passive rate:', passiveRate);
+                    }
+
+                    // Auto-clicker contribution
+                    if (gameState.isAutoClickerActive && gameState.bankedClicks >= gameState.autoClickCostPerSecond) {
+                        const autoRate = getAutoClickRate();
+                        if (typeof autoRate === 'number' && autoRate >= 0) {
+                            totalEPS += autoRate;
+                        } else {
+                            console.warn('[EssenceRuler] Invalid auto-click rate:', autoRate);
                         }
                     }
-                }
-            } else if (isRulerVisible && isRulerFixed) {
-                // Ruler is visible in its original position - restore to absolute
-                ruler.classList.remove('fixed');
-                isRulerFixed = false;
-                gameState.rulerPosition = 'default';
-                // Reposition performance container if it's extended
-                if (gameState.performanceContainerExtended) {
-                    const container = document.getElementById('performanceContainer');
-                    if (container) {
-                        container.style.transition = 'all 0.3s ease-out';
-                        positionPerformanceContainer();
-                        setTimeout(() => container.style.transition = '', 300);
-                    }
-                }
-            } else if (scrollTop + windowHeight < rulerCurrentTop && isRulerFixed) {
-                // We've scrolled back up above where the ruler should be - hide it
-                ruler.classList.add('hidden');
-                gameState.rulerPosition = 'hidden';
-                // Reposition performance container if it's extended
-                if (gameState.performanceContainerExtended) {
-                    const container = document.getElementById('performanceContainer');
-                    if (container) {
-                        container.style.transition = 'all 0.3s ease-out';
-                        positionPerformanceContainer();
-                        setTimeout(() => container.style.transition = '', 300);
-                    }
-                }
-            } else if (isRulerFixed && scrollTop + windowHeight >= rulerCurrentTop) {
-                // We're in the fixed zone - make sure it's visible
-                ruler.classList.remove('hidden');
-                gameState.rulerPosition = 'fixed';
-                // Reposition performance container if it's extended
-                if (gameState.performanceContainerExtended) {
-                    const container = document.getElementById('performanceContainer');
-                    if (container) {
-                        container.style.transition = 'all 0.3s ease-out';
-                        positionPerformanceContainer();
-                        setTimeout(() => container.style.transition = '', 300);
-                    }
-                }
-            }
-        }
 
+                    // Manual clicking contribution (only when not in bank mode and not in boss mode)
+                    if (!gameState.isBankMode && !bossState.active) {
+                        const smoothedCPS = gameState.smoothedCPS || 0;
+                        const essencePerClick = getEssencePerClick();
+                        if (typeof smoothedCPS === 'number' && typeof essencePerClick === 'number') {
+                            totalEPS += smoothedCPS * essencePerClick;
+                        } else {
+                            console.warn('[EssenceRuler] Invalid manual clicking values:', { smoothedCPS, essencePerClick });
+                        }
+                    }
+
+                    return Math.max(0, totalEPS); // Ensure non-negative result
+                } catch (error) {
+                    console.error('[EssenceRuler] EPS calculation failed:', error);
+                    return 0;
+                }
+            },
+
+            /**
+             * Get position percentage for EPS value using logarithmic scale
+             */
+            getPositionPercent(totalEPS) {
+                try {
+                    // Validate input
+                    if (typeof totalEPS !== 'number' || !isFinite(totalEPS)) {
+                        console.warn('[EssenceRuler] Invalid EPS value for position calculation:', totalEPS);
+                        return 0;
+                    }
+
+                    if (totalEPS <= 0) return 0;
+                    if (totalEPS < 10) return (totalEPS / 10) * 20; // 0-20% for 0-10 EPS
+                    if (totalEPS < 100) return 20 + ((totalEPS - 10) / 90) * 30; // 20-50% for 10-100 EPS
+                    if (totalEPS < 1000) return 50 + ((totalEPS - 100) / 900) * 30; // 50-80% for 100-1000 EPS
+                    return 80 + Math.min((Math.log10(totalEPS) - 3) * 5, 20); // 80-100% for 1000+ EPS
+                } catch (error) {
+                    console.error('[EssenceRuler] Position calculation failed:', error);
+                    return 0;
+                }
+            },
+
+            /**
+             * Format EPS number for display
+             */
+            formatEPSNumber(totalEPS) {
+                try {
+                    // Validate input
+                    if (typeof totalEPS !== 'number' || !isFinite(totalEPS)) {
+                        console.warn('[EssenceRuler] Invalid EPS value for formatting:', totalEPS);
+                        return '0.0';
+                    }
+
+                    if (totalEPS < 10) return totalEPS.toFixed(1);
+                    if (totalEPS < 100) return totalEPS.toFixed(0);
+                    return Math.floor(totalEPS).toString();
+                } catch (error) {
+                    console.error('[EssenceRuler] Number formatting failed:', error);
+                    return '0.0';
+                }
+            },
+
+            /**
+             * Update mini chart display
+             */
+            updateMiniChart() {
+                try {
+                    if (typeof updateMiniChart === 'function') {
+                        updateMiniChart();
+                    }
+                } catch (error) {
+                    console.error('[EssenceRuler] Mini chart update failed:', error);
+                }
+            },
+
+            /**
+             * Reset ruler to default state
+             */
+            reset() {
+                try {
+                    this.setPosition('default');
+                    this.state.isFixed = false;
+                    this.state.lastScrollTop = 0;
+                    this.state.scrollTicking = false;
+                    console.log('[EssenceRuler] Reset to default state');
+                } catch (error) {
+                    console.error('[EssenceRuler] Reset failed:', error);
+                }
+            },
+
+            /**
+             * Cleanup event listeners and references
+             */
+            destroy() {
+                try {
+                    window.removeEventListener('scroll', this.handleScroll);
+                    window.removeEventListener('resize', this.handleResize);
+
+                    // Cleanup modal observer
+                    if (this.state.modalObserver) {
+                        this.state.modalObserver.disconnect();
+                        this.state.modalObserver = null;
+                    }
+
+                    this.state.initialized = false;
+                    console.log('[EssenceRuler] Cleanup completed');
+                } catch (error) {
+                    console.error('[EssenceRuler] Cleanup failed:', error);
+                }
+            },
+
+            /**
+             * Adjust z-index to ensure modals appear above ruler
+             */
+            adjustZIndexForModals() {
+                if (!this.elements.ruler) return;
+
+                // Check if any modals are currently open
+                const titleModal = document.getElementById('titleModal');
+                const isModalOpen = titleModal && !titleModal.classList.contains('hidden');
+
+                if (isModalOpen) {
+                    // Lower z-index when modal is open
+                    this.elements.ruler.style.zIndex = '50';
+                } else {
+                    // Restore normal z-index when no modals are open
+                    this.elements.ruler.style.zIndex = this.state.isFixed ? '100' : '100';
+                }
+            },
+
+            /**
+             * Get current state for debugging
+             */
+            getDebugInfo() {
+                return {
+                    initialized: this.state.initialized,
+                    currentPosition: this.state.currentPosition,
+                    isFixed: this.state.isFixed,
+                    originalPosition: this.state.originalPosition,
+                    lastScrollTop: this.state.lastScrollTop,
+                    ticksGenerated: this.state.ticksGenerated,
+                    elementsCached: !!this.elements.ruler,
+                    config: this.CONFIG
+                };
+            }
+        };
+
+        // Legacy function for backward compatibility - delegates to new system
         function calculateTotalEssencePerSecond() {
-            let totalEPS = 0;
-
-            // Effective passive income (includes all boosts)
-            totalEPS += getEffectivePassiveIncomeRate();
-
-            // Auto-clicker contribution
-            if (gameState.isAutoClickerActive && gameState.bankedClicks >= gameState.autoClickCostPerSecond) {
-                totalEPS += getAutoClickRate();
-            }
-
-            // Manual clicking contribution (only when not in bank mode and not in boss mode)
-            if (!gameState.isBankMode && !bossState.active) {
-                totalEPS += gameState.smoothedCPS * getEssencePerClick();
-            }
-
-            return totalEPS;
+            return EssenceRuler.calculateTotalEPS();
         }
 
+        // Legacy function for backward compatibility - delegates to new system
         function updateRuler() {
-            const ruler = DOMElements.essenceRuler;
-            const rulerValue = DOMElements.rulerValue;
-            if (!ruler || !rulerValue) return;
-
-            const totalEPS = calculateTotalEssencePerSecond();
-            const rulerWidth = ruler.offsetWidth - 40; // Account for padding
-
-            // Calculate position based on EPS (logarithmic scale for better distribution)
-            let positionPercent;
-            if (totalEPS <= 0) {
-                positionPercent = 0;
-            } else if (totalEPS < 10) {
-                positionPercent = (totalEPS / 10) * 20; // 0-20% for 0-10 EPS
-            } else if (totalEPS < 100) {
-                positionPercent = 20 + ((totalEPS - 10) / 90) * 30; // 20-50% for 10-100 EPS
-            } else if (totalEPS < 1000) {
-                positionPercent = 50 + ((totalEPS - 100) / 900) * 30; // 50-80% for 100-1000 EPS
-            } else {
-                positionPercent = 80 + Math.min((Math.log10(totalEPS) - 3) * 5, 20); // 80-100% for 1000+ EPS
-            }
-
-            const position = 20 + (positionPercent / 100) * (rulerWidth - 40);
-
-            // Format number with appropriate decimal places
-            let formattedNumber;
-            if (totalEPS < 10) {
-                formattedNumber = totalEPS.toFixed(1);
-            } else if (totalEPS < 100) {
-                formattedNumber = totalEPS.toFixed(0);
-            } else {
-                formattedNumber = Math.floor(totalEPS).toString();
-            }
-
-            rulerValue.textContent = `${formattedNumber}/s`;
-            rulerValue.style.left = `${Math.max(20, Math.min(rulerWidth, position))}px`;
+            EssenceRuler.update();
         }
 
         // Performance Analytics Functions
@@ -7050,6 +7465,10 @@ let isTransitioning = false;
                 extendPerformanceContainer();
             });
 
+            // Add hover tooltip for mini chart
+            canvas.addEventListener('mousemove', handleMiniChartHover);
+            canvas.addEventListener('mouseleave', hideMiniChartTooltip);
+
             // Initial draw
             drawMiniChart();
         }
@@ -7102,13 +7521,16 @@ let isTransitioning = false;
             const overallMax = Math.max(maxCPS, maxEPS, maxBPS);
 
             if (overallMax === 0) {
-                // Draw flat line at bottom if no data
+                // Draw flat line at bottom if no data with subtle glow
                 ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)';
                 ctx.lineWidth = 1;
+                ctx.shadowColor = 'rgba(34, 211, 238, 0.5)';
+                ctx.shadowBlur = 2;
                 ctx.beginPath();
                 ctx.moveTo(2, height - 2);
                 ctx.lineTo(width - 2, height - 2);
                 ctx.stroke();
+                ctx.shadowBlur = 0;
                 return;
             }
 
@@ -7117,64 +7539,76 @@ let isTransitioning = false;
             const chartX = 2;
             const chartY = 2;
 
-            // Draw CPS line (cyan)
-            if (gameState.performanceChartVisibility.cps) {
-                ctx.strokeStyle = '#22d3ee';
-                ctx.lineWidth = 2;
+            // Helper function to draw smooth gradient line
+            function drawGradientLine(points, color1, color2, glowColor) {
+                if (points.length < 2) return;
+
+                // Create gradient
+                const gradient = ctx.createLinearGradient(0, 0, width, 0);
+                gradient.addColorStop(0, color1);
+                gradient.addColorStop(1, color2);
+
+                // Draw glow first
+                ctx.strokeStyle = glowColor;
+                ctx.lineWidth = 4;
+                ctx.shadowColor = glowColor;
+                ctx.shadowBlur = 3;
+                ctx.globalAlpha = 0.3;
                 ctx.beginPath();
-
-                recentHistory.forEach((point, index) => {
-                    const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
-                    const y = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
-
-                    if (index === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                });
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
                 ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+
+                // Draw main line
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = glowColor;
+                ctx.shadowBlur = 1;
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
             }
 
-            // Draw EPS line (green)
-            if (gameState.performanceChartVisibility.eps) {
-                ctx.strokeStyle = '#10b981';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
+            // Prepare data points
+            const cpsPoints = [];
+            const epsPoints = [];
+            const bpsPoints = [];
 
-                recentHistory.forEach((point, index) => {
-                    const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
-                    const y = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
+            recentHistory.forEach((point, index) => {
+                const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
+                const cpsY = chartY + chartHeight - (point.cps / overallMax) * chartHeight;
+                const epsY = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
+                const bpsY = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
 
-                    if (index === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                });
-                ctx.stroke();
+                cpsPoints.push({ x, y: cpsY });
+                epsPoints.push({ x, y: epsY });
+                bpsPoints.push({ x, y: bpsY });
+            });
+
+            // Draw CPS line (cyan gradient)
+            if (gameState.performanceChartVisibility.cps && cpsPoints.length > 1) {
+                drawGradientLine(cpsPoints, '#22d3ee', '#67e8f9', 'rgba(34, 211, 238, 0.6)');
             }
 
-            // Draw BPS line (white)
-            if (gameState.performanceChartVisibility.bps) {
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-
-                recentHistory.forEach((point, index) => {
-                    const x = chartX + (index / Math.max(recentHistory.length - 1, 1)) * chartWidth;
-                    const y = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
-
-                    if (index === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                });
-                ctx.stroke();
+            // Draw EPS line (green gradient)
+            if (gameState.performanceChartVisibility.eps && epsPoints.length > 1) {
+                drawGradientLine(epsPoints, '#10b981', '#34d399', 'rgba(16, 185, 129, 0.6)');
             }
 
-            // Draw data points as small dots (only show last few points for clarity)
+            // Draw BPS line (white gradient)
+            if (gameState.performanceChartVisibility.bps && bpsPoints.length > 1) {
+                drawGradientLine(bpsPoints, '#ffffff', '#f3f4f6', 'rgba(255, 255, 255, 0.6)');
+            }
+
+            // Draw enhanced data points (only show last few points for clarity)
             const pointsToShow = Math.min(recentHistory.length, 8);
             const startIndex = recentHistory.length - pointsToShow;
 
@@ -7186,29 +7620,38 @@ let isTransitioning = false;
                 const epsY = chartY + chartHeight - (point.eps / overallMax) * chartHeight;
                 const bpsY = chartY + chartHeight - ((point.bps || 0) / overallMax) * chartHeight;
 
+                // Enhanced points with glow
                 // CPS point (cyan)
                 if (gameState.performanceChartVisibility.cps) {
+                    ctx.shadowColor = '#22d3ee';
+                    ctx.shadowBlur = 2;
                     ctx.fillStyle = '#22d3ee';
                     ctx.beginPath();
-                    ctx.arc(x, cpsY, 1, 0, Math.PI * 2);
+                    ctx.arc(x, cpsY, 1.5, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
                 // EPS point (green)
                 if (gameState.performanceChartVisibility.eps) {
+                    ctx.shadowColor = '#10b981';
+                    ctx.shadowBlur = 2;
                     ctx.fillStyle = '#10b981';
                     ctx.beginPath();
-                    ctx.arc(x, epsY, 1, 0, Math.PI * 2);
+                    ctx.arc(x, epsY, 1.5, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
                 // BPS point (white)
                 if (gameState.performanceChartVisibility.bps) {
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = 2;
                     ctx.fillStyle = '#ffffff';
                     ctx.beginPath();
-                    ctx.arc(x, bpsY, 1, 0, Math.PI * 2);
+                    ctx.arc(x, bpsY, 1.5, 0, Math.PI * 2);
                     ctx.fill();
                 }
+
+                ctx.shadowBlur = 0;
             }
         }
 
@@ -7218,6 +7661,60 @@ let isTransitioning = false;
                 // Force canvas to be visible and properly sized
                 canvas.style.display = 'block';
                 drawMiniChart();
+            }
+        }
+
+        // Mini chart hover tooltip functions
+        function handleMiniChartHover(event) {
+            const canvas = DOMElements.miniChartCanvas;
+            if (!canvas || !gameState.performanceHistory.length) {
+                hideMiniChartTooltip();
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            // Get latest data point
+            const latestPoint = gameState.performanceHistory[gameState.performanceHistory.length - 1];
+            if (!latestPoint) return;
+
+            showMiniChartTooltip(event.clientX, event.clientY, latestPoint);
+        }
+
+        function showMiniChartTooltip(mouseX, mouseY, dataPoint) {
+            let tooltip = document.querySelector('.mini-chart-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'mini-chart-tooltip chart-tooltip';
+                document.body.appendChild(tooltip);
+            }
+
+            // Compact tooltip for mini chart
+            tooltip.innerHTML = `
+                <div style="font-weight: bold; color: #22d3ee; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 2px; font-size: 12px;">
+                    📈 Live Stats
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 2px 6px; font-size: 11px;">
+                    <div style="color: #22d3ee;">CPS:</div>
+                    <div style="color: #22d3ee; font-weight: bold;">${dataPoint.cps.toFixed(1)}</div>
+                    <div style="color: #10b981;">EPS:</div>
+                    <div style="color: #10b981; font-weight: bold;">${dataPoint.eps.toFixed(1)}</div>
+                    <div style="color: #f59e0b;">BPS:</div>
+                    <div style="color: #f59e0b; font-weight: bold;">${(dataPoint.bps || 0).toFixed(0)}</div>
+                </div>
+            `;
+
+            tooltip.style.left = `${mouseX + 10}px`;
+            tooltip.style.top = `${mouseY - 10}px`;
+            tooltip.classList.add('visible');
+        }
+
+        function hideMiniChartTooltip() {
+            const tooltip = document.querySelector('.mini-chart-tooltip');
+            if (tooltip) {
+                tooltip.classList.remove('visible');
             }
         }
 
@@ -7369,7 +7866,7 @@ let isTransitioning = false;
             setCursor();
 
             // Initialize the essence ruler
-            initializeRuler();
+            EssenceRuler.init();
 
             // Initialize mini chart
             initializeMiniChart();
@@ -7390,9 +7887,9 @@ let isTransitioning = false;
             window.addEventListener('resize', () => {
                 setCanvasSize();
                 initBackgroundParticles();
-                // Update ruler position after resize (only after initialization is complete)
-                if (rulerOriginalPosition !== null && !isInitializing) {
-                    handleRulerScroll();
+                // Update ruler position after resize using new system
+                if (EssenceRuler.state.initialized) {
+                    EssenceRuler.handleResize();
                 }
             });
 
