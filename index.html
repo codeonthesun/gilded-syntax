@@ -6820,7 +6820,14 @@ let isTransitioning = false;
             const now = Date.now();
             const cps = CPSTracker.getSmoothedCPS(); // Get current CPS from new tracker
             const eps = calculateTotalEssencePerSecond();
-            const bps = gameState.bankedClicks;
+
+            // Calculate BPS as the rate of bank increase per second
+            let bps = 0;
+            if (gameState.lastPerformanceUpdate && gameState.previousBankedClicks !== undefined) {
+                const timeDelta = (now - gameState.lastPerformanceUpdate) / 1000; // seconds
+                bps = (gameState.bankedClicks - gameState.previousBankedClicks) / timeDelta;
+            }
+            gameState.previousBankedClicks = gameState.bankedClicks;
 
             // Add data point to history
             gameState.performanceHistory.push({
@@ -7508,7 +7515,7 @@ let isTransitioning = false;
                     <div style="color: #10b981; font-weight: bold;">${dataPoint.eps.toFixed(1)}</div>
 
                     <div style="color: #f59e0b;"><strong>BPS:</strong></div>
-                    <div style="color: #f59e0b; font-weight: bold;">${(dataPoint.bps || 0).toFixed(0)}</div>
+                    <div style="color: #f59e0b; font-weight: bold;">${(dataPoint.bps || 0).toFixed(1)}</div>
 
                     <div style="color: #a855f7;"><strong>Level:</strong></div>
                     <div style="color: #a855f7; font-weight: bold;">${dataPoint.level}</div>
@@ -8002,7 +8009,7 @@ let isTransitioning = false;
                     <div style="color: #10b981;">EPS:</div>
                     <div style="color: #10b981; font-weight: bold;">${dataPoint.eps.toFixed(1)}</div>
                     <div style="color: #f59e0b;">BPS:</div>
-                    <div style="color: #f59e0b; font-weight: bold;">${(dataPoint.bps || 0).toFixed(0)}</div>
+                    <div style="color: #f59e0b; font-weight: bold;">${(dataPoint.bps || 0).toFixed(1)}</div>
                 </div>
             `;
 
@@ -8150,6 +8157,7 @@ let isTransitioning = false;
 
 
             loadGame();
+            gameState.previousBankedClicks = gameState.bankedClicks;
             if (!gameState.performanceChartVisibility) {
                 gameState.performanceChartVisibility = { cps: true, eps: true, bps: true };
             }
