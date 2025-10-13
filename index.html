@@ -156,6 +156,7 @@
             z-index: 2000;
             border: 2px solid #374151;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            text-shadow: none; /* Remove any inherited text-shadow */
         }
         .tooltip:hover::after {
             opacity: 1;
@@ -164,6 +165,13 @@
             bottom: 100%;
             top: auto;
             transform: translateX(-50%) translateY(4px);
+        }
+        .tooltip.above.left::after {
+            bottom: 100%;
+            top: auto;
+            left: 0;
+            right: auto;
+            transform: translateX(-110%) translateY(-30px);
         }
         .tooltip.below::after {
             top: 100%;
@@ -182,6 +190,13 @@
             left: 100%;
             bottom: auto;
             transform: translateX(40px) translateY(10px);
+        }
+        .tooltip.left::after {
+            top: 50%;
+            right: 100%;
+            left: auto;
+            bottom: auto;
+            transform: translateX(-40px) translateY(-50%);
         }
         .dashboard-canvas {
             width: 100% !important;
@@ -6701,8 +6716,8 @@ let isTransitioning = false;
 
                     // Make essence total clickable to toggle formatting and add tooltip
                     this.elements.rulerTotal.style.cursor = 'pointer';
-                    this.elements.rulerTotal.classList.add('tooltip');
-                    this.elements.rulerTotal.setAttribute('data-tooltip', 'Total essence collected - Click to toggle number format');
+                    this.elements.rulerTotal.classList.add('tooltip', 'above', 'left');
+                    this.elements.rulerTotal.setAttribute('data-tooltip', 'Total essence collected');
 
                     // Update zone objectives display using the same logic as Zone Objectives module
                     if (gameState.currentZoneIndex < gameState.zones.length) {
@@ -6712,12 +6727,12 @@ let isTransitioning = false;
                         this.elements.rulerZoneObjectives.textContent = `${completedCount}/${zone.challenges.length}`;
                         // Add tooltip showing the same information as the original flavortext
                         this.elements.rulerZoneObjectives.setAttribute('data-tooltip', `Completed objectives / Total objectives for this zone`);
-                        this.elements.rulerZoneObjectives.classList.add('tooltip');
+                        this.elements.rulerZoneObjectives.classList.add('tooltip', 'above', 'left');
                     } else {
                         // Handle infinite zones or zones beyond the initial set
                         this.elements.rulerZoneObjectives.textContent = '∞/∞';
                         this.elements.rulerZoneObjectives.setAttribute('data-tooltip', `Completed objectives / Total objectives for this zone`);
-                        this.elements.rulerZoneObjectives.classList.add('tooltip');
+                        this.elements.rulerZoneObjectives.classList.add('tooltip', 'above', 'left');
                     }
 
                     // Update bank display using the same logic as bank module (stored clicks / capacity)
@@ -6727,7 +6742,7 @@ let isTransitioning = false;
                     this.elements.rulerBankClicks.innerHTML = `${currentClicks}<span class="text-gray-400">/${maxCapacity}</span>`;
                     // Add tooltip showing the same information as the original bank module display
                     this.elements.rulerBankClicks.setAttribute('data-tooltip', `Clicks stored in bank for auto-clicker / Maximum clicks that can be stored`);
-                    this.elements.rulerBankClicks.classList.add('tooltip');
+                    this.elements.rulerBankClicks.classList.add('tooltip', 'above', 'left');
                     // Add click functionality to toggle between full and formatted numbers
                     this.elements.rulerBankClicks.style.cursor = 'pointer';
                 } catch (error) {
@@ -6897,6 +6912,39 @@ let isTransitioning = false;
                 } else {
                     // Restore normal z-index when no modals are open
                     this.elements.ruler.style.zIndex = this.state.isFixed ? '100' : '100';
+                }
+            },
+
+            /**
+             * Adjust tooltip position to prevent screen edge cutoff
+             * @param {HTMLElement} element - The element with tooltip
+             */
+            adjustTooltipPosition(element) {
+                if (!element || !element.classList.contains('tooltip')) return;
+
+                // Remove existing positioning classes
+                element.classList.remove('left', 'right', 'above');
+
+                // Get element position
+                const rect = element.getBoundingClientRect();
+                const tooltipWidth = 250; // Approximate tooltip width (matches CSS max-width)
+                const tooltipHeight = 150; // Approximate tooltip height (based on max-height + padding)
+                const margin = 20; // Margin from screen edge
+
+                // Check if tooltip would go off the bottom edge
+                const wouldGoOffBottom = (rect.bottom + tooltipHeight + margin) > window.innerHeight;
+                const wouldGoOffRight = (rect.left + rect.width / 2 + tooltipWidth / 2 + margin) > window.innerWidth;
+                const wouldGoOffLeft = (rect.left + rect.width / 2 - tooltipWidth / 2 - margin) < 0;
+
+                if (wouldGoOffBottom) {
+                    // Position above the element if it would go off the bottom edge
+                    element.classList.add('above');
+                } else if (wouldGoOffRight && !wouldGoOffLeft) {
+                    // Position to the left if it would go off the right edge
+                    element.classList.add('left');
+                } else {
+                    // Default position (centered below)
+                    element.classList.add('right');
                 }
             },
 
