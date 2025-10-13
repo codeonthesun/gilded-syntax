@@ -1667,6 +1667,52 @@
                 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
+        .ruler-bank-clicks {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #4ade80;
+            text-shadow:
+                1px 1px 2px rgba(0, 0, 0, 0.8),
+                0 0 8px rgba(74, 222, 128, 0.5);
+            position: relative;
+            min-width: 140px;
+            text-align: right;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(26, 32, 44, 0.3) 100%);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            box-shadow:
+                inset 0 1px 2px rgba(255, 255, 255, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .ruler-zone-objectives {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #a855f7;
+            text-shadow:
+                1px 1px 2px rgba(0, 0, 0, 0.8),
+                0 0 8px rgba(168, 85, 247, 0.5);
+            position: relative;
+            min-width: 140px;
+            text-align: right;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(26, 32, 44, 0.3) 100%);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            box-shadow:
+                inset 0 1px 2px rgba(255, 255, 255, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .ruler-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
         .ruler-line {
             position: absolute;
             top: -2px;
@@ -2119,6 +2165,8 @@
                     </div>
                     <div class="ruler-right">
                         <div class="ruler-total-essence"><span id="rulerTotalEssence">0</span></div>
+                        <div class="ruler-bank-clicks"><span id="rulerBankClicks">0</span></div>
+                        <div class="ruler-zone-objectives"><span id="rulerZoneObjectives">0/0</span></div>
                     </div>
                 </div>
 
@@ -2164,7 +2212,7 @@
                         <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                 </h2>
-                <p class="text-center text-sm mb-4"><span class="tooltip" data-tooltip="Clicks stored in bank for auto-clicker / Maximum clicks that can be stored">Stored Clicks: <span id="bankedClicks" class="font-bold text-green-400"></span> / <span id="bankSize" class="font-bold text-gray-400"></span></span></p>
+                <p class="text-center text-sm mb-4"></p>
                 <div class="flex items-center gap-4 text-sm justify-center">
                     <button id="autoClickButton" data-tooltip="Toggle auto-clicker on/off. Costs 1 banked click per second." class="bg-green-700 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors duration-200 tooltip">
                         Auto-Clicker: Off
@@ -3937,9 +3985,7 @@ let isTransitioning = false;
 
             DOMElements.playerStreak.textContent = gameState.streak > 0 ? gameState.streak : '';
 
-            // Bank
-            DOMElements.bankedClicks.textContent = showFullBankedClicks ? gameState.bankedClicks.toLocaleString() : formatNumber(gameState.bankedClicks);
-            DOMElements.bankSize.textContent = formatNumber(getBankSize());
+            // Bank (display moved to ruler, keeping only interest rate calculation)
             const interestRate = 0.001 * (1 + gameState.bankUpgradeLevel * 0.1);
             document.getElementById('interestRate').textContent = (gameState.bankedClicks * interestRate).toFixed(2);
             document.getElementById('accumulatedInterest').textContent = formatNumber(gameState.totalBankInterestEarned);
@@ -4339,10 +4385,10 @@ let isTransitioning = false;
              while (existing.length > zone.challenges.length) {
                  DOMElements.questList.removeChild(existing[existing.length - 1]);
              }
-             // Update flavor text
+             // Update flavor text (removed count display, will be shown in ruler with tooltip)
              let completedCount = 0;
              zone.challenges.forEach(c => { if (c.completed) completedCount++; });
-             document.getElementById('zoneFlavorText').textContent = `${completedCount} / ${zone.challenges.length}`;
+             // Don't set textContent here anymore - let the ruler handle the display
              // Blur objectives and add overlay if completed
              if (allCompleted) {
                  for (let child of DOMElements.questList.children) {
@@ -6327,6 +6373,8 @@ let isTransitioning = false;
                     this.elements.ruler = DOMElements.essenceRuler;
                     this.elements.rulerValue = DOMElements.rulerValue;
                     this.elements.rulerTotal = DOMElements.rulerTotalEssence;
+                    this.elements.rulerZoneObjectives = document.getElementById('rulerZoneObjectives');
+                    this.elements.rulerBankClicks = document.getElementById('rulerBankClicks');
                     this.elements.miniChart = DOMElements.miniChartContainer;
                     this.elements.performanceContainer = document.getElementById('performanceContainer');
 
@@ -6339,6 +6387,12 @@ let isTransitioning = false;
                     }
                     if (!this.elements.rulerTotal) {
                         throw new Error('Ruler total element not found');
+                    }
+                    if (!this.elements.rulerZoneObjectives) {
+                        throw new Error('Ruler zone objectives element not found');
+                    }
+                    if (!this.elements.rulerBankClicks) {
+                        throw new Error('Ruler bank clicks element not found');
                     }
 
                     console.log('[EssenceRuler] DOM elements cached successfully');
@@ -6354,6 +6408,22 @@ let isTransitioning = false;
             setupEventListeners() {
                 window.addEventListener('scroll', this.handleScroll.bind(this), { passive: true });
                 window.addEventListener('resize', this.handleResize.bind(this));
+
+                // Add click functionality to ruler bank display
+                if (this.elements.rulerBankClicks) {
+                    this.elements.rulerBankClicks.addEventListener('click', () => {
+                        showFullBankedClicks = !showFullBankedClicks;
+                        this.update();
+                    });
+                }
+
+                // Add click functionality to ruler total essence display
+                if (this.elements.rulerTotal) {
+                    this.elements.rulerTotal.addEventListener('click', () => {
+                        showFullEssence = !showFullEssence;
+                        this.update();
+                    });
+                }
 
                 // Listen for modal open/close events
                 this.setupModalListeners();
@@ -6594,7 +6664,7 @@ let isTransitioning = false;
              */
             updateDisplay() {
                 try {
-                    if (!this.elements.rulerValue || !this.elements.rulerTotal) {
+                    if (!this.elements.rulerValue || !this.elements.rulerTotal || !this.elements.rulerZoneObjectives || !this.elements.rulerBankClicks) {
                         console.warn('[EssenceRuler] Display elements not available');
                         return;
                     }
@@ -6628,6 +6698,38 @@ let isTransitioning = false;
                         console.warn('[EssenceRuler] Invalid essence value:', gameState.essence);
                         this.elements.rulerTotal.textContent = '0';
                     }
+
+                    // Make essence total clickable to toggle formatting and add tooltip
+                    this.elements.rulerTotal.style.cursor = 'pointer';
+                    this.elements.rulerTotal.classList.add('tooltip');
+                    this.elements.rulerTotal.setAttribute('data-tooltip', 'Total essence collected - Click to toggle number format');
+
+                    // Update zone objectives display using the same logic as Zone Objectives module
+                    if (gameState.currentZoneIndex < gameState.zones.length) {
+                        const zone = gameState.zones[gameState.currentZoneIndex];
+                        let completedCount = 0;
+                        zone.challenges.forEach(c => { if (c.completed) completedCount++; });
+                        this.elements.rulerZoneObjectives.textContent = `${completedCount}/${zone.challenges.length}`;
+                        // Add tooltip showing the same information as the original flavortext
+                        this.elements.rulerZoneObjectives.setAttribute('data-tooltip', `Completed objectives / Total objectives for this zone`);
+                        this.elements.rulerZoneObjectives.classList.add('tooltip');
+                    } else {
+                        // Handle infinite zones or zones beyond the initial set
+                        this.elements.rulerZoneObjectives.textContent = '∞/∞';
+                        this.elements.rulerZoneObjectives.setAttribute('data-tooltip', `Completed objectives / Total objectives for this zone`);
+                        this.elements.rulerZoneObjectives.classList.add('tooltip');
+                    }
+
+                    // Update bank display using the same logic as bank module (stored clicks / capacity)
+                    const bankSize = getBankSize();
+                    const currentClicks = showFullBankedClicks ? gameState.bankedClicks.toLocaleString() : formatNumber(gameState.bankedClicks);
+                    const maxCapacity = formatNumber(bankSize);
+                    this.elements.rulerBankClicks.innerHTML = `${currentClicks}<span class="text-gray-400">/${maxCapacity}</span>`;
+                    // Add tooltip showing the same information as the original bank module display
+                    this.elements.rulerBankClicks.setAttribute('data-tooltip', `Clicks stored in bank for auto-clicker / Maximum clicks that can be stored`);
+                    this.elements.rulerBankClicks.classList.add('tooltip');
+                    // Add click functionality to toggle between full and formatted numbers
+                    this.elements.rulerBankClicks.style.cursor = 'pointer';
                 } catch (error) {
                     console.error('[EssenceRuler] Display update failed:', error);
                 }
@@ -8161,7 +8263,7 @@ let isTransitioning = false;
             document.getElementById('resetProfile').addEventListener('click', resetProfile);
             document.getElementById('debugButton').addEventListener('click', debugToggle);
             DOMElements.playerEssence.addEventListener('click', () => { showFullEssence = !showFullEssence; updateUI(); });
-            DOMElements.bankedClicks.addEventListener('click', () => { showFullBankedClicks = !showFullBankedClicks; updateUI(); });
+            // Bank clicks display moved to ruler, click functionality moved there too
 
             // Music icon button
             DOMElements.musicIconButton.addEventListener('mousedown', () => DOMElements.musicIconButton.classList.add('pressed'));
