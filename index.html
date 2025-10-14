@@ -1798,6 +1798,26 @@
             max-width: 320px;
         }
 
+        /* Smaller mini chart when ruler is in normal position */
+        .essence-ruler:not(.fixed) .mini-chart-container {
+            max-width: 200px;
+        }
+
+        .essence-ruler:not(.fixed) .mini-chart-canvas {
+            width: 180px !important;
+            height: 45px !important; /* Keep same height */
+        }
+
+        /* Keep current size when ruler is pinned to bottom */
+        .essence-ruler.fixed .mini-chart-container {
+            max-width: 320px;
+        }
+
+        .essence-ruler.fixed .mini-chart-canvas {
+            width: 300px !important;
+            height: 45px !important; /* Keep same height */
+        }
+
         @media (max-width: 768px) {
             .mini-chart-container {
                 max-width: 240px;
@@ -1806,7 +1826,17 @@
 
             .mini-chart-canvas {
                 width: 240px !important;
-                height: 36px !important;
+                height: 45px !important; /* Keep same height */
+            }
+
+            /* Override mobile styles for different ruler positions */
+            .essence-ruler:not(.fixed) .mini-chart-container {
+                max-width: 160px;
+            }
+
+            .essence-ruler:not(.fixed) .mini-chart-canvas {
+                width: 140px !important;
+                height: 45px !important; /* Keep same height */
             }
         }
 
